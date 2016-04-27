@@ -234,7 +234,7 @@ def export_multiple_hdf5(CEs, out_folder):
             raise Exception("This function only works when count estimator were formed from files (i.e. CE.input_filename != None")
 
     for CE in CEs:
-        CE.export(os.path.join(out_folder, CE.input_file_name, ".CE.h5"))
+        CE.export(os.path.join(out_folder, os.path.basename(CE.input_file_name), ".CE.h5"))
 
     return
 
