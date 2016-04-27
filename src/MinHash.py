@@ -10,12 +10,13 @@ import os
 import tempfile
 import multiprocessing
 from multiprocessing import Pool
-
+import re
 # To Do:
 # export multiple count estimators in one big HDF5 file
 
 #CE = SM.CountEstimator(n=10, max_prime=1e10, ksize=10, input_filename='/Users/dkoslicki/Dropbox/Repositories/MinHash/data/Genomes/G000279475.fna')
 
+notACTG = re.compile('[^ACTG]')
 
 class CountEstimator(object):
     """
@@ -24,7 +25,7 @@ class CountEstimator(object):
     Still don't know what max_prime is...
     """
 
-    def __init__(self, n=None, max_prime=1e10, ksize=None, input_file_name=None, save_kmers='n'):
+    def __init__(self, n=None, max_prime=1e12, ksize=None, input_file_name=None, save_kmers='n'):
         if n is None:
             raise Exception
         if ksize is None:
@@ -40,8 +41,8 @@ class CountEstimator(object):
         self.p = p
 
         # initialize sketch to size n
-        self._mins = [float("inf")]*n
-        #self._mins = [p]*n
+        #self._mins = [float("inf")]*n
+        self._mins = [p]*n
 
         # initialize the corresponding counts
         self._counts = [0]*n
@@ -73,7 +74,7 @@ class CountEstimator(object):
         _kmers = self._kmers
 
         h = khmer.hash_murmur3(kmer)
-        #h = h % self.p
+        h = h % self.p
 
         if h >= _mins[-1]:
             return
@@ -99,7 +100,8 @@ class CountEstimator(object):
         """
          Sanitize and add a sequence to the sketch.
         """
-        seq = seq.upper().replace('N', 'G')
+        # seq = seq.upper().replace('N', 'G')
+        seq = notACTG.sub('G', seq.upper())
         for kmer in kmers(seq, self.ksize):
             self.add(kmer)
 
@@ -196,7 +198,7 @@ def import_single_hdf5(file_name):
     prime = grp.attrs['prime']
     mins = list(grp["mins"])
     counts = list(grp["counts"])
-    CE = CountEstimator(n=len(mins), max_prime=1e10, ksize=ksize)
+    CE = CountEstimator(n=len(mins), max_prime=1e12, ksize=ksize)
     CE.p = prime
     CE._mins = mins
     CE._counts = counts
@@ -292,7 +294,7 @@ def import_multiple_from_single_hdf5(file_name, import_list=None):
         prime = subgrp.attrs['prime']
         mins = list(subgrp["mins"])
         counts = list(subgrp["counts"])
-        CE = CountEstimator(n=len(mins), max_prime=1e10, ksize=ksize)
+        CE = CountEstimator(n=len(mins), max_prime=1e12, ksize=ksize)
         CE.p = prime
         CE._mins = mins
         CE._counts = counts
@@ -322,7 +324,7 @@ class CE_map(object):
         return CountEstimator(n=self.n, max_prime=self.max_prime, ksize=self.ksize, input_file_name=input_file, save_kmers=self.save_kmers)
 
 
-def compute_multiple(n=None, max_prime=1e10, ksize=None, input_files_list=None, save_kmers='n', num_threads=multiprocessing.cpu_count()):
+def compute_multiple(n=None, max_prime=1e12, ksize=None, input_files_list=None, save_kmers='n', num_threads=multiprocessing.cpu_count()):
     """
     Batch compute Count Estimators from a given list of file names.
     :param n: number of hashes to keep
@@ -383,7 +385,7 @@ def form_jaccard_kmer_matrix(CEs):
 
 
 class CompositionSketch(object):
-    def __init__(self, n=None, max_prime=1e10, ksize=None, prefixsize=None, input_file_name=None):
+    def __init__(self, n=None, max_prime=1e12, ksize=None, prefixsize=None, input_file_name=None, save_kmers='n'):
         """
         :param n: the number of kmer hashes to keep in the sketch. Must be >= 1
         :param max_prime:
@@ -409,7 +411,7 @@ class CompositionSketch(object):
         # initialize 4**prefixsize MinHash sketches
         self.sketches = []
         for i in range(4**prefixsize):
-            self.sketches.append(CountEstimator(n, self.p, ksize))
+            self.sketches.append(CountEstimator(n=n, max_prime=self.p, ksize=ksize, save_kmers=save_kmers))
 
         self.input_file_name = input_file_name
         if self.input_file_name:
@@ -446,7 +448,8 @@ class CompositionSketch(object):
 
     def add_sequence(self, seq):
         "Sanitize and add a sequence to the sketch."
-        seq = seq.upper().replace('N', 'G')
+        # seq = seq.upper().replace('N', 'G')
+        seq = notACTG.sub('G', seq.upper())
         for kmer in kmers(seq, self.ksize):
             self.add(kmer)
 
@@ -601,8 +604,8 @@ def get_prime_lt_x(target):
 
 
 def test_jaccard_1():
-    E1 = CountEstimator(n=0, ksize=20)
-    E2 = CountEstimator(n=0, ksize=20)
+    E1 = CountEstimator(n=0, ksize=21)
+    E2 = CountEstimator(n=0, ksize=21)
 
     E1._mins = [1, 2, 3, 4, 5]
     E2._mins = [1, 2, 3, 4, 6]
@@ -611,8 +614,8 @@ def test_jaccard_1():
 
 
 def test_jaccard_2_difflen():
-    E1 = CountEstimator(n=0, ksize=20)
-    E2 = CountEstimator(n=0, ksize=20)
+    E1 = CountEstimator(n=0, ksize=21)
+    E2 = CountEstimator(n=0, ksize=21)
 
     E1._mins = [1, 2, 3, 4, 5]
     E2._mins = [1, 2, 3, 4]
@@ -640,14 +643,15 @@ def test_yield_overlaps_3():
     assert len(list(_yield_overlaps(x2, x1))) == 2
 
 def test_CompositionSketch():
-    CE1 = CompositionSketch(n=5, max_prime=1e10, ksize=10, prefixsize=1)
-    CE2 = CompositionSketch(n=5, max_prime=1e10, ksize=10, prefixsize=1)
-    sequence1 = "CATGTGCATGTAGATCGATGCATGCATCGATGCATGATCGATCG"
-    sequence2 = "CATGTGCATGTAGATCGATGCATGCATCGATGCATGATCGATCGAAAAAAAAAAAAAAAAAAAAA"
-    CE1.add_sequence(sequence1)
-    CE2.add_sequence(sequence2)
-    print(CE1.similarity(CE2))
-    print(CE1.jaccard(CE2))
+    CS1 = CompositionSketch(n=5, max_prime=1e10, ksize=11, prefixsize=1, save_kmers='y')
+    CS2 = CompositionSketch(n=5, max_prime=1e10, ksize=11, prefixsize=1, save_kmers='y')
+    sequence1 = "CATGTGCATGTAGATCGATGCATGCATCGATGCATGATCGATCX"
+    sequence2 = "CATGTGCATGTAGATCGATGCATGCATCGATGCATGATCGATCGAAAAAAAAAAAAAAAAAAA"
+    CS1.add_sequence(sequence1)
+    CS2.add_sequence(sequence2)
+    assert CS1.similarity(CS2) == 1.0
+    assert CS1.jaccard(CS2) == 0.6
+    assert CS1.jaccard_count(CS2) == (0.5076923076923078, 0.5750000000000001)
 
 
 def test_CountEstimator():
@@ -675,4 +679,19 @@ def test_import_export():
     CE_Import = import_single_hdf5(temp_file)  # Read in the data
     os.remove(temp_file)  # Remove the temporary file
     assert CE_Import.jaccard_count(CE2) == CE1.jaccard_count(CE2)  # Make sure the results of the import are the same as the original CountEstimator
+
+
+def test_suite():
+    """
+    Runs all the test functions
+    :return:
+    """
+    test_jaccard_1()
+    test_jaccard_2_difflen()
+    test_yield_overlaps()
+    test_yield_overlaps_2()
+    test_yield_overlaps_3()
+    test_CompositionSketch()
+    test_CountEstimator()
+    test_import_export()
 
