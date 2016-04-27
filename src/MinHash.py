@@ -343,6 +343,7 @@ def compute_multiple(n=None, max_prime=1e12, ksize=None, input_files_list=None, 
 
     pool = Pool(processes=num_threads)
     CEs = pool.map(CE_map(n, max_prime, ksize, save_kmers), input_files_list)
+    pool.close()
     return CEs
 
 
