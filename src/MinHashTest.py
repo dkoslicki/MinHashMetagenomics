@@ -1,89 +1,29 @@
-# The first thing I am going to do is make sure I can implement the MinHash Sketch myself
+import MinHash as MH
 
-#Virtual env in ~/KhmerForMinHash/bin/python
+reload(MH)
+fid = open('/Users/dkoslicki/Dropbox/Repositories/MinHash/data/test_files.txt', 'r')
+file_names = fid.readlines()
+fid.close()
+file_names = [name.strip() for name in file_names]
+CE = MH.CountEstimator(n=5000, ksize=11, input_file_name=file_names[0], save_kmers='y')
+CE2 = MH.CountEstimator(n=5000, ksize=11, input_file_name=file_names[1], save_kmers='y')
+CE2.jaccard_count(CE)
+CE2.jaccard(CE)
+CE.jaccard(CE2)
 
-import khmer
+CS = MH.CompositionSketch(n=5000, ksize=11, prefixsize=1, input_file_name=file_names[0])
+CS2 = MH.CompositionSketch(n=5000, ksize=11, prefixsize=1, input_file_name=file_names[1])
+CS.jaccard_count(CS2)
+CS.jaccard(CS2)
+CS2.jaccard(CS)
 
 
-# Installing hdf5 on mac in virtualenv
-# download http://www.hdfgroup.org/ftp/HDF5/current/src/hdf5-1.8.16.tar.gz
-# unpack, configure, make, sudo make install
-# export HDF5_DIR=/Users/dkoslicki/KhmerForMinHash/hdf5-1.8.16/hdf5; /Users/dkoslicki/KhmerForMinHash/bin/pip install h5py
+i = 0
+for record in screed.open(file_names[0]):
+    for kmer in MH.kmers(record.sequence,10):
+        if kmer == 'TGGAATTCCA':
+            i += 1
 
+print(i)
 
-
-
-###########################################
-# This was originally included in Titus' code, but I've modified it to CountEstimators
-class Estimators(object):
-    """
-    A simple bottom n-sketch MinHash implementation.
-    n is the number of sketches to keep
-    Still don't know what max_prime is...
-    """
-
-    def __init__(self, n=None, max_prime=1e10, ksize=None):
-        if n is None:
-            raise Exception
-        if ksize is None:
-            raise Exception
-
-        self.ksize = ksize
-
-        # get a prime to use for hashing
-        p = get_prime_lt_x(max_prime)
-        self.p = p
-
-        # initialize sketch to size n
-        self._mins = [p]*n
-
-    def add(self, kmer):
-        "Add kmer into sketch, keeping sketch sorted."
-        _mins = self._mins
-        h = khmer.hash_murmur3(kmer)
-        h = h % self.p  # This gurantees that the hash doesn't return the prime p
-
-        if h >= _mins[-1]:
-            return
-
-        for i, v in enumerate(_mins):
-            if h < v:
-                _mins.insert(i, h)
-                _mins.pop()
-                return
-            elif h == v:
-                return
-            # else: h > v, keep on going.
-
-        assert 0, "should never reach this"
-
-    def add_sequence(self, seq):
-        "Sanitize and add a sequence to the sketch."
-        seq = seq.upper().replace('N', 'G')
-        for kmer in kmers(seq, self.ksize):
-            self.add(kmer)
-
-    def jaccard(self, other):
-        truelen = len(self._mins)
-        while truelen and self._mins[truelen - 1] == self.p:  # If the value of the hash is the prime p, it doesn't contribute to the length of the hash
-            truelen -= 1
-        if truelen == 0:
-            raise ValueError
-
-        return self.common(other) / float(truelen)
-    similarity = jaccard
-
-    def common(self, other):
-        "Calculate number of common k-mers between two sketches."
-        if self.ksize != other.ksize:
-            raise Exception("different k-mer sizes - cannot compare")
-        if self.p != other.p:
-            raise Exception("different primes - cannot compare")
-
-        common = 0
-        for val in _yield_overlaps(self._mins, other._mins):
-            common += 1
-        return common
-
-    def _truncate(self, n):
-        self._mins = self._mins[:n]
+CE = MH.CountEstimator(n=500, ksize=20, input_file_name=file_names[0], save_kmers='y')

@@ -1,37 +1,18 @@
-## This is Titus' code
 """
 An implementation of a MinHash bottom sketch, applied to k-mers in DNA.
 """
 from __future__ import print_function
 import khmer
 import screed
-import argparse
-import itertools
 import h5py
 import numpy as np
 import os
 import tempfile
 import multiprocessing
-from multiprocessing import Pool, freeze_support
-import hashlib
+from multiprocessing import Pool
 
 # To Do:
 # export multiple count estimators in one big HDF5 file
-
-# Note:
-# There is something REALLY FUNKY with even kmer sizes. Note khmer.hash_murmur3('ACGATATCGT') == khmer.hash_murmur3('TTTTGCAAAA') == khmer.hash_murmur3('GAAAATTTTC') etc. etc.
-# Similarly, this behavior is exhibited for large even kmer sizes as well. The following all hash to zero under khmer.hash_murmur3:
-#GACCAGCTTGCAAGCTGGTC
-#TATATATATATATATATATA
-#ATTTTGCAAATTTGCAAAAT
-#TCTTTAGATGCATCTAAAGA
-#AAGAGGAAGTACTTCCTCTT
-#TTTACTAAAATTTTAGTAAA
-#TTTTTAACCCGGGTTAAAAA
-#ACGACGATTTAAATCGTCGT
-#GGGAACACAGCTGTGTTCCC
-
-# Ah ha! The kmers that are reverse complement to themselves get hashed to zero!!
 
 #CE = SM.CountEstimator(n=10, max_prime=1e10, ksize=10, input_filename='/Users/dkoslicki/Dropbox/Repositories/MinHash/data/Genomes/G000279475.fna')
 
@@ -48,6 +29,9 @@ class CountEstimator(object):
             raise Exception
         if ksize is None:
             raise Exception
+
+        if ksize % 2 == 0:
+            raise Exception("Due to an issue with khmer, only odd ksizes are allowed")
 
         self.ksize = ksize
 
@@ -255,6 +239,15 @@ def export_multiple_hdf5(CEs, out_folder):
     return
 
 
+def export_multiple_to_single_hdf5(CEs, file_name):
+    """
+    This will take a list of count estimators and export them to a single, large HDF5 file
+    :param CEs: list of Count Estimators
+    :param file_name: output file name
+    :return: None
+    """
+
+
 class CE_map(object):
     """
     Helper function for mapping CountEstimator class over multiple input_file arguments
@@ -290,6 +283,7 @@ def compute_multiple(n=None, max_prime=1e10, ksize=None, input_files_list=None, 
     CEs = pool.map(CE_map(n, max_prime, ksize, save_kmers), input_files_list)
     return CEs
 
+
 def form_common_kmer_matrix(CEs):
     """
     Forms the common kmer matrix for input list of count estimators
@@ -305,21 +299,23 @@ def form_common_kmer_matrix(CEs):
 
     return A
 
-
 def form_jaccard_kmer_matrix(CEs):
     """
-    Forms the common kmer matrix for input list of count estimators
-    :param CEs: a list of Count Estimators
-    :return: a numpy matrix A where A_{i,j} \approx \sum_{w\in SW_k(g_i) \cap SW_k{g_j}} \frac{occ_w(g_j)}{|g_j| - k + 1}
+    Forms a matrix A with A_{i,j} = Jaccard(CEs[i], CEs[j])
+    :param CEs: list of Count Estimators
+    :return: numpy matrix
     """
     A = np.zeros((len(CEs), len(CEs)), dtype=np.float64)
     for i in range(len(CEs)):
         for j in range(i, len(CEs)):
-            (Aij, Aji) = CEs[i].jaccard(CEs[j])
-            A[i, j] = Aij
-            A[j, i] = Aji
+            val = CEs[i].jaccard_count(CEs[j])
+            A[i, j] = val
+            A[j, i] = val
 
     return A
+
+
+
 
 
 ##########################################
