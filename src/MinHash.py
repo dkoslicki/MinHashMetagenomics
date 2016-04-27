@@ -239,13 +239,73 @@ def export_multiple_hdf5(CEs, out_folder):
     return
 
 
-def export_multiple_to_single_hdf5(CEs, file_name):
+def export_multiple_to_single_hdf5(CEs, export_file_name):
     """
     This will take a list of count estimators and export them to a single, large HDF5 file
     :param CEs: list of Count Estimators
     :param file_name: output file name
     :return: None
     """
+    fid = h5py.File(export_file_name, 'w')
+    grp = fid.create_group("CountEstimators")
+    for CE in CEs:
+        subgrp = grp.create_group(os.path.basename(CE.input_file_name))  # the key of a subgroup is the basename (not the whole file)
+        mins_data = subgrp.create_dataset("mins", data=CE._mins)
+        counts_data = subgrp.create_dataset("counts", data=CE._counts)
+        if CE._kmers:
+            kmer_data = subgrp.create_dataset("kmers", data=CE._kmers)
+
+        subgrp.attrs['class'] = np.string_("CountEstimator")
+        subgrp.attrs['filename'] = np.string_(CE.input_file_name)  # But keep the full file name on hand
+        subgrp.attrs['ksize'] = CE.ksize
+        subgrp.attrs['prime'] = CE.p
+
+    fid.close()
+
+
+def import_multiple_from_single_hdf5(file_name, import_list=None):
+    """
+    This function will import multiple count estimators stored in a single HDF5 file.
+    :param file_name: file name for the single HDF5 file
+    :param import_list: List of names of files to import
+    :return: a list of Count Estimators
+    """
+    CEs = list()
+    fid = h5py.File(file_name, 'r')
+    if "CountEstimators" not in fid:
+        raise Exception("This function imports a single HDF5 file containing multiple sketches."
+                        " It appears you've used it on a file containing a single sketch."
+                        "Try using import_single_hdf5 instead")
+    grp = fid["CountEstimators"]
+    if import_list:
+        iterator = [os.path.basename(item) for item in import_list]
+    else:
+        iterator = grp.keys()
+
+    for key in iterator:
+        if key not in grp:
+            raise Exception("The key " + key + " is not in " + file_name)
+
+        subgrp = grp[key]
+        file_name = subgrp.attrs['filename']
+        ksize = subgrp.attrs['ksize']
+        prime = subgrp.attrs['prime']
+        mins = list(subgrp["mins"])
+        counts = list(subgrp["counts"])
+        CE = CountEstimator(n=len(mins), max_prime=1e10, ksize=ksize)
+        CE.p = prime
+        CE._mins = mins
+        CE._counts = counts
+        CE.input_file_name = file_name
+        if "kmers" in subgrp:
+            CE._kmers = list(subgrp["kmers"])
+        else:
+            CE._kmers = None
+
+        CEs.append(CE)
+
+    fid.close()
+    return(CEs)
 
 
 class CE_map(object):
