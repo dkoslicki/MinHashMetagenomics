@@ -5,8 +5,8 @@ fid = open('/Users/dkoslicki/Dropbox/Repositories/MinHash/data/test_files.txt', 
 file_names = fid.readlines()
 fid.close()
 file_names = [name.strip() for name in file_names]
-CE = MH.CountEstimator(n=5000, ksize=11, input_file_name=file_names[0], save_kmers='y')
-CE2 = MH.CountEstimator(n=5000, ksize=11, input_file_name=file_names[1], save_kmers='y')
+CE = MH.CountEstimator(n=500, ksize=11, input_file_name=file_names[0], save_kmers='y')
+CE2 = MH.CountEstimator(n=500, ksize=11, input_file_name=file_names[1], save_kmers='y')
 CE2.jaccard_count(CE)
 CE2.jaccard(CE)
 CE.jaccard(CE2)

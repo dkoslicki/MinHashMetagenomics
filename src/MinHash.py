@@ -185,6 +185,7 @@ class CountEstimator(object):
         fid.close()
 
 
+
 def import_single_hdf5(file_name):
     """
     This function will read an HDF5 file and populate the CountEstimator class accordingly
@@ -219,8 +220,11 @@ def import_multiple_hdf5(input_files_list):
     :return: list of Count Estimators
     """
     CEs = list()
-    for file_name in input_files_list:
-        CEs.append(import_single_hdf5(file_name))
+    #for file_name in input_files_list:
+    #    CEs.append(import_single_hdf5(file_name))
+    pool = Pool(processes=multiprocessing.cpu_count())
+    CEs = pool.map(import_single_hdf5, input_files_list)
+    pool.close()
 
     return CEs
 
