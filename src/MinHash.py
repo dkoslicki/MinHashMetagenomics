@@ -188,6 +188,30 @@ class CountEstimator(object):
         grp.attrs['prime'] = self.p
         fid.close()
 
+    def jaccard_count_vector(self, other_list):
+        """
+        Function that returns the Y vector of MetaPalette. That is, the vector where Y[i] = Jaccard_count(self, other_CEs[i]
+        :param other_list: a list of count estimator classes
+        :return: a numpy vector with the same basis as other_list giving the jaccard_count of self with other[i]
+        """
+        Y = np.zeros(len(other_list))
+        for i in range(len(other_list)):
+            Y[i] = other_list[i].jaccard_count(self)[0]  # Gotta make sure it's not [1] (one's the CKM vector, the other is the "coverage")
+
+        return Y
+
+    def jaccard_vector(self, other_list):
+        """
+        Function that returns the Y vector of Jaccard values. That is, the vector where Y[i] = Jaccard(self, other_CEs[i]
+        :param other_list: a list of count estimator classes
+        :return: a numpy vector with the same basis as other_list giving the jaccard of self with other[i]
+        """
+        Y = np.zeros(len(other_list))
+        for i in range(len(other_list)):
+            Y[i] = other_list[i].jaccard(self)
+
+        return Y
+
 
 def import_single_hdf5(file_name):
     """
@@ -701,6 +725,22 @@ def test_hash_list():
     assert CE1.jaccard_count(CE2) == (1.0, 2/7.)
 
 
+def test_vector_formation():
+    CE1 = CountEstimator(n=5, max_prime=1e10, ksize=3, save_kmers='y')
+    CE2 = CountEstimator(n=5, max_prime=1e10, ksize=3, save_kmers='y')
+    CE3 = CountEstimator(n=5, max_prime=1e10, ksize=3, save_kmers='y')
+    seq1 = 'tacgactgatgcatgatcgaactgatgcactcgtgatgc'
+    seq2 = 'tacgactgatgcatgatcgaactgatgcactcgtgatgc'
+    seq3 = 'ttgatactcaatccgcatgcatgcatgacgatgcatgatgtacgactgatgcatgatcgaactgatgcactcgtgatgczxerqwewdfhg'
+    CE1.add_sequence(seq1)
+    CE2.add_sequence(seq2)
+    CE3.add_sequence(seq3)
+    Y = CE1.jaccard_count_vector([CE1, CE2, CE3])
+    assert (Y == np.array([1.,1.,0.5625])).all()
+    Y2 = CE1.jaccard_vector([CE1, CE2, CE3])
+    assert (Y2 == np.array([1.,1.,0.4])).all()
+
+
 def test_suite():
     """
     Runs all the test functions
@@ -715,4 +755,5 @@ def test_suite():
     test_CountEstimator()
     test_import_export()
     test_hash_list()
+    test_vector_formation()
 
