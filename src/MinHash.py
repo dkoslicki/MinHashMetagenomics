@@ -25,7 +25,7 @@ class CountEstimator(object):
     Still don't know what max_prime is...
     """
 
-    def __init__(self, n=None, max_prime=1e12, ksize=None, input_file_name=None, save_kmers='n'):
+    def __init__(self, n=None, max_prime=1e12, ksize=None, input_file_name=None, save_kmers='n', hash_list=None):
         if n is None:
             raise Exception
         if ksize is None:
@@ -35,6 +35,7 @@ class CountEstimator(object):
             raise Exception("Due to an issue with khmer, only odd ksizes are allowed")
 
         self.ksize = ksize
+        self.hash_list = hash_list
 
         # get a prime to use for hashing
         p = get_prime_lt_x(max_prime)
@@ -75,6 +76,9 @@ class CountEstimator(object):
 
         h = khmer.hash_murmur3(kmer)
         h = h % self.p
+        if self.hash_list:  # If I only want to include hashes that occur in hash_list
+            if h not in self.hash_list:  # If the kmer isn't in the hash_list, then break
+                return
 
         if h >= _mins[-1]:
             return
@@ -185,7 +189,6 @@ class CountEstimator(object):
         fid.close()
 
 
-
 def import_single_hdf5(file_name):
     """
     This function will read an HDF5 file and populate the CountEstimator class accordingly
@@ -197,15 +200,15 @@ def import_single_hdf5(file_name):
     file_name = grp.attrs['filename']
     ksize = grp.attrs['ksize']
     prime = grp.attrs['prime']
-    mins = list(grp["mins"])
-    counts = list(grp["counts"])
+    mins = list(grp["mins"][:])
+    counts = list(grp["counts"][:])
     CE = CountEstimator(n=len(mins), max_prime=1e12, ksize=ksize)
     CE.p = prime
     CE._mins = mins
     CE._counts = counts
     CE.input_file_name = file_name
     if "kmers" in grp:
-        CE._kmers = list(grp["kmers"])
+        CE._kmers = list(grp["kmers"][:])
     else:
         CE._kmers = None
 
@@ -282,6 +285,7 @@ def import_multiple_from_single_hdf5(file_name, import_list=None):
         raise Exception("This function imports a single HDF5 file containing multiple sketches."
                         " It appears you've used it on a file containing a single sketch."
                         "Try using import_single_hdf5 instead")
+
     grp = fid["CountEstimators"]
     if import_list:
         iterator = [os.path.basename(item) for item in import_list]
@@ -296,15 +300,15 @@ def import_multiple_from_single_hdf5(file_name, import_list=None):
         file_name = subgrp.attrs['filename']
         ksize = subgrp.attrs['ksize']
         prime = subgrp.attrs['prime']
-        mins = list(subgrp["mins"])
-        counts = list(subgrp["counts"])
+        mins = list(subgrp["mins"][:])
+        counts = list(subgrp["counts"][:])
         CE = CountEstimator(n=len(mins), max_prime=1e12, ksize=ksize)
         CE.p = prime
         CE._mins = mins
         CE._counts = counts
         CE.input_file_name = file_name
         if "kmers" in subgrp:
-            CE._kmers = list(subgrp["kmers"])
+            CE._kmers = list(subgrp["kmers"][:])
         else:
             CE._kmers = None
 
@@ -686,6 +690,17 @@ def test_import_export():
     assert CE_Import.jaccard_count(CE2) == CE1.jaccard_count(CE2)  # Make sure the results of the import are the same as the original CountEstimator
 
 
+def test_hash_list():
+    CE1 = CountEstimator(n=5, max_prime=1e10, ksize=3, save_kmers='y')
+    seq1='acgtagtctagtctacgtagtcgttgtattataaaatcgtcgtagctagtgctat'
+    CE1.add_sequence(seq1)
+    hash_list = {424517919, 660397082L}
+    CE2 = CountEstimator(n=5, max_prime=1e10, ksize=3, hash_list=hash_list, save_kmers='y')
+    CE2.add_sequence(seq1)
+    assert CE1.jaccard(CE2) == 0.4
+    assert CE1.jaccard_count(CE2) == (1.0, 2/7.)
+
+
 def test_suite():
     """
     Runs all the test functions
@@ -699,4 +714,5 @@ def test_suite():
     test_CompositionSketch()
     test_CountEstimator()
     test_import_export()
+    test_hash_list()
 

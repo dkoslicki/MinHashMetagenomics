@@ -35,3 +35,12 @@ MH.export_multiple_to_single_hdf5(CEs, 'test_big.h5')
 CEs=MH.import_multiple_from_single_hdf5('test_big.h5')
 #load just a few in
 CEs=MH.import_multiple_from_single_hdf5('test_big.h5', file_names[0:2])
+
+
+# Let's look at forming the Y vector
+CEs = MH.import_multiple_hdf5(out_file_names)
+MCE = MH.import_single_hdf5('/nfs1/Koslicki_Lab/koslickd/MinHash/Out/SRR172902.fastq.CE_N500_k31_inComparison.h5')
+Y = np.zeros(len(CEs))
+for i in range(len(CEs)):
+    Y[i] = CEs[i].jaccard_count(MCE)[1]
+
