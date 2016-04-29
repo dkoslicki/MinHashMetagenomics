@@ -4,17 +4,15 @@ import os, timeit, h5py
 import MinHash as MH
 import numpy as np
 
-
 fid = open('/nfs1/Koslicki_Lab/koslickd/MinHash/Data/FileNames.txt', 'r')
 file_names = fid.readlines()
 fid.close()
 file_names = [name.strip() for name in file_names]
-out_file_names = ["/nfs1/Koslicki_Lab/koslickd/MinHash/Out/N500k31/" + os.path.basename(item) + ".CE.h5" for item in file_names]
 
 ###############################
 # Compute the hashes for all the training genomes
 n = 500
-CEs = MH.compute_multiple(n=n, max_prime=1e10, ksize=31, input_files_list=file_names, save_kmers='y', num_threads=48)
+CEs = MH.compute_multiple(n=n, max_prime=9999999999971., ksize=31, input_files_list=file_names, save_kmers='y', num_threads=48)
 # Export
 MH.export_multiple_hdf5(CEs, '/nfs1/Koslicki_Lab/koslickd/MinHash/Out/N'+str(n)+'k31/')
 # Save the hashes in the training genomes
@@ -30,7 +28,7 @@ fid.close()
 #hash_list = set(fid["hash_list"][:])
 
 n = 5000
-CEs = MH.compute_multiple(n=n, max_prime=1e10, ksize=31, input_files_list=file_names, save_kmers='y', num_threads=48)
+CEs = MH.compute_multiple(n=n, max_prime=9999999999971., ksize=31, input_files_list=file_names, save_kmers='y', num_threads=48)
 # Export
 MH.export_multiple_hdf5(CEs, '/nfs1/Koslicki_Lab/koslickd/MinHash/Out/N'+str(n)+'k31/')
 # Save the hashes in the training genomes
@@ -46,7 +44,7 @@ fid.close()
 #hash_list = set(fid["hash_list"][:])
 
 n = 50000
-CEs = MH.compute_multiple(n=n, max_prime=1e10, ksize=31, input_files_list=file_names, save_kmers='y', num_threads=48)
+CEs = MH.compute_multiple(n=n, max_prime=9999999999971., ksize=31, input_files_list=file_names, save_kmers='y', num_threads=48)
 # Export
 MH.export_multiple_hdf5(CEs, '/nfs1/Koslicki_Lab/koslickd/MinHash/Out/N'+str(n)+'k31/')
 # Save the hashes in the training genomes
@@ -63,21 +61,32 @@ fid.close()
 
 ####################################
 # Form a CE for a metagenome
-# n=500
-CE = MH.CountEstimator(n=500, max_prime=1e10, ksize=31, input_file_name='/nfs1/Koslicki_Lab/koslickd/MinHash/Data/SRR172902.fastq', save_kmers='y')
-CE.export('/nfs1/Koslicki_Lab/koslickd/MinHash/Out/SRR172902.fastq.CE_N500_k31_all.h5')
-CE2 = MH.CountEstimator(n=500, max_prime=1e10, ksize=31, input_file_name='/nfs1/Koslicki_Lab/koslickd/MinHash/Data/SRR172902.fastq', save_kmers='y', hash_list=hash_list)
-CE2.export('/nfs1/Koslicki_Lab/koslickd/MinHash/Out/SRR172902.fastq.CE_N500_k31_inComparison.h5')
-# n=5000
-MCE2 = MH.CountEstimator(n=5000, max_prime=1e10, ksize=31, input_file_name='/nfs1/Koslicki_Lab/koslickd/MinHash/Data/SRR172902.fastq', save_kmers='y', hash_list=hash_list)
-MCE2.export('/nfs1/Koslicki_Lab/koslickd/MinHash/Out/SRR172902.fastq.CE_N5000_k31_inComparison.h5')
-MCE = MH.CountEstimator(n=5000, max_prime=1e10, ksize=31, input_file_name='/nfs1/Koslicki_Lab/koslickd/MinHash/Data/SRR172902.fastq', save_kmers='y')
-MCE.export('/nfs1/Koslicki_Lab/koslickd/MinHash/Out/SRR172902.fastq.CE_N5000_k31_all.h5')
-# n=50,000
-MCE2 = MH.CountEstimator(n=5000, max_prime=1e10, ksize=31, input_file_name='/nfs1/Koslicki_Lab/koslickd/MinHash/Data/SRR172902.fastq', save_kmers='y', hash_list=hash_list)
-MCE2.export('/nfs1/Koslicki_Lab/koslickd/MinHash/Out/SRR172902.fastq.CE_N5000_k31_inComparison.h5')
-MCE = MH.CountEstimator(n=5000, max_prime=1e10, ksize=31, input_file_name='/nfs1/Koslicki_Lab/koslickd/MinHash/Data/SRR172902.fastq', save_kmers='y')
-MCE.export('/nfs1/Koslicki_Lab/koslickd/MinHash/Out/SRR172902.fastq.CE_N5000_k31_all.h5')
+n = 500
+fid = h5py.File('/nfs1/Koslicki_Lab/koslickd/MinHash/Out/N'+str(n)+'k31_mins.h5', 'r')
+hash_list = set(fid["hash_list"][...])
+fid.close()
+CE = MH.CountEstimator(n=n, max_prime=9999999999971., ksize=31, input_file_name='/nfs1/Koslicki_Lab/koslickd/MinHash/Data/SRR172902.fastq', save_kmers='y')
+CE.export('/nfs1/Koslicki_Lab/koslickd/MinHash/Out/SRR172902.fastq.CE_N'+str(n)+'_k31_all.h5')
+CE2 = MH.CountEstimator(n=n, max_prime=9999999999971., ksize=31, input_file_name='/nfs1/Koslicki_Lab/koslickd/MinHash/Data/SRR172902.fastq', save_kmers='y', hash_list=hash_list)
+CE2.export('/nfs1/Koslicki_Lab/koslickd/MinHash/Out/SRR172902.fastq.CE_N'+str(n)+'_k31_inComparison.h5')
+n = 5000
+fid = h5py.File('/nfs1/Koslicki_Lab/koslickd/MinHash/Out/N'+str(n)+'k31_mins.h5', 'r')
+hash_list = set(fid["hash_list"][...])
+fid.close()
+MCE2 = MH.CountEstimator(n=n, max_prime=9999999999971., ksize=31, input_file_name='/nfs1/Koslicki_Lab/koslickd/MinHash/Data/SRR172902.fastq', save_kmers='y', hash_list=hash_list)
+MCE2.export('/nfs1/Koslicki_Lab/koslickd/MinHash/Out/SRR172902.fastq.CE_N'+str(n)+'_k31_inComparison.h5')
+MCE = MH.CountEstimator(n=n, max_prime=9999999999971., ksize=31, input_file_name='/nfs1/Koslicki_Lab/koslickd/MinHash/Data/SRR172902.fastq', save_kmers='y')
+MCE.export('/nfs1/Koslicki_Lab/koslickd/MinHash/Out/SRR172902.fastq.CE_N'+str(n)+'_k31_all.h5')
+n = 50000
+fid = h5py.File('/nfs1/Koslicki_Lab/koslickd/MinHash/Out/N'+str(n)+'k31_mins.h5', 'r')
+hash_list = set(fid["hash_list"][...])
+fid.close()
+MCE2 = MH.CountEstimator(n=n, max_prime=9999999999971., ksize=31, input_file_name='/nfs1/Koslicki_Lab/koslickd/MinHash/Data/SRR172902.fastq', save_kmers='y', hash_list=hash_list)
+MCE2.export('/nfs1/Koslicki_Lab/koslickd/MinHash/Out/SRR172902.fastq.CE_N'+str(n)+'_k31_inComparison.h5')
+MCE = MH.CountEstimator(n=n, max_prime=9999999999971., ksize=31, input_file_name='/nfs1/Koslicki_Lab/koslickd/MinHash/Data/SRR172902.fastq', save_kmers='y')
+MCE.export('/nfs1/Koslicki_Lab/koslickd/MinHash/Out/SRR172902.fastq.CE_N'+str(n)+'_k31_all.h5')
+
+exit()
 
 ###################################
 # Make the Y vectors
