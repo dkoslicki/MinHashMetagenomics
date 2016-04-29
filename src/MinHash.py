@@ -11,7 +11,7 @@ import tempfile
 import multiprocessing
 from multiprocessing import Pool
 import re
-import logging, sys
+
 # To Do:
 # Make the formation of the count vectors parallel
 
@@ -251,23 +251,22 @@ def import_single_hdf5(file_name):
     :param file_name: input file name of HDF5 file created by CountEstimator.export(file_name)
     :return: CountEstimator
     """
-    sys.stdout.flush()
     fid = h5py.File(file_name, 'r')  # This automatically handles non-existent files for me
-    grp = fid["CountEstimator"]
-    file_name = grp.attrs['filename']
-    ksize = grp.attrs['ksize']
-    prime = grp.attrs['prime']
-    mins = list(grp["mins"][:])
-    counts = list(grp["counts"][:])
+    #grp = fid["CountEstimator"]
+    #file_name = grp.attrs['filename']
+    #ksize = grp.attrs['ksize']
+    #prime = grp.attrs['prime']
+    #mins = list(grp["mins"][:])
+    #counts = list(grp["counts"][:])
     CE = CountEstimator(n=len(mins), max_prime=1e12, ksize=ksize)
-    CE.p = prime
-    CE._mins = mins
-    CE._counts = counts
-    CE.input_file_name = file_name
-    if "kmers" in grp:
-        CE._kmers = list(grp["kmers"][:])
-    else:
-        CE._kmers = None
+    #CE.p = prime
+    #CE._mins = mins
+    #CE._counts = counts
+    #CE.input_file_name = file_name
+    #if "kmers" in grp:
+    #    CE._kmers = list(grp["kmers"][:])
+    #else:
+    #    CE._kmers = None
 
     fid.close()
     return CE
@@ -283,7 +282,6 @@ def import_multiple_hdf5(input_files_list):
     #for file_name in input_files_list:
     #    CEs.append(import_single_hdf5(file_name))
     pool = Pool(processes=multiprocessing.cpu_count())
-    multiprocessing.log_to_stderr(logging.DEBUG)
     CEs = pool.map(import_single_hdf5, input_files_list, chunksize=144)
     pool.terminate()
 
