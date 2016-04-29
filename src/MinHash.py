@@ -250,7 +250,7 @@ def import_multiple_hdf5(input_files_list):
     #for file_name in input_files_list:
     #    CEs.append(import_single_hdf5(file_name))
     pool = Pool(processes=multiprocessing.cpu_count())
-    CEs = pool.map_async(import_single_hdf5, input_files_list,chunksize=50).get()
+    CEs = pool.map_async(import_single_hdf5, input_files_list, chunksize=700).get()
     pool.close()
 
     return CEs
