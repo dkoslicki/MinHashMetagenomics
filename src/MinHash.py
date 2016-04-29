@@ -252,7 +252,7 @@ def import_single_hdf5(file_name):
     :return: CountEstimator
     """
     fid = h5py.File(file_name, 'r')  # This automatically handles non-existent files for me
-    #grp = fid["CountEstimator"]
+    grp = fid["CountEstimator"]
     #file_name = grp.attrs['filename']
     #ksize = grp.attrs['ksize']
     #prime = grp.attrs['prime']
