@@ -256,9 +256,8 @@ def import_single_hdf5(file_name):
     file_name = grp.attrs['filename']
     ksize = grp.attrs['ksize']
     prime = grp.attrs['prime']
-    #mins = grp["mins"][:]
+    #mins = grp["mins"][:]  # For some reason, slicing is WAY slower than using ... in this case.
     mins = grp["mins"][...]
-    #counts = grp["counts"][:]
     counts = grp["counts"][...]
     CE = CountEstimator(n=len(mins), max_prime=1e12, ksize=ksize)
     CE.p = prime
@@ -266,7 +265,7 @@ def import_single_hdf5(file_name):
     CE._counts = counts
     CE.input_file_name = file_name
     if "kmers" in grp:
-        CE._kmers = grp["kmers"][...] #list(grp["kmers"][:])
+        CE._kmers = grp["kmers"][...]
     else:
         CE._kmers = None
 
@@ -281,8 +280,6 @@ def import_multiple_hdf5(input_files_list):
     :return: list of Count Estimators
     """
     CEs = list()
-    #for file_name in input_files_list:
-    #    CEs.append(import_single_hdf5(file_name))
     pool = Pool(processes=multiprocessing.cpu_count())
     CEs = pool.map(import_single_hdf5, input_files_list, chunksize=144)
     pool.terminate()
@@ -358,15 +355,15 @@ def import_multiple_from_single_hdf5(file_name, import_list=None):
         file_name = subgrp.attrs['filename']
         ksize = subgrp.attrs['ksize']
         prime = subgrp.attrs['prime']
-        mins = list(subgrp["mins"][:])
-        counts = list(subgrp["counts"][:])
+        mins = subgrp["mins"][...]
+        counts = subgrp["counts"][...]
         CE = CountEstimator(n=len(mins), max_prime=1e12, ksize=ksize)
         CE.p = prime
         CE._mins = mins
         CE._counts = counts
         CE.input_file_name = file_name
         if "kmers" in subgrp:
-            CE._kmers = list(subgrp["kmers"][:])
+            CE._kmers = subgrp["kmers"][...]
         else:
             CE._kmers = None
 
