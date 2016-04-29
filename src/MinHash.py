@@ -256,15 +256,17 @@ def import_single_hdf5(file_name):
     file_name = grp.attrs['filename']
     ksize = grp.attrs['ksize']
     prime = grp.attrs['prime']
-    mins = grp["mins"][:]
-    counts = grp["counts"][:]
+    #mins = grp["mins"][:]
+    mins = grp["mins"][...]
+    #counts = grp["counts"][:]
+    counts = grp["counts"][...]
     CE = CountEstimator(n=len(mins), max_prime=1e12, ksize=ksize)
     CE.p = prime
     CE._mins = mins
     CE._counts = counts
     CE.input_file_name = file_name
     if "kmers" in grp:
-        CE._kmers = list(grp["kmers"][:])
+        CE._kmers = grp["kmers"][...] #list(grp["kmers"][:])
     else:
         CE._kmers = None
 
