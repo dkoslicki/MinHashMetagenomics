@@ -16,13 +16,13 @@ out_file_names = ["/nfs1/Koslicki_Lab/koslickd/MinHash/Out/N500k31/" + os.path.b
 n = 500
 CEs = MH.compute_multiple(n=n, max_prime=1e10, ksize=31, input_files_list=file_names, save_kmers='y', num_threads=48)
 # Export
-MH.export_multiple_hdf5(CEs, '/nfs1/Koslicki_Lab/koslickd/MinHash/Out/N500k31/')
+MH.export_multiple_hdf5(CEs, '/nfs1/Koslicki_Lab/koslickd/MinHash/Out/N'+str(n)+'k31/')
 # Save the hashes in the training genomes
 hash_list = set()
 for CE in CEs:
     hash_list.update(CE._mins)
 
-fid = h5py.File('/nfs1/Koslicki_Lab/koslickd/MinHash/Out/N500k31_mins.h5', 'w')
+fid = h5py.File('/nfs1/Koslicki_Lab/koslickd/MinHash/Out/N'+str(n)+'k31_mins.h5', 'w')
 fid.create_dataset("hash_list", data=list(hash_list))
 fid.close()
 # If I need to read it back in
@@ -32,13 +32,29 @@ fid.close()
 n = 5000
 CEs = MH.compute_multiple(n=n, max_prime=1e10, ksize=31, input_files_list=file_names, save_kmers='y', num_threads=48)
 # Export
-MH.export_multiple_hdf5(CEs, '/nfs1/Koslicki_Lab/koslickd/MinHash/Out/N500k31/')
+MH.export_multiple_hdf5(CEs, '/nfs1/Koslicki_Lab/koslickd/MinHash/Out/N'+str(n)+'k31/')
 # Save the hashes in the training genomes
 hash_list = set()
 for CE in CEs:
     hash_list.update(CE._mins)
 
-fid = h5py.File('/nfs1/Koslicki_Lab/koslickd/MinHash/Out/N500k31_mins.h5', 'w')
+fid = h5py.File('/nfs1/Koslicki_Lab/koslickd/MinHash/Out/N'+str(n)+'k31_mins.h5', 'w')
+fid.create_dataset("hash_list", data=list(hash_list))
+fid.close()
+# If I need to read it back in
+#fid = h5py.File('/nfs1/Koslicki_Lab/koslickd/MinHash/Out/N500k31_mins.h5','r')
+#hash_list = set(fid["hash_list"][:])
+
+n = 50000
+CEs = MH.compute_multiple(n=n, max_prime=1e10, ksize=31, input_files_list=file_names, save_kmers='y', num_threads=48)
+# Export
+MH.export_multiple_hdf5(CEs, '/nfs1/Koslicki_Lab/koslickd/MinHash/Out/N'+str(n)+'k31/')
+# Save the hashes in the training genomes
+hash_list = set()
+for CE in CEs:
+    hash_list.update(CE._mins)
+
+fid = h5py.File('/nfs1/Koslicki_Lab/koslickd/MinHash/Out/N'+str(n)+'k31_mins.h5', 'w')
 fid.create_dataset("hash_list", data=list(hash_list))
 fid.close()
 # If I need to read it back in
@@ -66,6 +82,8 @@ MCE.export('/nfs1/Koslicki_Lab/koslickd/MinHash/Out/SRR172902.fastq.CE_N5000_k31
 ###################################
 # Make the Y vectors
 # Read in all the saved hashes
+training_n = 5000
+out_file_names = ["/nfs1/Koslicki_Lab/koslickd/MinHash/Out/N"+str(training_n)+"k31/" + os.path.basename(item) + ".CE.h5" for item in file_names]
 CEs = MH.import_multiple_hdf5(out_file_names)
 # Set which CE for the test metagenome to read in
 n = 50000
@@ -94,6 +112,8 @@ for test_Y in [Y_count_in_comparison, Y_jaccard_in_comparison, Y_count_all, Y_ja
             break
 
 # n=500, Y_jaccard_in_comparison did quite well
+# n=50,000 is definitely the best so far.
+# Let's see if increasing the n for the training genomes helps as well
 
 #########################
 # Check the stats of the hashed kmers
