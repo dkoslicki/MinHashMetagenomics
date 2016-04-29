@@ -18,6 +18,26 @@ import re
 
 notACTG = re.compile('[^ACTG]')
 
+def unwrap_jaccard_count_vector(arg):
+    """
+    Helper function for parallelizing the jaccard_count_vector
+    :param arg:
+    :param kwarg:
+    :return:
+    """
+    return arg[0].jaccard_count(arg[1])
+
+
+def unwrap_jaccard_vector(arg):
+    """
+    Helper function for parallelizing the jaccard_vector
+    :param arg:
+    :param kwarg:
+    :return:
+    """
+    return arg[0].jaccard(arg[1])
+
+
 class CountEstimator(object):
     """
     A simple bottom n-sketch MinHash implementation.
@@ -195,8 +215,14 @@ class CountEstimator(object):
         :return: a numpy vector with the same basis as other_list giving the jaccard_count of self with other[i]
         """
         Y = np.zeros(len(other_list))
+        #for i in range(len(other_list)):
+        #    Y[i] = other_list[i].jaccard_count(self)[0]  # Gotta make sure it's not [1] (one's the CKM vector, the other is the "coverage")
+
+        pool = Pool(processes=multiprocessing.cpu_count())
+        Y_tuple = pool.map(unwrap_jaccard_count_vector, zip([self]*len(other_list), other_list))
+        pool.terminate()
         for i in range(len(other_list)):
-            Y[i] = other_list[i].jaccard_count(self)[0]  # Gotta make sure it's not [1] (one's the CKM vector, the other is the "coverage")
+            Y[i] = Y_tuple[i][1]
 
         return Y
 
@@ -206,9 +232,14 @@ class CountEstimator(object):
         :param other_list: a list of count estimator classes
         :return: a numpy vector with the same basis as other_list giving the jaccard of self with other[i]
         """
-        Y = np.zeros(len(other_list))
-        for i in range(len(other_list)):
-            Y[i] = other_list[i].jaccard(self)
+        #Y = np.zeros(len(other_list))
+        #for i in range(len(other_list)):
+        #    Y[i] = other_list[i].jaccard(self)
+        pool = Pool(processes=multiprocessing.cpu_count())
+        Y = np.array(pool.map(unwrap_jaccard_vector, zip([self]*len(other_list), other_list)))
+        pool.terminate()
+        #for i in range(len(other_list)):
+        #    Y[i] = Y_tuple[i][1]
 
         return Y
 
@@ -251,7 +282,7 @@ def import_multiple_hdf5(input_files_list):
     #    CEs.append(import_single_hdf5(file_name))
     pool = Pool(processes=multiprocessing.cpu_count())
     CEs = pool.map(import_single_hdf5, input_files_list, chunksize=144)
-    pool.close()
+    pool.terminate()
 
     return CEs
 
