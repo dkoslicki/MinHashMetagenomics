@@ -11,7 +11,7 @@ import tempfile
 import multiprocessing
 from multiprocessing import Pool
 import re
-import logging
+import logging, sys
 # To Do:
 # Make the formation of the count vectors parallel
 
