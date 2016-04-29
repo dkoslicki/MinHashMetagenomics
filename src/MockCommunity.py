@@ -82,6 +82,15 @@ MCE.export('/nfs1/Koslicki_Lab/koslickd/MinHash/Out/SRR172902.fastq.CE_N5000_k31
 ###################################
 # Make the Y vectors
 # Read in all the saved hashes
+import sys
+sys.path.append('/nfs1/Koslicki_Lab/koslickd/Repositories/MinHashMetagenomics/src/')
+import os, timeit, h5py
+import MinHash as MH
+import numpy as np
+fid = open('/nfs1/Koslicki_Lab/koslickd/MinHash/Data/FileNames.txt', 'r')
+file_names = fid.readlines()
+fid.close()
+file_names = [name.strip() for name in file_names]
 training_n = 5000
 out_file_names = ["/nfs1/Koslicki_Lab/koslickd/MinHash/Out/N"+str(training_n)+"k31/" + os.path.basename(item) + ".CE.h5" for item in file_names]
 CEs = MH.import_multiple_hdf5(out_file_names)
