@@ -46,7 +46,7 @@ class CountEstimator(object):
     Still don't know what max_prime is...
     """
 
-    def __init__(self, n=None, max_prime=1e12, ksize=None, input_file_name=None, save_kmers='n', hash_list=None):
+    def __init__(self, n=None, max_prime=9999999967., ksize=None, input_file_name=None, save_kmers='n', hash_list=None):
         if n is None:
             raise Exception
         if ksize is None:
@@ -387,7 +387,7 @@ class CE_map(object):
         return CountEstimator(n=self.n, max_prime=self.max_prime, ksize=self.ksize, input_file_name=input_file, save_kmers=self.save_kmers)
 
 
-def compute_multiple(n=None, max_prime=1e12, ksize=None, input_files_list=None, save_kmers='n', num_threads=multiprocessing.cpu_count()):
+def compute_multiple(n=None, max_prime=9999999967., ksize=None, input_files_list=None, save_kmers='n', num_threads=multiprocessing.cpu_count()):
     """
     Batch compute Count Estimators from a given list of file names.
     :param n: number of hashes to keep
@@ -449,7 +449,7 @@ def form_jaccard_kmer_matrix(CEs):
 
 
 class CompositionSketch(object):
-    def __init__(self, n=None, max_prime=1e12, ksize=None, prefixsize=None, input_file_name=None, save_kmers='n'):
+    def __init__(self, n=None, max_prime=9999999967., ksize=None, prefixsize=None, input_file_name=None, save_kmers='n'):
         """
         :param n: the number of kmer hashes to keep in the sketch. Must be >= 1
         :param max_prime:
@@ -732,8 +732,8 @@ def test_CountEstimator():
 
 
 def test_import_export():
-    CE1 = CountEstimator(n=5, max_prime=1e10, ksize=1)
-    CE2 = CountEstimator(n=5, max_prime=1e10, ksize=1)
+    CE1 = CountEstimator(n=5, max_prime=9999999967., ksize=1)
+    CE2 = CountEstimator(n=5, max_prime=9999999967., ksize=1)
     sequence1 = "AAAA"
     sequence2 = "AAAACCCC"
     CE1.add_sequence(sequence1)
