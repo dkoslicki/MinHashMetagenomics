@@ -258,8 +258,8 @@ def import_single_hdf5(file_name):
     prime = grp.attrs['prime']
     mins = list(grp["mins"][:])
     counts = list(grp["counts"][:])
-    #CE = CountEstimator(n=len(mins), max_prime=1e12, ksize=ksize)
-    CE = CountEstimator(n=500, max_prime=1e12, ksize=31)
+    CE = CountEstimator(n=len(mins), max_prime=1e12, ksize=ksize)
+    #CE = CountEstimator(n=500, max_prime=1e12, ksize=31)
     #CE.p = prime
     #CE._mins = mins
     #CE._counts = counts
