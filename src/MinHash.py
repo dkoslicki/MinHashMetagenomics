@@ -251,6 +251,7 @@ def import_single_hdf5(file_name):
     :param file_name: input file name of HDF5 file created by CountEstimator.export(file_name)
     :return: CountEstimator
     """
+    sys.stdout.flush()
     fid = h5py.File(file_name, 'r')  # This automatically handles non-existent files for me
     grp = fid["CountEstimator"]
     file_name = grp.attrs['filename']
