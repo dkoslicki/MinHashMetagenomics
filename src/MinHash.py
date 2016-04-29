@@ -259,7 +259,7 @@ def import_single_hdf5(file_name):
     #mins = grp["mins"][:]  # For some reason, slicing is WAY slower than using ... in this case.
     mins = grp["mins"][...]
     counts = grp["counts"][...]
-    CE = CountEstimator(n=len(mins), max_prime=1e12, ksize=ksize)
+    CE = CountEstimator(n=len(mins), max_prime=3, ksize=ksize)
     CE.p = prime
     CE._mins = mins
     CE._counts = counts
@@ -357,7 +357,7 @@ def import_multiple_from_single_hdf5(file_name, import_list=None):
         prime = subgrp.attrs['prime']
         mins = subgrp["mins"][...]
         counts = subgrp["counts"][...]
-        CE = CountEstimator(n=len(mins), max_prime=1e12, ksize=ksize)
+        CE = CountEstimator(n=len(mins), max_prime=3, ksize=ksize)
         CE.p = prime
         CE._mins = mins
         CE._counts = counts
