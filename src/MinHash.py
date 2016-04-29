@@ -12,7 +12,7 @@ import multiprocessing
 from multiprocessing import Pool
 import re
 # To Do:
-# export multiple count estimators in one big HDF5 file
+# Make the formation of the count vectors parallel
 
 #CE = SM.CountEstimator(n=10, max_prime=1e10, ksize=10, input_filename='/Users/dkoslicki/Dropbox/Repositories/MinHash/data/Genomes/G000279475.fna')
 
