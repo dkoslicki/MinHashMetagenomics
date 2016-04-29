@@ -262,7 +262,7 @@ def import_single_hdf5(file_name):
     #CE = CountEstimator(n=500, max_prime=1e12, ksize=31)
     CE.p = prime
     CE._mins = mins
-    CE._counts = counts
+    #CE._counts = counts
     #CE.input_file_name = file_name
     #if "kmers" in grp:
     #    CE._kmers = list(grp["kmers"][:])
