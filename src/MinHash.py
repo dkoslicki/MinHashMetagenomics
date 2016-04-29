@@ -11,6 +11,7 @@ import tempfile
 import multiprocessing
 from multiprocessing import Pool
 import re
+import logging
 # To Do:
 # Make the formation of the count vectors parallel
 
@@ -281,6 +282,7 @@ def import_multiple_hdf5(input_files_list):
     #for file_name in input_files_list:
     #    CEs.append(import_single_hdf5(file_name))
     pool = Pool(processes=multiprocessing.cpu_count())
+    multiprocessing.log_to_stderr(logging.DEBUG)
     CEs = pool.map(import_single_hdf5, input_files_list, chunksize=144)
     pool.terminate()
 

@@ -87,6 +87,7 @@ sys.path.append('/nfs1/Koslicki_Lab/koslickd/Repositories/MinHashMetagenomics/sr
 import os, timeit, h5py
 import MinHash as MH
 import numpy as np
+import logging
 fid = open('/nfs1/Koslicki_Lab/koslickd/MinHash/Data/FileNames.txt', 'r')
 file_names = fid.readlines()
 fid.close()
@@ -123,6 +124,8 @@ for test_Y in [Y_count_in_comparison, Y_jaccard_in_comparison, Y_count_all, Y_ja
 # n=500, Y_jaccard_in_comparison did quite well
 # n=50,000 is definitely the best so far.
 # Let's see if increasing the n for the training genomes helps as well
+# Yes indeed it does. trainging n=5000 and sample n=50,000 gives great results, especially for the jaccard_count
+# though the curious thing is that jaccard works better than jaccard_count when the n's are smaller
 
 #########################
 # Check the stats of the hashed kmers
