@@ -424,11 +424,14 @@ def form_common_kmer_matrix(CEs):
             indicies.append((i, j))
 
     pool = Pool(processes=multiprocessing.cpu_count())
-    res = pool.map(form_common_kmer_matrix_helper, izip(repeat(CEs), indicies), chunksize=500)
+    res = pool.imap(form_common_kmer_matrix_helper, izip(repeat(CEs), indicies), chunksize=500)
+    pool.close()
+    pool.join()
     pool.terminate()
-    for i in xrange(len(res)):
-        A[indicies[i][0], indicies[i][1]] = res[i][0]
-        A[indicies[i][1], indicies[i][0]] = res[i][1]
+    #for i in xrange(len(indicies)):
+    for i, val in enumerate(res):
+        A[indicies[i][0], indicies[i][1]] = val[0] #res[i][0]
+        A[indicies[i][1], indicies[i][0]] = val[1] #res[i][1]
 
     return A
 
