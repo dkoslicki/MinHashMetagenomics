@@ -407,7 +407,8 @@ def form_common_kmer_matrix_helper(arg):
     :param args:
     :return:
     """
-    (Aij, Aji) = arg[0][arg[1][0]].jaccard_count(arg[0][arg[1][1]])
+    #(Aij, Aji) = arg[0][arg[1][0]].jaccard_count(arg[0][arg[1][1]])
+    (Aij, Aji) = arg[0].jaccard_count(arg[1])
     return (Aij, Aji)
 
 
@@ -418,21 +419,24 @@ def form_common_kmer_matrix(CEs):
     :return: a numpy matrix A where A_{i,j} \approx \sum_{w\in SW_k(g_i) \cap SW_k{g_j}} \frac{occ_w(g_j)}{|g_j| - k + 1}
     """
     A = np.zeros((len(CEs), len(CEs)), dtype=np.float64)
+    input_args = []
     indicies = []
     for i in xrange(len(CEs)):
         for j in xrange(len(CEs)):
-            indicies.append((i, j))
+            input_args.append((CEs[i], CEs[j]))
+            indicies.append((i,j))
 
     pool = Pool(processes=multiprocessing.cpu_count())
-    res = pool.imap(form_common_kmer_matrix_helper, izip(repeat(CEs), indicies), chunksize=500)
-    pool.close()
-    pool.join()
-    pool.terminate()
+    res = pool.imap(form_common_kmer_matrix_helper, input_args, chunksize=500)
+    # pool.close()
+    # pool.join()
+    # pool.terminate()
     #for i in xrange(len(indicies)):
     for i, val in enumerate(res):
         A[indicies[i][0], indicies[i][1]] = val[0] #res[i][0]
         A[indicies[i][1], indicies[i][0]] = val[1] #res[i][1]
 
+    pool.terminate()
     return A
 
 
