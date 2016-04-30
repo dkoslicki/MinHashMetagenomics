@@ -11,6 +11,7 @@ import tempfile
 import multiprocessing
 from multiprocessing import Pool
 import re
+from itertools import *
 
 # To Do:
 # Make the formation of the count vectors parallel
@@ -104,7 +105,7 @@ class CountEstimator(object):
         if h >= _mins[-1]:
             return
 
-        for i, v in enumerate(_mins):
+        for i, v in enumerate(_mins):  # Let's get rid of the enumerate, replace with xrange and i += 1 stuff. O.W. try blist
             if h < v:
                 _mins.insert(i, h)
                 _mins.pop()
@@ -409,6 +410,15 @@ def compute_multiple(n=None, max_prime=9999999999971., ksize=None, input_files_l
     pool.close()
     return CEs
 
+def form_common_kmer_matrix_helper(arg):
+    """
+    Helper function for parallelizing form_common_kmer_matrix
+    :param args:
+    :return:
+    """
+    (Aij, Aji) = arg[0][arg[1][0]].jaccard_count(arg[0][arg[1][1]])
+    return (Aij, Aji)
+
 
 def form_common_kmer_matrix(CEs):
     """
@@ -417,13 +427,29 @@ def form_common_kmer_matrix(CEs):
     :return: a numpy matrix A where A_{i,j} \approx \sum_{w\in SW_k(g_i) \cap SW_k{g_j}} \frac{occ_w(g_j)}{|g_j| - k + 1}
     """
     A = np.zeros((len(CEs), len(CEs)), dtype=np.float64)
-    for i in range(len(CEs)):
-        for j in range(i, len(CEs)):
-            (Aij, Aji) = CEs[i].jaccard_count(CEs[j])
-            A[i, j] = Aij
-            A[j, i] = Aji
+    indicies = []
+    for i in xrange(len(CEs)):
+        for j in xrange(len(CEs)):
+            indicies.append((i, j))
+
+    pool = Pool(processes=multiprocessing.cpu_count())
+    res = pool.map(form_common_kmer_matrix_helper, izip(repeat(CEs), indicies))
+    pool.terminate()
+    for i in xrange(len(res)):
+        A[indicies[i][0], indicies[i][1]] = res[i][0]
+        A[indicies[i][1], indicies[i][0]] = res[i][1]
 
     return A
+
+
+def form_jaccard_kmer_matrix_helper(arg):
+    """
+    Helper function for parallelizing form_common_kmer_matrix
+    :param args:
+    :return:
+    """
+    val = arg[0][arg[1][0]].jaccard(arg[0][arg[1][1]])
+    return val
 
 def form_jaccard_kmer_matrix(CEs):
     """
@@ -432,11 +458,17 @@ def form_jaccard_kmer_matrix(CEs):
     :return: numpy matrix
     """
     A = np.zeros((len(CEs), len(CEs)), dtype=np.float64)
-    for i in range(len(CEs)):
-        for j in range(i, len(CEs)):
-            val = CEs[i].jaccard_count(CEs[j])
-            A[i, j] = val
-            A[j, i] = val
+    indicies = []
+    for i in xrange(len(CEs)):
+        for j in xrange(len(CEs)):
+            indicies.append((i, j))
+
+    pool = Pool(processes=multiprocessing.cpu_count())
+    res = pool.map(form_jaccard_kmer_matrix_helper, izip(repeat(CEs), indicies))
+    pool.terminate()
+    for i in xrange(len(res)):
+        A[indicies[i][0], indicies[i][1]] = res[i]
+        A[indicies[i][1], indicies[i][0]] = res[i]
 
     return A
 
@@ -772,6 +804,22 @@ def test_vector_formation():
     assert (Y2 == np.array([1.,1.,0.4])).all()
 
 
+def form_matrices_test():
+    CE1 = CountEstimator(n=5, max_prime=1e10, ksize=3, save_kmers='y')
+    CE2 = CountEstimator(n=5, max_prime=1e10, ksize=3, save_kmers='y')
+    CE3 = CountEstimator(n=5, max_prime=1e10, ksize=3, save_kmers='y')
+    seq1 = 'tacgactgatgcatgatcgaactgatgcactcgtgatgc'
+    seq2 = 'tacgactgatgcatgatcgaactgatgcactcgtgatgc'
+    seq3 = 'ttgatactcaatccgcatgcatgcatgacgatgcatgatgtacgactgatgcatgatcgaactgatgcactcgtgatgczxerqwewdfhg'
+    CE1.add_sequence(seq1)
+    CE2.add_sequence(seq2)
+    CE3.add_sequence(seq3)
+    A = form_common_kmer_matrix([CE1, CE2, CE3])
+    assert (A == np.array([[1., 1., 0.80952380952380953], [1., 1., 0.80952380952380953], [0.5625, 0.5625, 1.]])).all()
+    B = form_jaccard_kmer_matrix([CE1,CE2,CE3])
+    assert (B == np.array([[1., 1., 0.4], [1., 1., 0.4], [0.4, 0.4, 1.]])).all()
+
+
 def test_suite():
     """
     Runs all the test functions
@@ -787,4 +835,5 @@ def test_suite():
     test_import_export()
     test_hash_list()
     test_vector_formation()
+    form_matrices_test()
 

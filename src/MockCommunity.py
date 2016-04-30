@@ -78,13 +78,14 @@ MCE2.export('/nfs1/Koslicki_Lab/koslickd/MinHash/Out/SRR172902.fastq.CE_N'+str(n
 MCE = MH.CountEstimator(n=n, max_prime=9999999999971., ksize=31, input_file_name='/nfs1/Koslicki_Lab/koslickd/MinHash/Data/SRR172902.fastq', save_kmers='y')
 MCE.export('/nfs1/Koslicki_Lab/koslickd/MinHash/Out/SRR172902.fastq.CE_N'+str(n)+'_k31_all.h5')
 n = 50000
-fid = h5py.File('/nfs1/Koslicki_Lab/koslickd/MinHash/Out/N'+str(n)+'k31_mins.h5', 'r')
-hash_list = set(fid["hash_list"][...])
-fid.close()
-MCE2 = MH.CountEstimator(n=n, max_prime=9999999999971., ksize=31, input_file_name='/nfs1/Koslicki_Lab/koslickd/MinHash/Data/SRR172902.fastq', save_kmers='y', hash_list=hash_list)
-MCE2.export('/nfs1/Koslicki_Lab/koslickd/MinHash/Out/SRR172902.fastq.CE_N'+str(n)+'_k31_inComparison.h5')
-MCE = MH.CountEstimator(n=n, max_prime=9999999999971., ksize=31, input_file_name='/nfs1/Koslicki_Lab/koslickd/MinHash/Data/SRR172902.fastq', save_kmers='y')
-MCE.export('/nfs1/Koslicki_Lab/koslickd/MinHash/Out/SRR172902.fastq.CE_N'+str(n)+'_k31_all.h5')
+if os.path.isfile('/nfs1/Koslicki_Lab/koslickd/MinHash/Out/N'+str(n)+'k31_mins.h5'):
+    fid = h5py.File('/nfs1/Koslicki_Lab/koslickd/MinHash/Out/N'+str(n)+'k31_mins.h5', 'r')
+    hash_list = set(fid["hash_list"][...])
+    fid.close()
+    MCE2 = MH.CountEstimator(n=n, max_prime=9999999999971., ksize=31, input_file_name='/nfs1/Koslicki_Lab/koslickd/MinHash/Data/SRR172902.fastq', save_kmers='y', hash_list=hash_list)
+    MCE2.export('/nfs1/Koslicki_Lab/koslickd/MinHash/Out/SRR172902.fastq.CE_N'+str(n)+'_k31_inComparison.h5')
+    MCE = MH.CountEstimator(n=n, max_prime=9999999999971., ksize=31, input_file_name='/nfs1/Koslicki_Lab/koslickd/MinHash/Data/SRR172902.fastq', save_kmers='y')
+    MCE.export('/nfs1/Koslicki_Lab/koslickd/MinHash/Out/SRR172902.fastq.CE_N'+str(n)+'_k31_all.h5')
 
 exit()
 
@@ -136,6 +137,27 @@ for test_Y in [Y_count_in_comparison, Y_jaccard_in_comparison, Y_count_all, Y_ja
 # Yes indeed it does. trainging n=5000 and sample n=50,000 gives great results, especially for the jaccard_count
 # though the curious thing is that jaccard works better than jaccard_count when the n's are smaller
 
+
+#################################
+# Make the common Kmer matrix
+
+import sys
+sys.path.append('/nfs1/Koslicki_Lab/koslickd/Repositories/MinHashMetagenomics/src/')
+import os, timeit, h5py
+import MinHash as MH
+import numpy as np
+import logging
+fid = open('/nfs1/Koslicki_Lab/koslickd/MinHash/Data/FileNames.txt', 'r')
+file_names = fid.readlines()
+fid.close()
+file_names = [name.strip() for name in file_names]
+training_n = 500
+out_file_names = ["/nfs1/Koslicki_Lab/koslickd/MinHash/Out/N"+str(training_n)+"k31/" + os.path.basename(item) + ".CE.h5" for item in file_names]
+CEs = MH.import_multiple_hdf5(out_file_names)
+
+A = MH.form_common_kmer_matrix(CEs)
+
+
 #########################
 # Check the stats of the hashed kmers
 Acounts=list()
@@ -170,6 +192,33 @@ np.mean(Acounts)
 np.mean(Ccounts)
 np.mean(Tcounts)
 np.mean(Gcounts)
+
+
+######################
+# Let's test where the longest time is spent for building the hash from a file
+import sys
+sys.path.append('/nfs1/Koslicki_Lab/koslickd/Repositories/MinHashMetagenomics/src/')
+import os, timeit, h5py
+import MinHash as MH
+import numpy as np
+file_name = '/nfs1/Koslicki_Lab/koslickd/CommonKmers/TrainingOnRepoPhlAnPython/TrainDataIn/Genomes/G000467715.fna'
+t0 = timeit.default_timer()
+CE = MH.CountEstimator(n=50000, max_prime=9999999999971., ksize=31, input_file_name=file_name, save_kmers='n')
+t1 = timeit.default_timer()
+print("Parse time: %f" % (t1-t0))
+
+
+temp = [123513423523463457]*50000
+t0 = timeit.default_timer()
+for i in xrange(1000):
+    for j in xrange(25000):
+        if j == 25000:
+            temp.insert(25000,1)
+            temp.pop()
+
+t1 = timeit.default_timer()
+print(t1-t0)
+
 
 
 
