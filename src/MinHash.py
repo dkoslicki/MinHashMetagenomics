@@ -424,10 +424,10 @@ def form_common_kmer_matrix(CEs):
     for i in xrange(len(CEs)):
         for j in xrange(len(CEs)):
             input_args.append((CEs[i], CEs[j]))
-            indicies.append((i,j))
+            indicies.append((i, j))
 
     pool = Pool(processes=multiprocessing.cpu_count())
-    res = pool.imap(form_common_kmer_matrix_helper, input_args, chunksize=500)
+    res = pool.imap(form_common_kmer_matrix_helper, input_args, chunksize=100000)
     # pool.close()
     # pool.join()
     # pool.terminate()
