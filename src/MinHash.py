@@ -141,7 +141,6 @@ class CountEstimator(object):
         if truelen == 0:
             raise ValueError
 
-        #return self.common(other) / float(truelen)
         (total1, total2) = self.common_count(other)
         return (total2 / float(sum(other._counts)), total1 / float(sum(self._counts)))
         # The entries here are returned as (A_{CE1,CE2}, A_{CE2,CE1})
@@ -217,14 +216,12 @@ class CountEstimator(object):
         :return: a numpy vector with the same basis as other_list giving the jaccard_count of self with other[i]
         """
         Y = np.zeros(len(other_list))
-        #for i in range(len(other_list)):
-        #    Y[i] = other_list[i].jaccard_count(self)[0]  # Gotta make sure it's not [1] (one's the CKM vector, the other is the "coverage")
 
         pool = Pool(processes=multiprocessing.cpu_count())
         Y_tuple = pool.map(unwrap_jaccard_count_vector, zip([self]*len(other_list), other_list))
         pool.terminate()
         for i in range(len(other_list)):
-            Y[i] = Y_tuple[i][1]
+            Y[i] = Y_tuple[i][1]  # Gotta make sure it's not [1] (one's the CKM vector, the other is the "coverage")
 
         return Y
 
@@ -234,14 +231,9 @@ class CountEstimator(object):
         :param other_list: a list of count estimator classes
         :return: a numpy vector with the same basis as other_list giving the jaccard of self with other[i]
         """
-        #Y = np.zeros(len(other_list))
-        #for i in range(len(other_list)):
-        #    Y[i] = other_list[i].jaccard(self)
         pool = Pool(processes=multiprocessing.cpu_count())
         Y = np.array(pool.map(unwrap_jaccard_vector, zip([self]*len(other_list), other_list)))
         pool.terminate()
-        #for i in range(len(other_list)):
-        #    Y[i] = Y_tuple[i][1]
 
         return Y
 
@@ -257,8 +249,7 @@ def import_single_hdf5(file_name):
     file_name = grp.attrs['filename']
     ksize = grp.attrs['ksize']
     prime = grp.attrs['prime']
-    #mins = grp["mins"][:]  # For some reason, slicing is WAY slower than using ... in this case.
-    mins = grp["mins"][...]
+    mins = grp["mins"][...]  # For some reason, slicing is WAY slower than using ... in this case.
     counts = grp["counts"][...]
     CE = CountEstimator(n=len(mins), max_prime=3, ksize=ksize)
     CE.p = prime
