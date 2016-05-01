@@ -12,6 +12,9 @@ import multiprocessing
 from multiprocessing import Pool
 import re
 from itertools import *
+import collections
+from blist import *
+import bisect
 
 # To Do:
 # Make the formation of the count vectors parallel
@@ -65,14 +68,14 @@ class CountEstimator(object):
 
         # initialize sketch to size n
         #self._mins = [float("inf")]*n
-        self._mins = [p]*n
+        self._mins = blist([p]*n)
 
         # initialize the corresponding counts
-        self._counts = [0]*n
+        self._counts = blist([0]*n)
 
         # initialize the list of kmers used, if appropriate
         if save_kmers == 'y':
-            self._kmers = ['']*n
+            self._kmers = blist(['']*n)
         else:
             self._kmers = None
 
@@ -105,19 +108,33 @@ class CountEstimator(object):
         if h >= _mins[-1]:
             return
 
-        for i, v in enumerate(_mins):  # Let's get rid of the enumerate, replace with xrange and i += 1 stuff. O.W. try blist
-            if h < v:
-                _mins.insert(i, h)
-                _mins.pop()
-                _counts.insert(i, 1)
-                _counts.pop()
-                if self._kmers:
-                    _kmers.insert(i, np.string_(kmer))
-                    _kmers.pop()
-                return
-            elif h == v:
-                _counts[i] += 1
-                return
+        i = bisect.bisect_left(_mins, h)
+        if _mins[i] == h:
+            _counts[i] += 1
+            return
+        else:
+            _mins.insert(i, h)
+            _mins.pop()
+            _counts.insert(i, 1)
+            _counts.pop()
+            if _kmers:
+                _kmers.insert(i, np.string_(kmer))
+                _kmers.pop()
+            return
+
+        #for i, v in enumerate(_mins):  # Let's get rid of the enumerate, replace with xrange and i += 1 stuff. O.W. try blist
+        #    if h < v:
+        #        _mins.insert(i, h)
+        #        _mins.pop()
+        #        _counts.insert(i, 1)
+        #        _counts.pop()
+        #        if self._kmers:
+        #            _kmers.insert(i, np.string_(kmer))
+        #            _kmers.pop()
+        #        return
+        #    elif h == v:
+        #        _counts[i] += 1
+        #        return
             # else: h > v, keep on going.
 
         assert 0, "should never reach this"
@@ -418,8 +435,10 @@ def form_common_kmer_matrix(CEs):
     :param CEs: a list of Count Estimators
     :return: a numpy matrix A where A_{i,j} \approx \sum_{w\in SW_k(g_i) \cap SW_k{g_j}} \frac{occ_w(g_j)}{|g_j| - k + 1}
     """
+    # I could decreae the memory usage by not creating the whole list of input_args. Use an exterior chunk_size to create
+    # a smaller list of CEs, consume those, and then repeat until finished.
     A = np.zeros((len(CEs), len(CEs)), dtype=np.float64)
-    input_args = []
+    input_args = collections.deque()
     indicies = []
     for i in xrange(len(CEs)):
         for j in xrange(len(CEs)):
@@ -433,7 +452,7 @@ def form_common_kmer_matrix(CEs):
     # pool.terminate()
     #for i in xrange(len(indicies)):
     for i, val in enumerate(res):
-        A[indicies[i][0], indicies[i][1]] = val[0] #res[i][0]
+        A[indicies[i][0], indicies[i][1]] = val[0] #res[i][0]  # Replace i with i+last_index where last_index was the number of times the xranges executed before going into the pool
         A[indicies[i][1], indicies[i][0]] = val[1] #res[i][1]
 
     pool.terminate()

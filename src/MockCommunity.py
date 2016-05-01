@@ -155,7 +155,7 @@ training_n = 500
 out_file_names = ["/nfs1/Koslicki_Lab/koslickd/MinHash/Out/N"+str(training_n)+"k31/" + os.path.basename(item) + ".CE.h5" for item in file_names]
 CEs = MH.import_multiple_hdf5(out_file_names)
 
-A = MH.form_common_kmer_matrix(CEs)
+A = MH.form_common_kmer_matrix(CEs)  #NOTE!!! I only need to form this for the indicies where Y[i] > 0
 
 
 #########################
@@ -221,4 +221,70 @@ print(t1-t0)
 
 
 
+###################
+# Timing of the default methods
+import timeit
+import blist
+import random
+import numpy as np
+len_list = 50000
+upper = 1e15
+mins = [upper]*len_list
+num_its = int(1e5)
+h_list = [random.randint(0, upper) for it in xrange(num_its)]
+num_times = 10
+times = np.zeros(num_times)
+
+for outer_iter in xrange(num_times):
+    mins = [upper]*len_list
+    h_list = [random.randint(0, upper) for it in xrange(num_its)]
+    t0 = timeit.default_timer()
+    for h in h_list:
+        if h < mins[-1]:
+            i = 0
+            for v in mins:  # Let's get rid of the enumerate, replace with xrange and i += 1 stuff. O.W. try blist
+                if h < v:
+                    mins.insert(i, h)
+                    dummy = mins.pop()
+                    break
+                elif h == v:
+                    break
+                i += 1
+    t1 = timeit.default_timer()
+    times[outer_iter] = (t1-t0)
+
+print("Time: %f" % np.mean(times))  # (default) enumerate, standard list. (len_list=5000, 10.3896) (len_list=50000, 343.972694)
+print("Time: %f" % np.mean(times))  # in mins i+=1, standard list, (len_list=5000, 11.822465) (len_list=50000, )
+
+
+# Blist
+import timeit
+from blist import *
+import random
+import numpy as np
+import bisect
+len_list = 50000
+upper = 1e15
+mins = blist([upper]*len_list)
+num_its = int(1e5)
+h_list = [random.randint(0, upper) for it in xrange(num_its)]
+num_times = 10
+times = np.zeros(num_times)
+
+for outer_iter in xrange(num_times):
+    mins = [upper]*len_list
+    h_list = [random.randint(0, upper) for it in xrange(num_its)]
+    t0 = timeit.default_timer()
+    for h in h_list:
+        if h < mins[-1]:
+            i = bisect.bisect_left(mins, h)
+            if mins[i] == h:  # this means that h is already in mins. This is where I would increment counts
+                pass
+            else:
+                mins.insert(i, h)
+                dummy = mins.pop()
+    t1 = timeit.default_timer()
+    times[outer_iter] = (t1-t0)
+
+print("Time: %f" % np.mean(times))
 
