@@ -108,11 +108,11 @@ class CountEstimator(object):
         if h >= _mins[-1]:
             return
 
-        i = bisect.bisect_left(_mins, h)
-        if _mins[i] == h:
+        i = bisect.bisect_left(_mins, h)  # find index to insert h
+        if _mins[i] == h:  # if h in mins, increment counts
             _counts[i] += 1
             return
-        else:
+        else:  # otherwise insert h, initialize counts to 1, and insert kmer if necessary
             _mins.insert(i, h)
             _mins.pop()
             _counts.insert(i, 1)
@@ -121,21 +121,6 @@ class CountEstimator(object):
                 _kmers.insert(i, np.string_(kmer))
                 _kmers.pop()
             return
-
-        #for i, v in enumerate(_mins):  # Let's get rid of the enumerate, replace with xrange and i += 1 stuff. O.W. try blist
-        #    if h < v:
-        #        _mins.insert(i, h)
-        #        _mins.pop()
-        #        _counts.insert(i, 1)
-        #        _counts.pop()
-        #        if self._kmers:
-        #            _kmers.insert(i, np.string_(kmer))
-        #            _kmers.pop()
-        #        return
-        #    elif h == v:
-        #        _counts[i] += 1
-        #        return
-            # else: h > v, keep on going.
 
         assert 0, "should never reach this"
 
