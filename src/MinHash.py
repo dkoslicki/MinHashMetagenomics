@@ -13,7 +13,8 @@ from multiprocessing import Pool
 import re
 from itertools import *
 import collections
-from blist import *
+from blist import *  # note, the import functions import the _mins etc. as lists, and the CE class imports them as blists.
+# This shouldn't cause an issue, but will lead to slow performance if a CE is imported, then additional things are added.
 import bisect
 
 # To Do:
@@ -129,7 +130,7 @@ class CountEstimator(object):
          Sanitize and add a sequence to the sketch.
         """
         # seq = seq.upper().replace('N', 'G')
-        seq = notACTG.sub('G', seq.upper())
+        seq = notACTG.sub('G', seq.upper())  # more intelligent sanatization?
         for kmer in kmers(seq, self.ksize):
             self.add(kmer)
 
