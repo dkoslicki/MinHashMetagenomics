@@ -447,6 +447,8 @@ def form_common_kmer_matrix(all_CEs):
         for (i, j), val in zip(sub_indicies, res):
             A[i, j] = val[0] #res[i][0]  # Replace i with i+last_index where last_index was the number of times the xranges executed before going into the pool
             A[j, i] = val[1] #res[i][1]
+            print((i,j))
+            print(val)
 
         pool.terminate()
     return A
