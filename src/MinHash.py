@@ -427,13 +427,14 @@ def form_common_kmer_matrix(CEs):
     # I could decreae the memory usage by not creating the whole list of input_args. Use an exterior chunk_size to create
     # a smaller list of CEs, consume those, and then repeat until finished.
     A = np.zeros((len(CEs), len(CEs)), dtype=np.float64)
-    input_args = collections.deque()
+    #input_args = collections.deque()
     indicies = []
     for i in xrange(len(CEs)):
         for j in xrange(len(CEs)):
-            input_args.append((CEs[i], CEs[j]))
+            #input_args.append((CEs[i], CEs[j]))
             indicies.append((i, j))
 
+    input_args = ((CEs[i], CEs[j]) for i in xrange(len(CEs)) for j in xrange(len(CEs)))
     pool = Pool(processes=multiprocessing.cpu_count())
     res = pool.imap(form_common_kmer_matrix_helper, input_args, chunksize=np.floor(len(indicies)/float(multiprocessing.cpu_count())))  # chunk into fewest pieces possible
     # pool.close()

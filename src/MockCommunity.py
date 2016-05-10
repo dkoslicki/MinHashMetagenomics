@@ -172,7 +172,7 @@ fid = open('/nfs1/Koslicki_Lab/koslickd/MinHash/Data/FileNames.txt', 'r')
 file_names = fid.readlines()
 fid.close()
 file_names = [name.strip() for name in file_names]
-training_n = 5000
+training_n = 50000
 out_file_names = ["/nfs1/Koslicki_Lab/koslickd/MinHash/Out/N"+str(training_n)+"k31/" + os.path.basename(item) + ".CE.h5" for item in file_names]
 CEs = MH.import_multiple_hdf5(out_file_names)
 # Set which CE for the test metagenome to read in
@@ -193,7 +193,7 @@ taxonomy_names = [item.split('\t')[0] for item in taxonomy]
 reconstruction = MH.common_lsqnonneg(CEs, Y_count_in_comparison, .0001)
 i = 0
 print("Reconstruction Values")
-for pair in sorted(enumerate(test_Y), key=lambda x: x[1])[::-1]:
+for pair in sorted(enumerate(reconstruction), key=lambda x: x[1])[::-1]:
     index = pair[0]
     value = pair[1]
     print("\t name: %s abundance: %f" %(taxonomy_names[index], value))
