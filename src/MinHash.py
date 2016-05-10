@@ -418,34 +418,37 @@ def form_common_kmer_matrix_helper(arg):
     return (Aij, Aji)
 
 
-def form_common_kmer_matrix(CEs):
+def chunks(l, n):
+    """Yield successive n-sized chunks from l."""
+    for i in range(0, len(l), n):
+        yield l[i:i+n]
+
+
+def form_common_kmer_matrix(all_CEs):
     """
     Forms the common kmer matrix for input list of count estimators
     :param CEs: a list of Count Estimators
     :return: a numpy matrix A where A_{i,j} \approx \sum_{w\in SW_k(g_i) \cap SW_k{g_j}} \frac{occ_w(g_j)}{|g_j| - k + 1}
     """
-    # I could decreae the memory usage by not creating the whole list of input_args. Use an exterior chunk_size to create
-    # a smaller list of CEs, consume those, and then repeat until finished.
-    A = np.zeros((len(CEs), len(CEs)), dtype=np.float64)
-    #input_args = collections.deque()
+    A = np.zeros((len(all_CEs), len(all_CEs)), dtype=np.float64)
+    chunk_size = 500
+    # Can precompute all the indicies
     indicies = []
-    for i in xrange(len(CEs)):
-        for j in xrange(len(CEs)):
-            #input_args.append((CEs[i], CEs[j]))
+    for i in xrange(len(all_CEs)):
+        for j in xrange(len(all_CEs)):
             indicies.append((i, j))
+    for sub_indicies in chunks(indicies, chunk_size):
+        input_args = ((all_CEs[i], all_CEs[j]) for (i, j) in sub_indicies)
+        pool = Pool(processes=multiprocessing.cpu_count())
+        res = pool.imap(form_common_kmer_matrix_helper, input_args, chunksize=np.floor(len(indicies)/float(multiprocessing.cpu_count())))  # chunk into fewest pieces possible
+        # pool.close()
+        # pool.join()
+        # pool.terminate()
+        for (i, j), val in zip(sub_indicies, res):
+            A[i, j] = val[0] #res[i][0]  # Replace i with i+last_index where last_index was the number of times the xranges executed before going into the pool
+            A[j, i] = val[1] #res[i][1]
 
-    input_args = ((CEs[i], CEs[j]) for i in xrange(len(CEs)) for j in xrange(len(CEs)))
-    pool = Pool(processes=multiprocessing.cpu_count())
-    res = pool.imap(form_common_kmer_matrix_helper, input_args, chunksize=np.floor(len(indicies)/float(multiprocessing.cpu_count())))  # chunk into fewest pieces possible
-    # pool.close()
-    # pool.join()
-    # pool.terminate()
-    #for i in xrange(len(indicies)):
-    for i, val in enumerate(res):
-        A[indicies[i][0], indicies[i][1]] = val[0] #res[i][0]  # Replace i with i+last_index where last_index was the number of times the xranges executed before going into the pool
-        A[indicies[i][1], indicies[i][0]] = val[1] #res[i][1]
-
-    pool.terminate()
+        pool.terminate()
     return A
 
 
