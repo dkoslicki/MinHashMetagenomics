@@ -449,8 +449,6 @@ def form_common_kmer_matrix(all_CEs):
         for j in xrange(len(all_CEs)):
             indicies.append((i, j))
 
-    print(len(all_CEs)*len(all_CEs[0]._mins))
-    print(len(all_CEs)*len(all_CEs[0]._counts))
     shared_mins_base = multiprocessing.Array(ctypes.c_double, len(all_CEs)*len(all_CEs[0]._mins))
     global shared_mins
     shared_mins = np.ctypeslib.as_array(shared_mins_base.get_obj())
@@ -469,16 +467,11 @@ def form_common_kmer_matrix(all_CEs):
         lens_mins.add(len(all_CEs[i]._mins))
         lens_counts.add(len(all_CEs[i]._counts))
 
-    print(lens_counts)
-    print(lens_mins)
-
     pool = multiprocessing.Pool(processes=multiprocessing.cpu_count())
     res = pool.imap(temp_func, indicies, chunksize=np.floor(len(indicies)/float(multiprocessing.cpu_count())))
     for (i, j), val in zip(indicies, res):
-        A[i, j] = val[0] #res[i][0]  # Replace i with i+last_index where last_index was the number of times the xranges executed before going into the pool
+        A[i, j] = val[0] #res[i][0]
         A[j, i] = val[1] #res[i][1]
-        print((i,j))
-        print(val)
 
     pool.terminate()
     return A
