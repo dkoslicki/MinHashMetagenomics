@@ -431,7 +431,7 @@ def form_common_kmer_matrix(all_CEs):
     :return: a numpy matrix A where A_{i,j} \approx \sum_{w\in SW_k(g_i) \cap SW_k{g_j}} \frac{occ_w(g_j)}{|g_j| - k + 1}
     """
     A = np.zeros((len(all_CEs), len(all_CEs)), dtype=np.float64)
-    chunk_size = 7000
+    chunk_size = 70000
     # Can precompute all the indicies
     indicies = []
     for i in xrange(len(all_CEs)):
