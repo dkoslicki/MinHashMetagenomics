@@ -459,9 +459,16 @@ def form_common_kmer_matrix(all_CEs):
     shared_counts = shared_counts.reshape(len(all_CEs), len(all_CEs[0]._counts))
     global p
     p = all_CEs[0].p
+    lens_counts = set()
+    lens_mins = set()
     for i in range(len(all_CEs)):
         shared_mins[i] = all_CEs[i]._mins
         shared_counts[i] = all_CEs[i]._counts
+        lens_mins.add(len(all_CEs[i]._mins))
+        lens_counts.add(len(all_CEs[i]._counts))
+
+    print(lens_counts)
+    print(lens_mins)
 
     pool = multiprocessing.Pool(processes=4)
     res = pool.map(temp_func, indicies)
