@@ -17,6 +17,7 @@ from blist import *  # note, the import functions import the _mins etc. as lists
 # This shouldn't cause an issue, but will lead to slow performance if a CE is imported, then additional things are added.
 import bisect
 import scipy.optimize
+import ctypes
 
 # To Do:
 # Make the formation of the count vectors parallel
@@ -423,36 +424,55 @@ def chunks(l, n):
     for i in range(0, len(l), n):
         yield l[i:i+n]
 
+def temp_func(ij):
+    mins1 = shared_mins[ij[0]]
+    mins2 = shared_mins[ij[1]]
+    counts1 = shared_counts[ij[0]]
+    counts2 = shared_counts[ij[1]]
+    truelen = len(mins1)
+    while truelen and mins1[truelen - 1] == p:  # If the value of the hash is the prime p, it doesn't contribute to the length of the hash
+        truelen -= 1
+    if truelen == 0:
+        raise ValueError
+    common1 = 0
+    common2 = 0
+    for (count1, count2) in _yield_count_overlaps(mins1, mins2, counts1, counts2):
+        common1 += count1  # The unpopulated hashes have count 0, so we don't have to worry about that here
+        common2 += count2
+    return (common2 / float(sum(counts2)), common1 / float(sum(counts1)))
 
 def form_common_kmer_matrix(all_CEs):
-    """
-    Forms the common kmer matrix for input list of count estimators
-    :param CEs: a list of Count Estimators
-    :return: a numpy matrix A where A_{i,j} \approx \sum_{w\in SW_k(g_i) \cap SW_k{g_j}} \frac{occ_w(g_j)}{|g_j| - k + 1}
-    """
     A = np.zeros((len(all_CEs), len(all_CEs)), dtype=np.float64)
-    chunk_size = 70000
     # Can precompute all the indicies
     indicies = []
     for i in xrange(len(all_CEs)):
         for j in xrange(len(all_CEs)):
             indicies.append((i, j))
-    for sub_indicies in chunks(indicies, chunk_size):
-        input_args = ((all_CEs[sub_indicies[i][0]], all_CEs[sub_indicies[i][1]]) for i in xrange(len(sub_indicies)))
-        pool = Pool(processes=multiprocessing.cpu_count())
-        res = pool.imap(form_common_kmer_matrix_helper, input_args, chunksize=np.floor(len(indicies)/float(multiprocessing.cpu_count())))
-        # pool.close()
-        # pool.join()
-        # pool.terminate()
-        for (i, j), val in zip(sub_indicies, res):
-            A[i, j] = val[0] #res[i][0]  # Replace i with i+last_index where last_index was the number of times the xranges executed before going into the pool
-            A[j, i] = val[1] #res[i][1]
-            print((i,j))
-            print(val)
 
-        pool.terminate()
+    shared_mins_base = multiprocessing.Array(ctypes.c_longlong, len(all_CEs)*len(all_CEs[0]._mins))
+    shared_mins = np.ctypeslib.as_array(shared_mins_base.get_obj())
+    global shared_mins
+    shared_mins = shared_mins.reshape(len(all_CEs), len(all_CEs[0]._mins))
+    shared_counts_base = multiprocessing.Array(ctypes.c_double, len(all_CEs)*len(all_CEs[0]._counts))
+    global shared_counts
+    shared_counts = np.ctypeslib.as_array(shared_counts_base.get_obj())
+    shared_counts = shared_counts.reshape(len(all_CEs), len(all_CEs[0]._counts))
+    global p
+    p = all_CEs[0].p
+    for i in range(len(all_CEs)):
+        shared_mins[i] = all_CEs[i]._mins
+        shared_counts[i] = all_CEs[i]._counts
+
+    pool = multiprocessing.Pool(processes=4)
+    res = pool.map(temp_func, indicies)
+    for (i, j), val in zip(indicies, res):
+        A[i, j] = val[0] #res[i][0]  # Replace i with i+last_index where last_index was the number of times the xranges executed before going into the pool
+        A[j, i] = val[1] #res[i][1]
+        print((i,j))
+        print(val)
+
+    pool.terminate()
     return A
-
 
 def form_jaccard_kmer_matrix_helper(arg):
     """
