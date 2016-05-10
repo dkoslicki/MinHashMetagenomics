@@ -112,9 +112,9 @@ CEs = MH.import_multiple_hdf5(out_file_names)
 n = 50000
 MCE_in_comparison = MH.import_single_hdf5('/nfs1/Koslicki_Lab/koslickd/MinHash/Out/SRR172902.fastq.CE_N'+str(n)+'_k31_inComparison.h5')
 MCE_all = MH.import_single_hdf5('/nfs1/Koslicki_Lab/koslickd/MinHash/Out/SRR172902.fastq.CE_N'+str(n)+'_k31_all.h5')
-Y_count_in_comparison = MCE_in_comparison.jaccard_count_vector(CEs)
+Y_count_in_comparison = MCE_in_comparison.count_vector(CEs)
 Y_jaccard_in_comparison = MCE_in_comparison.jaccard_vector(CEs)
-Y_count_all = MCE_all.jaccard_count_vector(CEs)
+Y_count_all = MCE_all.count_vector(CEs)
 Y_jaccard_all = MCE_all.jaccard_vector(CEs)
 # Read in the taxonomy and see which are the largest entries of which Y vectors
 fid = open('/nfs1/Koslicki_Lab/koslickd/MinHash/Data/Taxonomy.txt', 'r')

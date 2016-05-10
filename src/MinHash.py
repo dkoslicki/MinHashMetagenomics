@@ -16,6 +16,7 @@ import collections
 from blist import *  # note, the import functions import the _mins etc. as lists, and the CE class imports them as blists.
 # This shouldn't cause an issue, but will lead to slow performance if a CE is imported, then additional things are added.
 import bisect
+import scipy.optimize
 
 # To Do:
 # Make the formation of the count vectors parallel
@@ -24,9 +25,10 @@ import bisect
 
 notACTG = re.compile('[^ACTG]')
 
-def unwrap_jaccard_count_vector(arg):
+
+def unwrap_count_vector(arg):
     """
-    Helper function for parallelizing the jaccard_count_vector
+    Helper function for parallelizing the count_vector
     :param arg:
     :param kwarg:
     :return:
@@ -212,7 +214,7 @@ class CountEstimator(object):
         grp.attrs['prime'] = self.p
         fid.close()
 
-    def jaccard_count_vector(self, other_list):
+    def count_vector(self, other_list):
         """
         Function that returns the Y vector of MetaPalette. That is, the vector where Y[i] = Jaccard_count(self, other_CEs[i]
         :param other_list: a list of count estimator classes
@@ -221,7 +223,7 @@ class CountEstimator(object):
         Y = np.zeros(len(other_list))
 
         pool = Pool(processes=multiprocessing.cpu_count())
-        Y_tuple = pool.map(unwrap_jaccard_count_vector, zip([self]*len(other_list), other_list))
+        Y_tuple = pool.map(unwrap_count_vector, zip([self] * len(other_list), other_list))
         pool.terminate()
         for i in range(len(other_list)):
             Y[i] = Y_tuple[i][1]  # Gotta make sure it's not [1] (one's the CKM vector, the other is the "coverage")
@@ -404,11 +406,12 @@ def compute_multiple(n=None, max_prime=9999999999971., ksize=None, input_files_l
     pool.close()
     return CEs
 
+
 def form_common_kmer_matrix_helper(arg):
     """
     Helper function for parallelizing form_common_kmer_matrix
-    :param args:
-    :return:
+    :param arg: an ordered pair of count estimators (CE1, CE2).
+    :return: \approx \sum_{w\in SW_k(g_i) \cap SW_k{g_j}} \frac{occ_w(g_j)}{|g_j| - k + 1}
     """
     #(Aij, Aji) = arg[0][arg[1][0]].jaccard_count(arg[0][arg[1][1]])
     (Aij, Aji) = arg[0].jaccard_count(arg[1])
@@ -454,6 +457,7 @@ def form_jaccard_kmer_matrix_helper(arg):
     val = arg[0][arg[1][0]].jaccard(arg[0][arg[1][1]])
     return val
 
+
 def form_jaccard_kmer_matrix(CEs):
     """
     Forms a matrix A with A_{i,j} = Jaccard(CEs[i], CEs[j])
@@ -476,8 +480,82 @@ def form_jaccard_kmer_matrix(CEs):
     return A
 
 
+def lsqnonneg(A, Y, eps, machine_eps=1e-07):
+    """
+    Sovle Ax=y for x using nonnegative least squares, with a threshold parameter eps
+    :param A: The input common kmer or jaccard matrix
+    :param Y: The input kmer or jaccard count vector
+    :param eps: cutoff value. Only consider row/columns of A and entries of Y above this value
+    :param machine_eps: All values below this are treated as zeros. Defaults to 1e-07
+    :return: a vector x that approximately solves A x = Y subject to x >= 0 while ignoring rows/columns with Y[i] < eps
+    """
+    indicies = Y >= eps
+    Y_eps = Y[indicies]
+    A_eps = A[indicies, :][:, indicies]
+    x_eps = scipy.optimize.nnls(A_eps, Y_eps)[0]
+    x = np.zeros(len(Y))
+    # repopulate the indicies
+    x[indicies] = x_eps
+    # set anything below machine_eps to zero
+    for i in range(len(x)):
+        if x[i] < machine_eps:
+            x[i] = 0
+    return x
 
 
+def common_lsqnonneg(CEs, Y, eps, machine_eps=1e-07):
+    """
+    Sovle Ax=y for x using nonnegative least squares, with a threshold parameter eps. Only form A for subset of CEs with Y[i] > eps
+    :param CEs: Input list of count estimators
+    :param Y: The input kmer or jaccard count vector
+    :param eps: cutoff value. Only consider row/columns of A and entries of Y above this value
+    :param machine_eps: All values below this are treated as zeros. Defaults to 1e-07
+    :return: a vector x that approximately solves A x = Y subject to x >= 0 while ignoring rows/columns with Y[i] < eps
+    """
+    indicies = Y >= eps
+    Y_eps = Y[indicies]
+    CEs_eps = []
+    for i in range(len(indicies)):
+        if indicies[i] == True:
+            CEs_eps.append(CEs[i])
+
+    A_eps = form_common_kmer_matrix(CEs_eps)
+    x_eps = scipy.optimize.nnls(A_eps, Y_eps)[0]
+    x = np.zeros(len(Y))
+    # repopulate the indicies
+    x[indicies] = x_eps
+    # set anything below machine_eps to zero
+    for i in range(len(x)):
+        if x[i] < machine_eps:
+            x[i] = 0
+    return x
+
+def jaccard_lsqnonneg(CEs, Y, eps, machine_eps=1e-07):
+    """
+    Sovle Ax=y for x using nonnegative least squares, with a threshold parameter eps. Only form A for subset of CEs with Y[i] > eps
+    :param CEs: Input list of count estimators
+    :param Y: The input kmer or jaccard count vector
+    :param eps: cutoff value. Only consider row/columns of A and entries of Y above this value
+    :param machine_eps: All values below this are treated as zeros. Defaults to 1e-07
+    :return: a vector x that approximately solves A x = Y subject to x >= 0 while ignoring rows/columns with Y[i] < eps
+    """
+    indicies = Y >= eps
+    Y_eps = Y[indicies]
+    CEs_eps = []
+    for i in range(len(indicies)):
+        if indicies[i] == True:
+            CEs_eps.append(CEs[i])
+
+    A_eps = form_jaccard_kmer_matrix(CEs_eps)
+    x_eps = scipy.optimize.nnls(A_eps, Y_eps)[0]
+    x = np.zeros(len(Y))
+    # repopulate the indicies
+    x[indicies] = x_eps
+    # set anything below machine_eps to zero
+    for i in range(len(x)):
+        if x[i] < machine_eps:
+            x[i] = 0
+    return x
 
 ##########################################
 
@@ -801,7 +879,7 @@ def test_vector_formation():
     CE1.add_sequence(seq1)
     CE2.add_sequence(seq2)
     CE3.add_sequence(seq3)
-    Y = CE1.jaccard_count_vector([CE1, CE2, CE3])
+    Y = CE1.count_vector([CE1, CE2, CE3])
     assert (Y == np.array([1.,1.,0.5625])).all()
     Y2 = CE1.jaccard_vector([CE1, CE2, CE3])
     assert (Y2 == np.array([1.,1.,0.4])).all()
@@ -823,6 +901,24 @@ def form_matrices_test():
     assert (B == np.array([[1., 1., 0.4], [1., 1., 0.4], [0.4, 0.4, 1.]])).all()
 
 
+def test_lsqnonneg():
+    CE1 = CountEstimator(n=5, max_prime=1e10, ksize=3, save_kmers='y')
+    CE2 = CountEstimator(n=5, max_prime=1e10, ksize=3, save_kmers='y')
+    CE3 = CountEstimator(n=5, max_prime=1e10, ksize=3, save_kmers='y')
+    seq1 = 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'
+    seq2 = 'ccccccccccccccccccccccccccccccccccccccc'
+    seq3 = 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaccccccccccccccccccccccccccccccccccccccc'
+    CE1.add_sequence(seq1)
+    CE2.add_sequence(seq2)
+    CE3.add_sequence(seq3)
+    A = form_common_kmer_matrix([CE1, CE2, CE3])
+    Y = CE3.count_vector([CE1, CE2, CE3])
+    x = lsqnonneg(A, Y, 0)
+    # check if the L1 norm to the truth is less than machine zero
+    assert abs(x - np.array([0, 0, 1.])).sum() < 1e-07
+    x = common_lsqnonneg([CE1, CE2, CE3], Y, 0)
+    assert abs(x - np.array([0, 0, 1.])).sum() < 1e-07
+
 def test_suite():
     """
     Runs all the test functions
@@ -839,4 +935,5 @@ def test_suite():
     test_hash_list()
     test_vector_formation()
     form_matrices_test()
+    test_lsqnonneg()
 
