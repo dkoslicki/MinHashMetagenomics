@@ -154,11 +154,11 @@ fid = open('/nfs1/Koslicki_Lab/koslickd/MinHash/Data/FileNames.txt', 'r')
 file_names = fid.readlines()
 fid.close()
 file_names = [name.strip() for name in file_names]
-training_n = 500
+training_n = 50000
 out_file_names = ["/nfs1/Koslicki_Lab/koslickd/MinHash/Out/N"+str(training_n)+"k31/" + os.path.basename(item) + ".CE.h5" for item in file_names]
 CEs = MH.import_multiple_hdf5(out_file_names)
 
-A = MH.form_common_kmer_matrix(CEs)  #NOTE!!! I only need to form this for the indicies where Y[i] > 0
+A = MH.form_jaccard_count_matrix(CEs)  #NOTE!!! I only need to form this for the indicies where Y[i] > 0
 
 
 ################################
@@ -190,7 +190,7 @@ fid.close()
 taxonomy = [item.strip() for item in taxonomy]
 taxonomy_names = [item.split('\t')[0] for item in taxonomy]
 
-reconstruction = MH.common_lsqnonneg(CEs, Y_count_in_comparison, .0001)
+reconstruction = MH.jaccard_count_lsqnonneg(CEs, Y_count_in_comparison, .0001)
 i = 0
 print("Reconstruction Values")
 for pair in sorted(enumerate(reconstruction), key=lambda x: x[1])[::-1]:

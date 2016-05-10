@@ -18,6 +18,8 @@ from blist import *  # note, the import functions import the _mins etc. as lists
 import bisect
 import scipy.optimize
 import ctypes
+import warnings
+warnings.simplefilter("ignore", RuntimeWarning)
 
 # To Do:
 # Make the formation of the count vectors parallel
@@ -410,7 +412,7 @@ def compute_multiple(n=None, max_prime=9999999999971., ksize=None, input_files_l
 
 def form_common_kmer_matrix_helper(arg):
     """
-    Helper function for parallelizing form_common_kmer_matrix
+    Helper function for parallelizing form_jaccard_count_matrix
     :param arg: an ordered pair of count estimators (CE1, CE2).
     :return: \approx \sum_{w\in SW_k(g_i) \cap SW_k{g_j}} \frac{occ_w(g_j)}{|g_j| - k + 1}
     """
@@ -424,7 +426,13 @@ def chunks(l, n):
     for i in range(0, len(l), n):
         yield l[i:i+n]
 
-def temp_func(ij):
+
+def jaccard_count(ij):
+    """
+    Clone of jaccard_count from the count_estimator class, just so I can use shared memory arrays
+    :param ij: a tuple of indicies to use in the global shared_mins and shared_counts
+    :return: entries of the CKM matrix
+    """
     mins1 = shared_mins[ij[0]]
     mins2 = shared_mins[ij[1]]
     counts1 = shared_counts[ij[0]]
@@ -441,7 +449,13 @@ def temp_func(ij):
         common2 += count2
     return (common2 / float(sum(counts2)), common1 / float(sum(counts1)))
 
-def form_common_kmer_matrix(all_CEs):
+
+def form_jaccard_count_matrix(all_CEs):
+    """
+    Forms the jaccard kmer matrix when given a list of count estimators
+    :param all_CEs: a list of count estimators
+    :return: a numpy array of the jaccard count matrix
+    """
     A = np.zeros((len(all_CEs), len(all_CEs)), dtype=np.float64)
     # Can precompute all the indicies
     indicies = []
@@ -449,11 +463,11 @@ def form_common_kmer_matrix(all_CEs):
         for j in xrange(len(all_CEs)):
             indicies.append((i, j))
 
-    shared_mins_base = multiprocessing.Array(ctypes.c_double, len(all_CEs)*len(all_CEs[0]._mins))
+    shared_mins_base = multiprocessing.Array(ctypes.c_longlong, len(all_CEs)*len(all_CEs[0]._mins))
     global shared_mins
     shared_mins = np.ctypeslib.as_array(shared_mins_base.get_obj())
     shared_mins = shared_mins.reshape(len(all_CEs), len(all_CEs[0]._mins))
-    shared_counts_base = multiprocessing.Array(ctypes.c_double, len(all_CEs)*len(all_CEs[0]._counts))
+    shared_counts_base = multiprocessing.Array(ctypes.c_longlong, len(all_CEs)*len(all_CEs[0]._counts))
     global shared_counts
     shared_counts = np.ctypeslib.as_array(shared_counts_base.get_obj())
     shared_counts = shared_counts.reshape(len(all_CEs), len(all_CEs[0]._counts))
@@ -468,7 +482,7 @@ def form_common_kmer_matrix(all_CEs):
         lens_counts.add(len(all_CEs[i]._counts))
 
     pool = multiprocessing.Pool(processes=multiprocessing.cpu_count())
-    res = pool.imap(temp_func, indicies, chunksize=np.floor(len(indicies)/float(multiprocessing.cpu_count())))
+    res = pool.imap(jaccard_count, indicies, chunksize=np.floor(len(indicies)/float(multiprocessing.cpu_count())))
     for (i, j), val in zip(indicies, res):
         A[i, j] = val[0] #res[i][0]
         A[j, i] = val[1] #res[i][1]
@@ -478,7 +492,7 @@ def form_common_kmer_matrix(all_CEs):
 
 def form_jaccard_kmer_matrix_helper(arg):
     """
-    Helper function for parallelizing form_common_kmer_matrix
+    Helper function for parallelizing form_jaccard_count_matrix
     :param args:
     :return:
     """
@@ -486,7 +500,7 @@ def form_jaccard_kmer_matrix_helper(arg):
     return val
 
 
-def form_jaccard_kmer_matrix(CEs):  # NOTE: may want to do the chunking just as in form_count_kmer_matrix()
+def form_jaccard_matrix(CEs):  # NOTE: may want to do the chunking just as in form_count_kmer_matrix()
     """
     Forms a matrix A with A_{i,j} = Jaccard(CEs[i], CEs[j])
     :param CEs: list of Count Estimators
@@ -510,7 +524,7 @@ def form_jaccard_kmer_matrix(CEs):  # NOTE: may want to do the chunking just as 
 
 def lsqnonneg(A, Y, eps, machine_eps=1e-07):
     """
-    Sovle Ax=y for x using nonnegative least squares, with a threshold parameter eps
+    Solve Ax=y for x using nonnegative least squares, with a threshold parameter eps. This is to be used if the A matrix is pre-computed
     :param A: The input common kmer or jaccard matrix
     :param Y: The input kmer or jaccard count vector
     :param eps: cutoff value. Only consider row/columns of A and entries of Y above this value
@@ -531,9 +545,9 @@ def lsqnonneg(A, Y, eps, machine_eps=1e-07):
     return x
 
 
-def common_lsqnonneg(CEs, Y, eps, machine_eps=1e-07):
+def jaccard_count_lsqnonneg(CEs, Y, eps, machine_eps=1e-07):
     """
-    Sovle Ax=y for x using nonnegative least squares, with a threshold parameter eps. Only form A for subset of CEs with Y[i] > eps
+    Solve Ax=y for x using nonnegative least squares, with a threshold parameter eps. Only form A for subset of CEs with Y[i] > eps
     :param CEs: Input list of count estimators
     :param Y: The input kmer or jaccard count vector
     :param eps: cutoff value. Only consider row/columns of A and entries of Y above this value
@@ -547,7 +561,7 @@ def common_lsqnonneg(CEs, Y, eps, machine_eps=1e-07):
         if indicies[i] == True:
             CEs_eps.append(CEs[i])
 
-    A_eps = form_common_kmer_matrix(CEs_eps)
+    A_eps = form_jaccard_count_matrix(CEs_eps)
     x_eps = scipy.optimize.nnls(A_eps, Y_eps)[0]
     x = np.zeros(len(Y))
     # repopulate the indicies
@@ -560,7 +574,7 @@ def common_lsqnonneg(CEs, Y, eps, machine_eps=1e-07):
 
 def jaccard_lsqnonneg(CEs, Y, eps, machine_eps=1e-07):
     """
-    Sovle Ax=y for x using nonnegative least squares, with a threshold parameter eps. Only form A for subset of CEs with Y[i] > eps
+    Solve Ax=y for x using nonnegative least squares, with a threshold parameter eps. Only form A for subset of CEs with Y[i] > eps
     :param CEs: Input list of count estimators
     :param Y: The input kmer or jaccard count vector
     :param eps: cutoff value. Only consider row/columns of A and entries of Y above this value
@@ -574,7 +588,7 @@ def jaccard_lsqnonneg(CEs, Y, eps, machine_eps=1e-07):
         if indicies[i] == True:
             CEs_eps.append(CEs[i])
 
-    A_eps = form_jaccard_kmer_matrix(CEs_eps)
+    A_eps = form_jaccard_matrix(CEs_eps)
     x_eps = scipy.optimize.nnls(A_eps, Y_eps)[0]
     x = np.zeros(len(Y))
     # repopulate the indicies
@@ -923,9 +937,9 @@ def form_matrices_test():
     CE1.add_sequence(seq1)
     CE2.add_sequence(seq2)
     CE3.add_sequence(seq3)
-    A = form_common_kmer_matrix([CE1, CE2, CE3])
+    A = form_jaccard_count_matrix([CE1, CE2, CE3])
     assert (A == np.array([[1., 1., 0.80952380952380953], [1., 1., 0.80952380952380953], [0.5625, 0.5625, 1.]])).all()
-    B = form_jaccard_kmer_matrix([CE1,CE2,CE3])
+    B = form_jaccard_matrix([CE1, CE2, CE3])
     assert (B == np.array([[1., 1., 0.4], [1., 1., 0.4], [0.4, 0.4, 1.]])).all()
 
 
@@ -939,13 +953,19 @@ def test_lsqnonneg():
     CE1.add_sequence(seq1)
     CE2.add_sequence(seq2)
     CE3.add_sequence(seq3)
-    A = form_common_kmer_matrix([CE1, CE2, CE3])
+    A = form_jaccard_count_matrix([CE1, CE2, CE3])
     Y = CE3.count_vector([CE1, CE2, CE3])
     x = lsqnonneg(A, Y, 0)
     # check if the L1 norm to the truth is less than machine zero
     assert abs(x - np.array([0, 0, 1.])).sum() < 1e-07
-    x = common_lsqnonneg([CE1, CE2, CE3], Y, 0)
+    assert (x == jaccard_count_lsqnonneg([CE1, CE2, CE3], Y, 0)).all()
+    A = form_jaccard_matrix([CE1, CE2, CE3])
+    Y = CE3.jaccard_vector([CE1, CE2, CE3])
+    x = lsqnonneg(A, Y, 0)
+    # check if the L1 norm to the truth is less than machine zero
     assert abs(x - np.array([0, 0, 1.])).sum() < 1e-07
+    assert (x == jaccard_lsqnonneg([CE1, CE2, CE3], Y, 0)).all()
+
 
 def test_suite():
     """
