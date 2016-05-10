@@ -431,16 +431,16 @@ def form_common_kmer_matrix(all_CEs):
     :return: a numpy matrix A where A_{i,j} \approx \sum_{w\in SW_k(g_i) \cap SW_k{g_j}} \frac{occ_w(g_j)}{|g_j| - k + 1}
     """
     A = np.zeros((len(all_CEs), len(all_CEs)), dtype=np.float64)
-    chunk_size = 100
+    chunk_size = 500
     # Can precompute all the indicies
     indicies = []
     for i in xrange(len(all_CEs)):
         for j in xrange(len(all_CEs)):
             indicies.append((i, j))
     for sub_indicies in chunks(indicies, chunk_size):
-        input_args = [(all_CEs[i], all_CEs[j]) for (i, j) in sub_indicies]
+        input_args = ((all_CEs[sub_indicies[i][0]], all_CEs[sub_indicies[i][1]]) for i in xrange(len(sub_indicies)))
         pool = Pool(processes=multiprocessing.cpu_count())
-        res = pool.imap(form_common_kmer_matrix_helper, input_args)
+        res = pool.imap(form_common_kmer_matrix_helper, input_args, chunksize=np.floor(len(indicies)/float(multiprocessing.cpu_count())))
         # pool.close()
         # pool.join()
         # pool.terminate()
