@@ -438,7 +438,7 @@ def form_common_kmer_matrix(all_CEs):
         for j in xrange(len(all_CEs)):
             indicies.append((i, j))
     for sub_indicies in chunks(indicies, chunk_size):
-        input_args = ((all_CEs[i], all_CEs[j]) for (i, j) in sub_indicies)
+        input_args = [(all_CEs[i], all_CEs[j]) for (i, j) in sub_indicies]
         pool = Pool(processes=multiprocessing.cpu_count())
         res = pool.imap(form_common_kmer_matrix_helper, input_args, chunksize=np.floor(len(indicies)/float(multiprocessing.cpu_count())))  # chunk into fewest pieces possible
         # pool.close()
