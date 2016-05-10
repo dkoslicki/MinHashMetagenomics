@@ -451,7 +451,7 @@ def form_common_kmer_matrix(all_CEs):
 
     print(len(all_CEs)*len(all_CEs[0]._mins))
     print(len(all_CEs)*len(all_CEs[0]._counts))
-    shared_mins_base = multiprocessing.Array(ctypes.c_longlong, len(all_CEs)*len(all_CEs[0]._mins))
+    shared_mins_base = multiprocessing.Array(ctypes.c_double, len(all_CEs)*len(all_CEs[0]._mins))
     global shared_mins
     shared_mins = np.ctypeslib.as_array(shared_mins_base.get_obj())
     shared_mins = shared_mins.reshape(len(all_CEs), len(all_CEs[0]._mins))
