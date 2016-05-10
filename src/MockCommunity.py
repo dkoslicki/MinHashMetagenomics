@@ -161,6 +161,63 @@ CEs = MH.import_multiple_hdf5(out_file_names)
 A = MH.form_common_kmer_matrix(CEs)  #NOTE!!! I only need to form this for the indicies where Y[i] > 0
 
 
+################################
+# Test the lsqnonneg stuff
+# Read in all the saved hashes
+import sys, os
+sys.path.append('/nfs1/Koslicki_Lab/koslickd/Repositories/MinHashMetagenomics/src/')
+import MinHash as MH
+import numpy as np
+fid = open('/nfs1/Koslicki_Lab/koslickd/MinHash/Data/FileNames.txt', 'r')
+file_names = fid.readlines()
+fid.close()
+file_names = [name.strip() for name in file_names]
+training_n = 5000
+out_file_names = ["/nfs1/Koslicki_Lab/koslickd/MinHash/Out/N"+str(training_n)+"k31/" + os.path.basename(item) + ".CE.h5" for item in file_names]
+CEs = MH.import_multiple_hdf5(out_file_names)
+# Set which CE for the test metagenome to read in
+n = 50000
+MCE_in_comparison = MH.import_single_hdf5('/nfs1/Koslicki_Lab/koslickd/MinHash/Out/SRR172902.fastq.CE_N'+str(n)+'_k31_inComparison.h5')
+MCE_all = MH.import_single_hdf5('/nfs1/Koslicki_Lab/koslickd/MinHash/Out/SRR172902.fastq.CE_N'+str(n)+'_k31_all.h5')
+Y_count_in_comparison = MCE_in_comparison.count_vector(CEs)
+Y_jaccard_in_comparison = MCE_in_comparison.jaccard_vector(CEs)
+Y_count_all = MCE_all.count_vector(CEs)
+Y_jaccard_all = MCE_all.jaccard_vector(CEs)
+# Read in the taxonomy and see which are the largest entries of which Y vectors
+fid = open('/nfs1/Koslicki_Lab/koslickd/MinHash/Data/Taxonomy.txt', 'r')
+taxonomy = fid.readlines()
+fid.close()
+taxonomy = [item.strip() for item in taxonomy]
+taxonomy_names = [item.split('\t')[0] for item in taxonomy]
+
+reconstruction = MH.common_lsqnonneg(CEs, Y_count_in_comparison, .0001)
+i = 0
+print("Reconstruction Values")
+for pair in sorted(enumerate(test_Y), key=lambda x: x[1])[::-1]:
+    index = pair[0]
+    value = pair[1]
+    print("\t name: %s abundance: %f" %(taxonomy_names[index], value))
+    i += 1
+    if i > 20:
+        break
+
+
+
+
+for test_Y in [Y_count_in_comparison, Y_jaccard_in_comparison, Y_count_all, Y_jaccard_all]:
+    i = 0
+    print("Y_vales")
+    for pair in sorted(enumerate(test_Y), key=lambda x: x[1])[::-1]:
+        index = pair[0]
+        value = pair[1]
+        print("\t name: %s abundance: %f" %(taxonomy_names[index], value))
+        i += 1
+        if i > 20:
+            break
+
+
+
+
 #########################
 # Check the stats of the hashed kmers
 Acounts=list()

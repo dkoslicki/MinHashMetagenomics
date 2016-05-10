@@ -435,7 +435,7 @@ def form_common_kmer_matrix(CEs):
             indicies.append((i, j))
 
     pool = Pool(processes=multiprocessing.cpu_count())
-    res = pool.imap(form_common_kmer_matrix_helper, input_args, chunksize=100000)
+    res = pool.imap(form_common_kmer_matrix_helper, input_args, chunksize=np.floor(len(indicies)/float(multiprocessing.cpu_count())))  # chunk into fewest pieces possible
     # pool.close()
     # pool.join()
     # pool.terminate()
@@ -458,7 +458,7 @@ def form_jaccard_kmer_matrix_helper(arg):
     return val
 
 
-def form_jaccard_kmer_matrix(CEs):
+def form_jaccard_kmer_matrix(CEs):  # NOTE: may want to do the chunking just as in form_count_kmer_matrix()
     """
     Forms a matrix A with A_{i,j} = Jaccard(CEs[i], CEs[j])
     :param CEs: list of Count Estimators
