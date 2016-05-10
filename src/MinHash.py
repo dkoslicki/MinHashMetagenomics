@@ -473,7 +473,7 @@ def form_common_kmer_matrix(all_CEs):
     print(lens_mins)
 
     pool = multiprocessing.Pool(processes=multiprocessing.cpu_count())
-    res = pool.imap(temp_func, indicies, chunksize=500)
+    res = pool.imap(temp_func, indicies, chunksize=np.floor(len(indicies)/float(multiprocessing.cpu_count())))
     for (i, j), val in zip(indicies, res):
         A[i, j] = val[0] #res[i][0]  # Replace i with i+last_index where last_index was the number of times the xranges executed before going into the pool
         A[j, i] = val[1] #res[i][1]
