@@ -410,17 +410,6 @@ def compute_multiple(n=None, max_prime=9999999999971., ksize=None, input_files_l
     return CEs
 
 
-def form_common_kmer_matrix_helper(arg):
-    """
-    Helper function for parallelizing form_jaccard_count_matrix
-    :param arg: an ordered pair of count estimators (CE1, CE2).
-    :return: \approx \sum_{w\in SW_k(g_i) \cap SW_k{g_j}} \frac{occ_w(g_j)}{|g_j| - k + 1}
-    """
-    #(Aij, Aji) = arg[0][arg[1][0]].jaccard_count(arg[0][arg[1][1]])
-    (Aij, Aji) = arg[0].jaccard_count(arg[1])
-    return (Aij, Aji)
-
-
 def chunks(l, n):
     """Yield successive n-sized chunks from l."""
     for i in range(0, len(l), n):
@@ -452,7 +441,7 @@ def jaccard_count(ij):
 
 def form_jaccard_count_matrix(all_CEs):
     """
-    Forms the jaccard kmer matrix when given a list of count estimators
+    Forms the jaccard count kmer matrix when given a list of count estimators
     :param all_CEs: a list of count estimators
     :return: a numpy array of the jaccard count matrix
     """
@@ -473,52 +462,70 @@ def form_jaccard_count_matrix(all_CEs):
     shared_counts = shared_counts.reshape(len(all_CEs), len(all_CEs[0]._counts))
     global p
     p = all_CEs[0].p
-    lens_counts = set()
-    lens_mins = set()
     for i in range(len(all_CEs)):
         shared_mins[i] = all_CEs[i]._mins
         shared_counts[i] = all_CEs[i]._counts
-        lens_mins.add(len(all_CEs[i]._mins))
-        lens_counts.add(len(all_CEs[i]._counts))
 
     pool = multiprocessing.Pool(processes=multiprocessing.cpu_count())
     res = pool.imap(jaccard_count, indicies, chunksize=np.floor(len(indicies)/float(multiprocessing.cpu_count())))
     for (i, j), val in zip(indicies, res):
-        A[i, j] = val[0] #res[i][0]
-        A[j, i] = val[1] #res[i][1]
+        A[i, j] = val[0]
+        A[j, i] = val[1]
 
     pool.terminate()
     return A
 
-def form_jaccard_kmer_matrix_helper(arg):
+
+def jaccard(ij):
     """
-    Helper function for parallelizing form_jaccard_count_matrix
-    :param args:
-    :return:
+    Clone of jaccard_count from the count_estimator class, just so I can use shared memory arrays
+    :param ij: a tuple of indicies to use in the global shared_mins and shared_counts
+    :return: entries of the CKM matrix
     """
-    val = arg[0][arg[1][0]].jaccard(arg[0][arg[1][1]])
-    return val
+    mins1 = shared_mins[ij[0]]
+    mins2 = shared_mins[ij[1]]
+    truelen = len(mins1)
+    while truelen and mins1[truelen - 1] == p:  # If the value of the hash is the prime p, it doesn't contribute to the length of the hash
+        truelen -= 1
+    if truelen == 0:
+        raise ValueError
+
+    common = 0
+    for val in _yield_overlaps(mins1, mins2):
+        if val != p:  # Make sure not to include the un-populated hashes p
+            common += 1
+    return common/float(truelen)
 
 
-def form_jaccard_matrix(CEs):  # NOTE: may want to do the chunking just as in form_count_kmer_matrix()
+def form_jaccard_matrix(all_CEs):
     """
-    Forms a matrix A with A_{i,j} = Jaccard(CEs[i], CEs[j])
-    :param CEs: list of Count Estimators
-    :return: numpy matrix
+    Forms the jaccard count kmer matrix when given a list of count estimators
+    :param all_CEs: a list of count estimators
+    :return: a numpy array of the jaccard count matrix
     """
-    A = np.zeros((len(CEs), len(CEs)), dtype=np.float64)
+    A = np.zeros((len(all_CEs), len(all_CEs)), dtype=np.float64)
+    # Can precompute all the indicies
     indicies = []
-    for i in xrange(len(CEs)):
-        for j in xrange(len(CEs)):
+    for i in xrange(len(all_CEs)):
+        for j in xrange(len(all_CEs)):
             indicies.append((i, j))
 
-    pool = Pool(processes=multiprocessing.cpu_count())
-    res = pool.map(form_jaccard_kmer_matrix_helper, izip(repeat(CEs), indicies))
-    pool.terminate()
-    for i in xrange(len(res)):
-        A[indicies[i][0], indicies[i][1]] = res[i]
-        A[indicies[i][1], indicies[i][0]] = res[i]
+    shared_mins_base = multiprocessing.Array(ctypes.c_double, len(all_CEs)*len(all_CEs[0]._mins))
+    global shared_mins
+    shared_mins = np.ctypeslib.as_array(shared_mins_base.get_obj())
+    shared_mins = shared_mins.reshape(len(all_CEs), len(all_CEs[0]._mins))
+    global p
+    p = all_CEs[0].p
+    for i in range(len(all_CEs)):
+        shared_mins[i] = all_CEs[i]._mins
 
+    pool = multiprocessing.Pool(processes=multiprocessing.cpu_count())
+    res = pool.imap(jaccard, indicies, chunksize=np.floor(len(indicies)/float(multiprocessing.cpu_count())))
+    for (i, j), val in zip(indicies, res):
+        A[i, j] = val
+        A[j, i] = val
+
+    pool.terminate()
     return A
 
 
