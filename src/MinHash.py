@@ -30,7 +30,7 @@ warnings.simplefilter("ignore", RuntimeWarning)
 # After that point, can use amino acids
 # SNAP paired or single reads
 # Get DIAMOND implemented
-# Make the snap streaming automatically chunk the index_dirs if there are too many
+# Make the snap streaming automatically chunk the index_dirs if there are too many (can get max command len with xargs --show-limits)
 
 
 notACTG = re.compile('[^ACTG]')
@@ -965,7 +965,8 @@ def stream_aligned_save_unaligned(index_dirs, sample_file, out_file, filt='unali
     if len(big_cmd) >= 2616670:
         raise Exception("The typical maximum command length is 2616670, and running it with this many indicies would exceed that. Please iterate over index_dirs in chunks.")
     else:
-        exit_code = subprocess.call(big_cmd, shell=True,  stdout=FNULL, stderr=subprocess.STDOUT)
+        #exit_code = subprocess.call(big_cmd, shell=True,  stdout=FNULL, stderr=subprocess.STDOUT)
+    print(big_cmd)
     return exit_code
 
 
@@ -981,6 +982,7 @@ def sam2fastq(sam_file, out_file):
     exit_code = subprocess.call(cmd, shell=True,  stdout=FNULL, stderr=subprocess.STDOUT)
     FNULL.close()
     return exit_code
+
 
 def top_down_align(sample_file, reference_files, index_dir, out_dir, threads=multiprocessing.cpu_count(), large_index=True, seed_size=20, edit_distance=20, min_read_len=50, binary="snap-aligner"):
     sam_out_file_prev = os.path.join(out_dir, os.path.basename(sample_file) + "_unaligned_prev.sam")
