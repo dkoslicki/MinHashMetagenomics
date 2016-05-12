@@ -844,7 +844,7 @@ def get_prime_lt_x(target):
 
 ##########################################################################
 # SNAP aligner
-def build_reference(reference_file, output_dir, large_index=True, seed_size=20, threads=48, binary="snap-aligner"):
+def build_reference(reference_file, output_dir, large_index=True, seed_size=20, threads=multiprocessing.cpu_count(), binary="snap-aligner"):
     """
     Wrapper for the SNAP aligner index building
     :param reference_file: file from which an index will be made
@@ -855,6 +855,8 @@ def build_reference(reference_file, output_dir, large_index=True, seed_size=20, 
     :param binary: location of the snap-aligner binary
     :return: exit code of SNAP
     """
+    if not os.path.isdir(output_dir):
+        os.makedirs(output_dir)
     FNULL = open(os.devnull, 'w')
     if large_index:
         cmd = binary + " index " + reference_file + " " + output_dir + " -large -s " + str(seed_size) + " -t" + str(threads)
@@ -863,8 +865,27 @@ def build_reference(reference_file, output_dir, large_index=True, seed_size=20, 
     exit_code = subprocess.call(cmd, shell=True,  stdout=FNULL, stderr=subprocess.STDOUT)
     return exit_code
 
+def build_reference_multiple(reference_file_names, output_dir, large_index=True, seed_size=20, threads=multiprocessing.cpu_count(), binary="snap-aligner"):
+    """
+    Will build indexes for SNAP aligner for multiple references
+    :param reference_file_names: input reference fasta files
+    :param output_dir: directory where all the indexes will be put
+    :param large_index: makes the index about 30% bigger, but faster for quick/inaccurate alignements
+    :param seed_size: for initial match to begin alignment
+    :param threads: number of threads to use
+    :param binary: location of the snap-aligner binary
+    :return: list of location of all the indexes
+    """
+    reference_dirs = []
+    for reference_file_name in reference_file_names:
+        prefix, ext = os.path.splitext(os.path.basename(reference_file_name))
+        reference_dir = os.path.join(output_dir, prefix)
+        reference_dirs.append(reference_dir)
+        exit_code = build_reference(reference_file_name, output_dir, large_index=large_index, seed_size=seed_size, threads=threads, binary=binary)
+    return reference_dirs
 
-def align_reads(index_dir, sample_file, out_file, filt='aligned', threads=48, edit_distance=20, min_read_len=50, binary="snap-aligner"):  # NOTE: snap-aligner will take SAM and BAM as INPUT!!
+
+def align_reads(index_dir, sample_file, out_file, filt='aligned', threads=multiprocessing.cpu_count(), edit_distance=20, min_read_len=50, binary="snap-aligner"):  # NOTE: snap-aligner will take SAM and BAM as INPUT!!
     """
     Wrapper for the SNAP aligner.
     :param index_dir: Directory in which the index was placed (from build_reference
