@@ -1068,7 +1068,8 @@ def test_snap():
     res = build_reference(index_file, temp_dir, large_index=True, seed_size=20, threads=1, binary="snap-aligner")
     assert res == 0
     res = align_reads(temp_dir, align_file, out_file, filt='aligned', threads=1, edit_distance=20, min_read_len=50, binary="snap-aligner")
-    #assert res == 0
+    assert res == 0
+    sam2fastq(out_file, os.path.join(temp_dir, "out.fastq"))
     print(index_file)
     print(align_file)
     print(out_file)
