@@ -264,11 +264,11 @@ def import_single_hdf5(file_name):
     counts = grp["counts"][...]
     CE = CountEstimator(n=len(mins), max_prime=3, ksize=ksize)
     CE.p = prime
-    CE._mins = blist(mins)
-    CE._counts = blist(counts)
+    CE._mins = mins
+    CE._counts = counts
     CE.input_file_name = file_name
     if "kmers" in grp:
-        CE._kmers = blist(grp["kmers"][...])
+        CE._kmers = grp["kmers"][...]
     else:
         CE._kmers = None
 
@@ -362,11 +362,11 @@ def import_multiple_from_single_hdf5(file_name, import_list=None):
         counts = subgrp["counts"][...]
         CE = CountEstimator(n=len(mins), max_prime=3, ksize=ksize)
         CE.p = prime
-        CE._mins = blist(mins)
-        CE._counts = blist(counts)
+        CE._mins = mins
+        CE._counts = counts
         CE.input_file_name = file_name
         if "kmers" in subgrp:
-            CE._kmers = blist(subgrp["kmers"][...])
+            CE._kmers = subgrp["kmers"][...]
         else:
             CE._kmers = None
 
