@@ -1072,7 +1072,7 @@ def test_snap():
     res = align_reads(temp_dir, align_file, out_sam, filt='aligned', threads=1, edit_distance=20, min_read_len=50, binary="snap-aligner")
     assert res == 0
     sam2fastq(out_sam, out_fastq)
-    assert filecmp.cmp(align_file)
+    assert filecmp.cmp(align_file, out_fastq)
     print(index_file)
     print(align_file)
     print(out_sam)
