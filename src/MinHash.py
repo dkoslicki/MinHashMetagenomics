@@ -22,9 +22,12 @@ import warnings
 warnings.simplefilter("ignore", RuntimeWarning)
 
 # To Do:
-# Make the formation of the count vectors parallel
+# Implement hash_murmur3 to leave the khmer package. Need to implement reverse complement myself, etc.
+# After that point, can use amino acids
+# Get SNAP implemented
+# Get DIAMOND implemented
+# Make import functions import as blists
 
-#CE = SM.CountEstimator(n=10, max_prime=1e10, ksize=10, input_filename='/Users/dkoslicki/Dropbox/Repositories/MinHash/data/Genomes/G000279475.fna')
 
 notACTG = re.compile('[^ACTG]')
 
