@@ -318,8 +318,42 @@ MH.sam2fastq(out_sam, out_fastq)
 
 ##############################
 # Try the streaming approach
+import sys
+sys.path.append('/nfs1/Koslicki_Lab/koslickd/Repositories/MinHashMetagenomics/src/')
+import os
+import MinHash as MH
+import shutil
+fid = open('/nfs1/Koslicki_Lab/koslickd/MinHash/Data/FileNames.txt', 'r')
+file_names = fid.readlines()
+fid.close()
+file_names = [name.strip() for name in file_names]
+training_n = 5000
+out_file_names = ["/nfs1/Koslicki_Lab/koslickd/MinHash/Out/N"+str(training_n)+"k31/" + os.path.basename(item) + ".CE.h5" for item in file_names]
+CEs = MH.import_multiple_hdf5(out_file_names)
+n = 50000
+MCE_in_comparison = MH.import_single_hdf5('/nfs1/Koslicki_Lab/koslickd/MinHash/Out/SRR172902.fastq.CE_N'+str(n)+'_k31_inComparison.h5')
+MCE_all = MH.import_single_hdf5('/nfs1/Koslicki_Lab/koslickd/MinHash/Out/SRR172902.fastq.CE_N'+str(n)+'_k31_all.h5')
+Y_count_in_comparison = MCE_in_comparison.count_vector(CEs)
+reference_files = []
+reconstruction = MH.jaccard_count_lsqnonneg(CEs, Y_count_in_comparison, .001)
+N = 40
+indicies = reconstruction.argsort()[-N:][::-1]
+for index in indicies:
+    reference_files.append(CEs[index].input_file_name)
+
+index_dir = "/scratch/temp/SNAP/"
+out_dir = "/nfs1/Koslicki_Lab/koslickd/MinHash/Out/Temp/"
+sample_file = "/nfs1/Koslicki_Lab/koslickd/MinHash/Data/SRR172902.fastq"
+
 index_dirs = MH.build_reference_multiple(reference_files[0:10], index_dir)
-MH.stream_aligned_save_unaligned(index_dirs, sample_file, "/nfs1/Koslicki_Lab/koslickd/MinHash/Out/Temp/out.sam")
+out_sam = "/nfs1/Koslicki_Lab/koslickd/MinHash/Out/Temp/out.sam"
+MH.stream_aligned_save_unaligned(index_dirs, sample_file, out_sam)
+pre, ext = os.path.splitext(out_sam)
+out_fastq = pre + ".fastq"
+MH.sam2fastq(out_sam, out_fastq)
+os.remove(out_sam)
+for index_dir in index_dirs:
+    shutil.rmtree(index_dir)
 
 
 
@@ -334,32 +368,6 @@ MH.stream_aligned_save_unaligned(index_dirs, sample_file, "/nfs1/Koslicki_Lab/ko
 
 
 
-
-
-
-
-for i in range(len(reference_files)):
-    reference_file = reference_files[i]
-    if i == 0:
-        MH.fastq_out_basename = os.path.join(out_dir, os.path.basename(sample_file) + "_" + os.path.basename(reference_file))
-        MH.build_reference(reference_file, index_dir)
-        MH.align_reads(index_dir, sample_file, sam_out_file, filt="aligned")
-        MH.sam2fastq(sam_out_file, fastq_out_basename + "_aligned.fastq")
-        MH.align_reads(index_dir, sample_file, sam_out_file, filt="unaligned")
-        MH.sam2fastq(sam_out_file, fastq_out_basename + "_unaligned.fastq")  # Better yet, just call this unaligned.fastq
-        os.remove(sam_out_file)
-    else:
-        fastq_out_basename = os.path.join(out_dir, os.path.basename(sample_file) + "_" + os.path.basename(reference_file))
-        prev_fastq_file = os.path.join(out_dir, os.path.basename(sample_file) + "_" + os.path.basename(reference_files[i-1]) + "_unaligned.fastq")  # Better yet, just call this unaligned.fastq
-        MH.build_reference(reference_file, index_dir)
-        MH.align_reads(index_dir, prev_fastq_file, sam_out_file, filt="aligned")
-        MH.sam2fastq(sam_out_file, fastq_out_basename + "_aligned.fastq")
-        MH.align_reads(index_dir, prev_fastq_file, sam_out_file, filt="unaligned")
-        MH.sam2fastq(sam_out_file, fastq_out_basename + "_unaligned.fastq")
-        os.remove(sam_out_file)
-        os.remove(prev_fastq_file)
-
-# After running this, I should then go back and re-aligned the unaligned reads to the detected genomes with something a bit more sensitive (blast?)
 
 
 #############
