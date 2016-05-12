@@ -1077,7 +1077,7 @@ def test_snap():
     assert res == 0
     sam2fastq(out_sam, out_fastq)
     assert filecmp.cmp(align_file, out_fastq)
-    #shutil.rmtree(temp_dir)
+    shutil.rmtree(temp_dir)
 
 
 
