@@ -21,6 +21,7 @@ import scipy.optimize
 import ctypes
 import warnings
 import subprocess
+import filecmp
 warnings.simplefilter("ignore", RuntimeWarning)
 
 # To Do:
@@ -1054,7 +1055,8 @@ def test_snap():
     temp_dir = tempfile.mkdtemp()
     index_file = os.path.join(temp_dir,"in.fasta")
     align_file = os.path.join(temp_dir, "in.fastq")
-    out_file = os.path.join(temp_dir,"out.sam")
+    out_sam = os.path.join(temp_dir,"out.sam")
+    out_fastq = os.path.join(temp_dir, "out.fastq")
     fid = open(index_file, "w")
     fid.write(">seq1\n")
     fid.write("GGATTGGTGTATTCACGCTAGAATTCTTGTTAATCATATTATAACACTGGTTAATAGAGGAATGCAAAAAGATGC\n")
@@ -1067,12 +1069,13 @@ def test_snap():
     fid.close()
     res = build_reference(index_file, temp_dir, large_index=True, seed_size=20, threads=1, binary="snap-aligner")
     assert res == 0
-    res = align_reads(temp_dir, align_file, out_file, filt='aligned', threads=1, edit_distance=20, min_read_len=50, binary="snap-aligner")
+    res = align_reads(temp_dir, align_file, out_sam, filt='aligned', threads=1, edit_distance=20, min_read_len=50, binary="snap-aligner")
     assert res == 0
-    sam2fastq(out_file, os.path.join(temp_dir, "out.fastq"))
+    sam2fastq(out_sam, out_fastq)
+    assert filecmp.cmp(align_file)
     print(index_file)
     print(align_file)
-    print(out_file)
+    print(out_sam)
 
 
 
