@@ -918,7 +918,7 @@ def top_down_align(sample_file, reference_files, index_dir, out_dir, threads=mul
             align_reads(index_dir, sam_out_file_prev, sam_out_file, filt="unaligned", threads=threads, edit_distance=edit_distance, min_read_len=min_read_len, binary=binary)
             shutil.move(sam_out_file, sam_out_file_prev)  # need to check if this is ok
     shutil.move(sam_out_file_prev, sam_out_file)
-
+    return sam_out_file
 
 
 
