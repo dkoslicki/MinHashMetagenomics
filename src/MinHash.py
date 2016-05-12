@@ -933,31 +933,31 @@ def stream_aligned_save_unaligned(index_dirs, sample_file, out_file, filt='unali
     for index_dir in index_dirs:
         if i == 0:
             if filt == 'aligned':
-                cmd = binary + " single " + index_dir + " " + sample_file + " -o -sam - -f -F a -t " + str(threads) + " -d " + str(edit_distance) + " -mrl " + str(min_read_len)
+                cmd = binary + " single " + index_dir + " " + sample_file + " -o -bam - -f -F a -t " + str(threads) + " -d " + str(edit_distance) + " -mrl " + str(min_read_len)
             elif filt == 'unaligned':
-                cmd = binary + " single " + index_dir + " " + sample_file + " -o -sam - -f -F u -t " + str(threads) + " -d " + str(edit_distance) + " -mrl " + str(min_read_len)
+                cmd = binary + " single " + index_dir + " " + sample_file + " -o -bam - -f -F u -t " + str(threads) + " -d " + str(edit_distance) + " -mrl " + str(min_read_len)
             elif filt == 'all':
-                cmd = binary + " single " + index_dir + " " + sample_file + " -o -sam - -f -t " + str(threads) + " -d " + str(edit_distance) + " -mrl " + str(min_read_len)
+                cmd = binary + " single " + index_dir + " " + sample_file + " -o -bam - -f -t " + str(threads) + " -d " + str(edit_distance) + " -mrl " + str(min_read_len)
             else:
                 raise Exception("aligned must be 'aligned', 'unaligned', or 'all'")
             big_cmd = " " + cmd
         elif not i == len(index_dirs)-1:
             if filt == 'aligned':
-                cmd = binary + " single " + index_dir + " -sam - -o -sam - -f -F a -t " + str(threads) + " -d " + str(edit_distance) + " -mrl " + str(min_read_len)
+                cmd = binary + " single " + index_dir + " -bam - -o -bam - -f -F a -t " + str(threads) + " -d " + str(edit_distance) + " -mrl " + str(min_read_len)
             elif filt == 'unaligned':
-                cmd = binary + " single " + index_dir + " -sam - -o -sam - -f -F u -t " + str(threads) + " -d " + str(edit_distance) + " -mrl " + str(min_read_len)
+                cmd = binary + " single " + index_dir + " -bam - -o -bam - -f -F u -t " + str(threads) + " -d " + str(edit_distance) + " -mrl " + str(min_read_len)
             elif filt == 'all':
-                cmd = binary + " single " + index_dir + " -sam - -o -sam - -f -t " + str(threads) + " -d " + str(edit_distance) + " -mrl " + str(min_read_len)
+                cmd = binary + " single " + index_dir + " -bam - -o -bam - -f -t " + str(threads) + " -d " + str(edit_distance) + " -mrl " + str(min_read_len)
             else:
                 raise Exception("aligned must be 'aligned', 'unaligned', or 'all'")
             big_cmd = big_cmd + " | " + cmd
         else:
             if filt == 'aligned':
-                cmd = binary + " single " + index_dir + " -sam - -o " + out_file + " -f -F a -t " + str(threads) + " -d " + str(edit_distance) + " -mrl " + str(min_read_len)
+                cmd = binary + " single " + index_dir + " -bam - -o " + out_file + " -f -F a -t " + str(threads) + " -d " + str(edit_distance) + " -mrl " + str(min_read_len)
             elif filt == 'unaligned':
-                cmd = binary + " single " + index_dir + " -sam - -o " + out_file + " -f -F u -t " + str(threads) + " -d " + str(edit_distance) + " -mrl " + str(min_read_len)
+                cmd = binary + " single " + index_dir + " -bam - -o " + out_file + " -f -F u -t " + str(threads) + " -d " + str(edit_distance) + " -mrl " + str(min_read_len)
             elif filt == 'all':
-                cmd = binary + " single " + index_dir + " -sam - -o " + out_file + " -f -t " + str(threads) + " -d " + str(edit_distance) + " -mrl " + str(min_read_len)
+                cmd = binary + " single " + index_dir + " -bam - -o " + out_file + " -f -t " + str(threads) + " -d " + str(edit_distance) + " -mrl " + str(min_read_len)
             else:
                 raise Exception("aligned must be 'aligned', 'unaligned', or 'all'")
             big_cmd = big_cmd + " | " + cmd

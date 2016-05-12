@@ -323,6 +323,7 @@ sys.path.append('/nfs1/Koslicki_Lab/koslickd/Repositories/MinHashMetagenomics/sr
 import os
 import MinHash as MH
 import shutil
+import timeit
 fid = open('/nfs1/Koslicki_Lab/koslickd/MinHash/Data/FileNames.txt', 'r')
 file_names = fid.readlines()
 fid.close()
@@ -345,12 +346,17 @@ index_dir = "/scratch/temp/SNAP/"
 out_dir = "/nfs1/Koslicki_Lab/koslickd/MinHash/Out/Temp/"
 sample_file = "/nfs1/Koslicki_Lab/koslickd/MinHash/Data/SRR172902.fastq"
 
-index_dirs = MH.build_reference_multiple(reference_files[0:10], index_dir)
+index_dirs = MH.build_reference_multiple(reference_files, index_dir)
 out_sam = "/nfs1/Koslicki_Lab/koslickd/MinHash/Out/Temp/out.sam"
+t0 = timeit.default_timer()
 MH.stream_aligned_save_unaligned(index_dirs, sample_file, out_sam)
+t1 = timeit.default_timer()
+print("Alignment time: %f" % (t1-t0))
 pre, ext = os.path.splitext(out_sam)
 out_fastq = pre + ".fastq"
 MH.sam2fastq(out_sam, out_fastq)
+
+# Clean up
 os.remove(out_sam)
 for index_dir in index_dirs:
     shutil.rmtree(index_dir)
