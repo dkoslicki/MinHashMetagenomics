@@ -849,9 +849,9 @@ def build_reference(reference_file, output_dir, large_index=True, seed_size=20, 
     """
     FNULL = open(os.devnull, 'w')
     if large_index:
-        cmd = binary + " index " + reference_file + " " + output_dir + " -large -s " + str(seed_size) + " -t " + str(threads)
+        cmd = binary + " index " + reference_file + " " + output_dir + " -large -s " + str(seed_size) + " -t" + str(threads)
     else:
-        cmd = binary + " index " + reference_file + " " + output_dir + " -s " + str(seed_size) + " -t " + str(threads)
+        cmd = binary + " index " + reference_file + " " + output_dir + " -s " + str(seed_size) + " -t" + str(threads)
     print(cmd)
     exit_code = subprocess.call(cmd, shell=True,  stdout=FNULL, stderr=subprocess.STDOUT)
     FNULL.close()
@@ -874,11 +874,11 @@ def align_reads(index_dir, sample_file, out_file, filt='aligned', threads=48, ed
     """
     FNULL = open(os.devnull, 'w')
     if filt == 'aligned':
-        cmd = binary + " single " + index_dir + " " + sample_file + " -o " + out_file + " -F a -t " + str(threads) + " -d " + str(edit_distance) + " -mrl " + str(min_read_len)
+        cmd = binary + " single " + index_dir + " " + sample_file + " -o " + out_file + " -F a -t" + str(threads) + " -d " + str(edit_distance) + " -mrl " + str(min_read_len)
     elif filt == 'unaligned':
-        cmd = binary + " single " + index_dir + " " + sample_file + " -o " + out_file + " -F u -t " + str(threads) + " -d " + str(edit_distance) + " -mrl " + str(min_read_len)
+        cmd = binary + " single " + index_dir + " " + sample_file + " -o " + out_file + " -F u -t" + str(threads) + " -d " + str(edit_distance) + " -mrl " + str(min_read_len)
     elif filt == 'all':
-        cmd = binary + " single " + index_dir + " " + sample_file + " -o " + out_file + " -t " + str(threads) + " -d " + str(edit_distance) + " -mrl " + str(min_read_len)
+        cmd = binary + " single " + index_dir + " " + sample_file + " -o " + out_file + " -t" + str(threads) + " -d " + str(edit_distance) + " -mrl " + str(min_read_len)
     else:
         raise Exception("aligned must be 'aligned', 'unaligned', or 'all'")
     exit_code = subprocess.call(cmd, shell=True,  stdout=FNULL, stderr=subprocess.STDOUT)
