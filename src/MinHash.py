@@ -20,6 +20,7 @@ import bisect
 import scipy.optimize
 import ctypes
 import warnings
+import subprocess
 warnings.simplefilter("ignore", RuntimeWarning)
 
 # To Do:
@@ -833,6 +834,71 @@ def get_prime_lt_x(target):
         raise RuntimeError("unable to find a prime number < %d" % (target))
 
 
+##########################################################################
+# SNAP aligner
+def build_reference(reference_file, output_dir, large_index=True, seed_size=20, threads=48, binary="snap-aligner"):
+    """
+    Wrapper for the SNAP aligner index building
+    :param reference_file: file from which an index will be made
+    :param output_dir: directory in which to put the index files
+    :param large_index: makes the index about 30% bigger, but faster for quick/inaccurate alignements
+    :param seed_size: for initial match to begin alignment
+    :param threads: number of threads to use
+    :param binary: location of the snap-aligner binary
+    :return: exit code of SNAP
+    """
+    FNULL = open(os.devnull, 'w')
+    if large_index:
+        cmd = binary + " index " + reference_file + " " + output_dir + " -large -s " + str(seed_size) + " -t " + str(threads)
+    else:
+        cmd = binary + " index " + reference_file + " " + output_dir + " -s " + str(seed_size) + " -t " + str(threads)
+    exit_code = subprocess.call(cmd, shell=True,  stdout=FNULL, stderr=subprocess.STDOUT)
+    FNULL.close()
+    return exit_code
+
+
+def align_reads(index_dir, sample_file, out_file, filt='aligned', threads=48, edit_distance=20, min_read_len=50, binary="snap-aligner"):  # NOTE: snap-aligner will take SAM and BAM as INPUT!!
+    """
+    Wrapper for the SNAP aligner.
+    :param index_dir: Directory in which the index was placed (from build_reference
+    :param sample_file: The file to align (can be fasta/fastq/sam/bam
+    :param out_file: the output alignments. Can be *.sam or *.bam
+    :param filt: If the output should be the aligned results ('aligned'), just the unaligned results ('unaligned'), or all results ('all')
+    :param threads: number of threads to use
+    :param edit_distance: the maximum edit distance to allow for an alignment
+    :param min_read_len: Specify the minimum read length to align, reads shorter than this (after clipping) stay unaligned.  This should be
+       a good bit bigger than the seed length or you might get some questionable alignments.  Default 50
+    :param binary: location of the snap-aligner binary
+    :return: exit code of SNAP
+    """
+    FNULL = open(os.devnull, 'w')
+    if filt == 'aligned':
+        cmd = binary + " single " + index_dir + " " + sample_file + " -o " + out_file + " -F a -t " + str(threads) + " -d " + str(edit_distance) + " -mrl " + str(min_read_len)
+    elif filt == 'unaligned':
+        cmd = binary + " single " + index_dir + " " + sample_file + " -o " + out_file + " -F u -t " + str(threads) + " -d " + str(edit_distance) + " -mrl " + str(min_read_len)
+    elif filt == 'all':
+        cmd = binary + " single " + index_dir + " " + sample_file + " -o " + out_file + " -t " + str(threads) + " -d " + str(edit_distance) + " -mrl " + str(min_read_len)
+    else:
+        raise Exception("aligned must be 'aligned', 'unaligned', or 'all'")
+    exit_code = subprocess.call(cmd, shell=True,  stdout=FNULL, stderr=subprocess.STDOUT)
+    FNULL.close()
+    return exit_code
+
+
+def sam2fastq(sam_file, out_file):
+    """
+    Converts a SAM file to a FASTQ file. Quite hacky
+    :param sam_file: input SAM file
+    :param out_file: output FASTQ file
+    :return: exit code
+    """
+    FNULL = open(os.devnull, 'w')
+    cmd = "cat " + sam_file + " | grep -v ^@ | awk '{print \"@\"$1\"\\n\"$10\"\\n+\\n\"$11}' > " + out_file
+    exit_code = subprocess.call(cmd, shell=True,  stdout=FNULL, stderr=subprocess.STDOUT)
+    FNULL.close()
+    return exit_code
+
+
 
 ##########################################################################
 # Tests
@@ -982,11 +1048,27 @@ def test_lsqnonneg():
     assert (x == jaccard_lsqnonneg([CE1, CE2, CE3], Y, 0)).all()
 
 
+def test_snap():
+    temp_file = tempfile.mktemp()
+    temp_file2 = tempfile.mktemp()
+    temp_dir = tempfile.mkdtemp()
+    fid = open(temp_file, "w")
+    fid.write(">seq1\n")
+    fid.write("ACTGTTACGTCAGATGATGACTCGTGACGCATCGCAGCATGCATGTGATCCAGATCGATGCATG\n")
+    fid.close()
+    build_reference(temp_file, temp_dir, large_index=True, seed_size=20, threads=1, binary="snap-aligner")
+    align_reads(temp_dir, temp_file, temp_file2, filt='aligned', threads=1, edit_distance=20, min_read_len=50, binary="snap-aligner")
+    print(temp_dir)
+    print(temp_file)
+
+
+
 def test_suite():
     """
     Runs all the test functions
     :return:
     """
+    from sys import platform as _platform
     test_jaccard_1()
     test_jaccard_2_difflen()
     test_yield_overlaps()
@@ -999,4 +1081,6 @@ def test_suite():
     test_vector_formation()
     form_matrices_test()
     test_lsqnonneg()
+    if _platform == "linux" or _platform == "linux2":
+        test_snap()
 

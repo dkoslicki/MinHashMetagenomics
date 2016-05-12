@@ -264,65 +264,12 @@ reference_file = "/nfs1/Koslicki_Lab/koslickd/CommonKmers/TrainingOnRepoPhlAnPyt
 fastq_out_basename = os.path.join(out_dir, os.path.basename(sample_file) + "_" + os.path.basename(reference_file))
 
 
-def build_reference(reference_file, output_dir, large_index=True, seed_size=20, threads=48):
-    """
-    Wrapper for the SNAP aligner index building
-    :param reference_file: file from which an index will be made
-    :param output_dir: directory in which to put the index files
-    :param large_index: makes the index about 30% bigger, but faster for quick/inaccurate alignements
-    :param seed_size: for initial match to begin alignment
-    :param threads: number of threads to use
-    :return: exit code of SNAP
-    """
-    if large_index:
-        cmd = "/home/pi/koslickd/./snap-aligner index " + reference_file + " " + output_dir + " -large -s " + str(seed_size) + " -t " + str(threads)
-    else:
-        cmd = "/home/pi/koslickd/./snap-aligner index " + reference_file + " " + output_dir + " -s " + str(seed_size) + " -t " + str(threads)
-    exit_code = subprocess.call(cmd, shell=True,  stdout=FNULL, stderr=subprocess.STDOUT)
-    return exit_code
 
-
-def align_reads(index_dir, sample_file, out_file, filt='aligned', threads=48, edit_distance=20, min_read_len=50):  # NOTE: snap-aligner will take SAM and BAM as INPUT!!
-    """
-    Wrapper for the SNAP aligner.
-    :param index_dir: Directory in which the index was placed (from build_reference
-    :param sample_file: The file to align (can be fasta/fastq/sam/bam
-    :param out_file: the output alignments. Can be *.sam or *.bam
-    :param filt: If the output should be the aligned results ('aligned'), just the unaligned results ('unaligned'), or all results ('all')
-    :param threads: number of threads to use
-    :param edit_distance: the maximum edit distance to allow for an alignment
-    :param min_read_len: Specify the minimum read length to align, reads shorter than this (after clipping) stay unaligned.  This should be
-       a good bit bigger than the seed length or you might get some questionable alignments.  Default 50
-    :return: exit code of SNAP
-    """
-    if filt == 'aligned':
-        cmd = "/home/pi/koslickd/./snap-aligner single " + index_dir + " " + sample_file + " -o " + out_file + " -F a -t " + str(threads) + " -d " + str(edit_distance) + " -mrl " + str(min_read_len)
-    elif filt == 'unaligned':
-        cmd = "/home/pi/koslickd/./snap-aligner single " + index_dir + " " + sample_file + " -o " + out_file + " -F u -t " + str(threads) + " -d " + str(edit_distance) + " -mrl " + str(min_read_len)
-    elif filt == 'all':
-        cmd = "/home/pi/koslickd/./snap-aligner single " + index_dir + " " + sample_file + " -o " + out_file + " -t " + str(threads) + " -d " + str(edit_distance) + " -mrl " + str(min_read_len)
-    else:
-        raise Exception("aligned must be 'aligned', 'unaligned', or 'all'")
-    exit_code = subprocess.call(cmd, shell=True,  stdout=FNULL, stderr=subprocess.STDOUT)
-    return exit_code
-
-
-def sam2fastq(sam_file, out_file):
-    """
-    Converts a SAM file to a FASTQ file. Quite hacky
-    :param sam_file: input SAM file
-    :param out_file: output FASTQ file
-    :return: exit code
-    """
-    cmd = "cat " + sam_file + " | grep -v ^@ | awk '{print \"@\"$1\"\\n\"$10\"\\n+\\n\"$11}' > " + out_file
-    exit_code = subprocess.call(cmd, shell=True,  stdout=FNULL, stderr=subprocess.STDOUT)
-    return exit_code
-
-build_reference(reference_file, index_dir)
-align_reads(index_dir, sample_file, sam_out_file, filt='aligned')
-sam2fastq(sam_out_file, fastq_out_basename + "_aligned.fastq")
-align_reads(index_dir, sample_file, sam_out_file, filt='unaligned')
-sam2fastq(sam_out_file, fastq_out_basename + "_unaligned.fastq")
+MH.build_reference(reference_file, index_dir)
+MH.align_reads(index_dir, sample_file, sam_out_file, filt='aligned')
+MH.sam2fastq(sam_out_file, fastq_out_basename + "_aligned.fastq")
+MH.align_reads(index_dir, sample_file, sam_out_file, filt='unaligned')
+MH.sam2fastq(sam_out_file, fastq_out_basename + "_unaligned.fastq")
 os.remove(sam_out_file)
 
 # More efficient thing to do is figure out how to get the output SAM to split over aligned and unaligned, rather than reading it twice...
@@ -350,27 +297,6 @@ sample_file = "/nfs1/Koslicki_Lab/koslickd/MinHash/Data/SRR172902.fastq"
 # reference_file = CEs[ind].input_file_name # Until I get snap on math0, or scipy on math1
 reference_file = "/nfs1/Koslicki_Lab/koslickd/CommonKmers/TrainingOnRepoPhlAnPython/TrainDataIn/Genomes/G000008565.fna"
 fastq_out_basename = os.path.join(out_dir, os.path.basename(sample_file) + "_" + os.path.basename(reference_file))
-def build_reference(reference_file, output_dir):
-    cmd = "/home/pi/koslickd/./snap-aligner index " + reference_file + " " + output_dir
-    dummy = subprocess.call(cmd, shell=True,  stdout=FNULL, stderr=subprocess.STDOUT)
-    return
-
-
-def align_reads(index_dir, sample_file, out_file, aligned=True):  # NOTE: snap-aligner will take SAM and BAM as INPUT!!
-    if aligned:
-        cmd = "/home/pi/koslickd/./snap-aligner single " + index_dir + " " + sample_file + " -o " + out_file + " -F a -t 48 -d 20 -mrl 40"  # mrl is the minimum read length that aligns (indexed with default 20, mrl=40, -d=20 -> bad alignments?
-    elif not aligned:
-        cmd = "/home/pi/koslickd/./snap-aligner single " + index_dir + " " + sample_file + " -o " + out_file + " -F u -t 48 -d 20 -mrl 40"
-    else:
-        raise Exception("aligned must be True or False")
-    dummy = subprocess.call(cmd, shell=True,  stdout=FNULL, stderr=subprocess.STDOUT)
-    return
-
-
-def sam2fastq(sam_file, out_file):
-    cmd = "cat " + sam_file + " | grep -v ^@ | awk '{print \"@\"$1\"\\n\"$10\"\\n+\\n\"$11}' > " + out_file
-    dummy = subprocess.call(cmd, shell=True,  stdout=FNULL, stderr=subprocess.STDOUT)
-    return
 
 
 
@@ -380,21 +306,21 @@ reference_files = ['/nfs1/Koslicki_Lab/koslickd/CommonKmers/TrainingOnRepoPhlAnP
 for i in range(len(reference_files)):
     reference_file = reference_files[i]
     if i == 0:
-        fastq_out_basename = os.path.join(out_dir, os.path.basename(sample_file) + "_" + os.path.basename(reference_file))
-        build_reference(reference_file, index_dir)
-        align_reads(index_dir, sample_file, sam_out_file, aligned=True)
-        sam2fastq(sam_out_file, fastq_out_basename + "_aligned.fastq")
-        align_reads(index_dir, sample_file, sam_out_file, aligned=False)
-        sam2fastq(sam_out_file, fastq_out_basename + "_unaligned.fastq")  # Better yet, just call this unaligned.fastq
+        MH.fastq_out_basename = os.path.join(out_dir, os.path.basename(sample_file) + "_" + os.path.basename(reference_file))
+        MH.build_reference(reference_file, index_dir)
+        MH.align_reads(index_dir, sample_file, sam_out_file, filt="aligned")
+        MH.sam2fastq(sam_out_file, fastq_out_basename + "_aligned.fastq")
+        MH.align_reads(index_dir, sample_file, sam_out_file, filt="unaligned")
+        MH.sam2fastq(sam_out_file, fastq_out_basename + "_unaligned.fastq")  # Better yet, just call this unaligned.fastq
         os.remove(sam_out_file)
     else:
         fastq_out_basename = os.path.join(out_dir, os.path.basename(sample_file) + "_" + os.path.basename(reference_file))
         prev_fastq_file = os.path.join(out_dir, os.path.basename(sample_file) + "_" + os.path.basename(reference_files[i-1]) + "_unaligned.fastq")  # Better yet, just call this unaligned.fastq
-        build_reference(reference_file, index_dir)
-        align_reads(index_dir, prev_fastq_file, sam_out_file, aligned=True)
-        sam2fastq(sam_out_file, fastq_out_basename + "_aligned.fastq")
-        align_reads(index_dir, prev_fastq_file, sam_out_file, aligned=False)
-        sam2fastq(sam_out_file, fastq_out_basename + "_unaligned.fastq")
+        MH.build_reference(reference_file, index_dir)
+        MH.align_reads(index_dir, prev_fastq_file, sam_out_file, filt="aligned")
+        MH.sam2fastq(sam_out_file, fastq_out_basename + "_aligned.fastq")
+        MH.align_reads(index_dir, prev_fastq_file, sam_out_file, filt="unaligned")
+        MH.sam2fastq(sam_out_file, fastq_out_basename + "_unaligned.fastq")
         os.remove(sam_out_file)
         os.remove(prev_fastq_file)
 
