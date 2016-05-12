@@ -905,6 +905,21 @@ def sam2fastq(sam_file, out_file):
     FNULL.close()
     return exit_code
 
+def top_down_align(sample_file, reference_files, index_dir, out_dir, threads=multiprocessing.cpu_count(), large_index=True, seed_size=20, edit_distance=20, min_read_len=50, binary="snap-aligner"):
+    sam_out_file_prev = os.path.join(out_dir, sample_file + "_unaligned_prev.sam")
+    sam_out_file = os.path.join(out_dir, sample_file + "_unaligned.sam")
+    for i in range(len(reference_files)):
+        reference_file = reference_files[i]
+        if i == 0:
+            build_reference(reference_file, index_dir, large_index=large_index, seed_size=seed_size, threads=threads, binary=binary)
+            align_reads(index_dir, sample_file, sam_out_file_prev, filt="unaligned", threads=threads, edit_distance=edit_distance, min_read_len=min_read_len, binary=binary)
+        else:
+            build_reference(reference_file, index_dir, large_index=large_index, seed_size=seed_size, threads=threads, binary=binary)
+            align_reads(index_dir, sam_out_file_prev, sam_out_file, filt="unaligned", threads=threads, edit_distance=edit_distance, min_read_len=min_read_len, binary=binary)
+            shutil.move(sam_out_file, sam_out_file_prev)  # need to check if this is ok
+    shutil.move(sam_out_file_prev, sam_out_file)
+
+
 
 
 ##########################################################################
@@ -1100,6 +1115,6 @@ def test_suite():
     test_vector_formation()
     form_matrices_test()
     test_lsqnonneg()
-    if _platform == "linux" or _platform == "linux2":
+    if _platform == "linux" or _platform == "linux2":  # I don't have snap installed on my mac, so only do the test on the server
         test_snap()
 
