@@ -876,6 +876,7 @@ def build_reference_multiple(reference_files, output_dir, large_index=True, seed
     :param binary: location of the snap-aligner binary
     :return: list of location of all the indexes
     """
+    # Note: I could parallelize this simple for loop if I wanted...
     index_dirs = []
     for reference_file_name in reference_files:
         prefix, ext = os.path.splitext(os.path.basename(reference_file_name))
@@ -913,6 +914,20 @@ def align_reads(index_dir, sample_file, out_file, filt='aligned', threads=multip
     return exit_code
 
 def stream_aligned_save_unaligned(index_dirs, sample_file, out_file, filt='unaligned', threads=multiprocessing.cpu_count(), edit_distance=20, min_read_len=50, binary="snap-aligner"):
+    """
+    This will take a directory of indexes and stream filter the sample reads through it
+    :param index_dirs: list of directories of snap indexes
+    :param sample_file: sample file to align
+    :param out_file: .sam or .bam file of reads that did/did not align to anything in the index_dirs
+    :param filt: filtering option (unaligned, aligned, or all)
+    :param threads: number of threads to use for each instance of snap-align
+    :param edit_distance: max edit distanct to allow for an alignment
+    :param min_read_len: Specify the minimum read length to align, reads shorter than this (after clipping) stay unaligned.  This should be
+       a good bit bigger than the seed length or you might get some questionable alignments.  Default 50
+    :param binary: location of the snap-aligner binary
+    :return: exit code of SNAP
+    """
+    FNULL = open(os.devnull, 'w')
     big_cmd = ''
     i = 0
     for index_dir in index_dirs:
@@ -945,7 +960,7 @@ def stream_aligned_save_unaligned(index_dirs, sample_file, out_file, filt='unali
                 raise Exception("aligned must be 'aligned', 'unaligned', or 'all'")
         i += 1
         big_cmd = big_cmd + " | " + cmd
-        print(big_cmd)
+        exit_code = subprocess.call(big_cmd, shell=True,  stdout=FNULL, stderr=subprocess.STDOUT)
 
 
 def sam2fastq(sam_file, out_file):
