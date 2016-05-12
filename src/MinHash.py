@@ -474,7 +474,10 @@ def form_jaccard_count_matrix(all_CEs):
         shared_counts[i] = all_CEs[i]._counts
 
     pool = multiprocessing.Pool(processes=multiprocessing.cpu_count())
-    res = pool.imap(jaccard_count, indicies, chunksize=np.floor(len(indicies)/float(multiprocessing.cpu_count())))
+    chunk_size = np.floor(len(indicies)/float(multiprocessing.cpu_count()))
+    if chunk_size < 1:
+        chunk_size = 1
+    res = pool.imap(jaccard_count, indicies, chunksize=chunk_size)
     for (i, j), val in zip(indicies, res):
         A[i, j] = val[0]
         A[j, i] = val[1]
@@ -527,7 +530,10 @@ def form_jaccard_matrix(all_CEs):
         shared_mins[i] = all_CEs[i]._mins
 
     pool = multiprocessing.Pool(processes=multiprocessing.cpu_count())
-    res = pool.imap(jaccard, indicies, chunksize=np.floor(len(indicies)/float(multiprocessing.cpu_count())))
+    chunk_size = np.floor(len(indicies)/float(multiprocessing.cpu_count()))
+    if chunk_size < 1:
+        chunk_size = 1
+    res = pool.imap(jaccard, indicies, chunksize=chunk_size)
     for (i, j), val in zip(indicies, res):
         A[i, j] = val
         A[j, i] = val
@@ -854,7 +860,6 @@ def build_reference(reference_file, output_dir, large_index=True, seed_size=20, 
         cmd = binary + " index " + reference_file + " " + output_dir + " -large -s " + str(seed_size) + " -t" + str(threads)
     else:
         cmd = binary + " index " + reference_file + " " + output_dir + " -s " + str(seed_size) + " -t" + str(threads)
-    print(cmd)
     exit_code = subprocess.call(cmd, shell=True,  stdout=FNULL, stderr=subprocess.STDOUT)
     return exit_code
 
