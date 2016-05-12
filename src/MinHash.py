@@ -1053,7 +1053,7 @@ def test_lsqnonneg():
 def test_snap():
     temp_dir = tempfile.mkdtemp()
     in_file = os.path.join(temp_dir,"in.fasta")
-    out_file = os.path.joing(temp_dir,"out.sam")
+    out_file = os.path.join(temp_dir,"out.sam")
     fid = open(in_file, "w")
     fid.write(">seq1\n")
     fid.write("ACTGTTACGTCAGATGATGACTCGTGACGCATCGCAGCATGCATGTGATCCAGATCGATGCATG\n")
