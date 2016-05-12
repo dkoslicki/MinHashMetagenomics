@@ -865,10 +865,10 @@ def build_reference(reference_file, output_dir, large_index=True, seed_size=20, 
     exit_code = subprocess.call(cmd, shell=True,  stdout=FNULL, stderr=subprocess.STDOUT)
     return exit_code
 
-def build_reference_multiple(reference_file_names, output_dir, large_index=True, seed_size=20, threads=multiprocessing.cpu_count(), binary="snap-aligner"):
+def build_reference_multiple(reference_files, output_dir, large_index=True, seed_size=20, threads=multiprocessing.cpu_count(), binary="snap-aligner"):
     """
     Will build indexes for SNAP aligner for multiple references
-    :param reference_file_names: input reference fasta files
+    :param reference_files: input reference fasta files
     :param output_dir: directory where all the indexes will be put
     :param large_index: makes the index about 30% bigger, but faster for quick/inaccurate alignements
     :param seed_size: for initial match to begin alignment
@@ -877,11 +877,11 @@ def build_reference_multiple(reference_file_names, output_dir, large_index=True,
     :return: list of location of all the indexes
     """
     reference_dirs = []
-    for reference_file_name in reference_file_names:
+    for reference_file_name in reference_files:
         prefix, ext = os.path.splitext(os.path.basename(reference_file_name))
         reference_dir = os.path.join(output_dir, prefix)
         reference_dirs.append(reference_dir)
-        exit_code = build_reference(reference_file_name, output_dir, large_index=large_index, seed_size=seed_size, threads=threads, binary=binary)
+        exit_code = build_reference(reference_file_name, reference_dir, large_index=large_index, seed_size=seed_size, threads=threads, binary=binary)
     return reference_dirs
 
 
