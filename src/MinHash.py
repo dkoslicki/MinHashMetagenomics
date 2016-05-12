@@ -941,7 +941,7 @@ def stream_aligned_save_unaligned(index_dirs, sample_file, out_file, filt='unali
             else:
                 raise Exception("aligned must be 'aligned', 'unaligned', or 'all'")
             big_cmd = " " + cmd
-        elif i < len(index_dir) - 1:
+        elif i < len(index_dir) - 2:
             if filt == 'aligned':
                 cmd = binary + " single " + index_dir + " -sam - -o -sam - -f -F a -t " + str(threads) + " -d " + str(edit_distance) + " -mrl " + str(min_read_len)
             elif filt == 'unaligned':
