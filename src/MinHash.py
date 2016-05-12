@@ -960,7 +960,8 @@ def stream_aligned_save_unaligned(index_dirs, sample_file, out_file, filt='unali
                 raise Exception("aligned must be 'aligned', 'unaligned', or 'all'")
         i += 1
         big_cmd = big_cmd + " | " + cmd
-        exit_code = subprocess.call(big_cmd, shell=True,  stdout=FNULL, stderr=subprocess.STDOUT)
+        print(big_cmd)
+        #exit_code = subprocess.call(big_cmd, shell=True,  stdout=FNULL, stderr=subprocess.STDOUT)
 
 
 def sam2fastq(sam_file, out_file):
