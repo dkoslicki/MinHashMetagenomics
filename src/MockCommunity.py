@@ -329,20 +329,26 @@ fid = open('/nfs1/Koslicki_Lab/koslickd/MinHash/Data/FileNames.txt', 'r')
 file_names = fid.readlines()
 fid.close()
 file_names = [name.strip() for name in file_names]
-training_n = 5000
+training_n = 50000
 out_file_names = ["/nfs1/Koslicki_Lab/koslickd/MinHash/Out/N"+str(training_n)+"k31/" + os.path.basename(item) + ".CE.h5" for item in file_names]
 CEs = MH.import_multiple_hdf5(out_file_names)
 n = 50000
 MCE_in_comparison = MH.import_single_hdf5('/nfs1/Koslicki_Lab/koslickd/MinHash/Out/SRR172902.fastq.CE_N'+str(n)+'_k31_inComparison.h5')
 MCE_all = MH.import_single_hdf5('/nfs1/Koslicki_Lab/koslickd/MinHash/Out/SRR172902.fastq.CE_N'+str(n)+'_k31_all.h5')
 Y_count_in_comparison = MCE_in_comparison.count_vector(CEs)
-reference_files = []
 eps = .001
-reconstruction = MH.jaccard_count_lsqnonneg(CEs, Y_count_in_comparison, .001)
-N = 40
-indicies = reconstruction.argsort()[-N:][::-1]
+reconstruction = MH.jaccard_count_lsqnonneg(CEs, Y_count_in_comparison, eps)
+#N = 40
+# indicies = reconstruction.argsort()[-N:][::-1]
+reconstruction = reconstruction/float(sum(reconstruction))
+indicies = reconstruction.argsort()[::-1]
+reference_files = []
 for index in indicies:
     reference_files.append(CEs[index].input_file_name)
+    if reconstruction[index] < eps:  # Add at leat one more index below the threshold (to make sure I don't have an empty list of indexes)
+        break
+
+print("Number of indicies to build: %d" % len(reference_files))
 
 index_dir = "/scratch/temp/SNAP/"
 out_dir = "/nfs1/Koslicki_Lab/koslickd/MinHash/Out/Temp/"
@@ -365,9 +371,31 @@ os.remove(out_sam)
 for index_dir in index_dirs:
     shutil.rmtree(index_dir)
 
+# Total running time, all eps = .001
+# training_n 500
+# total time: 172.598919
+# 227M fastq
 
+# training_n 5000
+# total time: 328.972598
+# 182M fastq
+
+# training_n 50000
+# total time: 624.505597
+# 182M fastq
+
+
+
+
+# BAM vs SAM
+# training_n 5000
 # 230 for SAM
 # 209.065743 for BAM. Let's go with BAM
+
+
+#############################################
+# The whole kit and kaboodle on a soil sample
+
 
 
 

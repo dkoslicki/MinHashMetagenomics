@@ -32,6 +32,7 @@ warnings.simplefilter("ignore", RuntimeWarning)
 # Get DIAMOND implemented
 # Make the snap streaming automatically chunk the index_dirs if there are too many (can get max command len with xargs --show-limits)
 # Finish build_one_reference_from_many
+# Make the count vector over a shared array (just like the kmer matricies)
 
 
 notACTG = re.compile('[^ACTG]')
