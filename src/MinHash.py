@@ -962,13 +962,11 @@ def stream_aligned_save_unaligned(index_dirs, sample_file, out_file, filt='unali
                 raise Exception("aligned must be 'aligned', 'unaligned', or 'all'")
             big_cmd = big_cmd + " | " + cmd
         i += 1
-        print(i)
     if len(big_cmd) >= 2616670:
         raise Exception("The typical maximum command length is 2616670, and running it with this many indicies would exceed that. Please iterate over index_dirs in chunks.")
     else:
-        #exit_code = subprocess.call(big_cmd, shell=True,  stdout=FNULL, stderr=subprocess.STDOUT)
-        print(big_cmd)
-    #return exit_code
+        exit_code = subprocess.call(big_cmd, shell=True,  stdout=FNULL, stderr=subprocess.STDOUT)
+    return exit_code
 
 
 def sam2fastq(sam_file, out_file):
