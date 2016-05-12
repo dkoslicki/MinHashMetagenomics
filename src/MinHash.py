@@ -881,6 +881,7 @@ def align_reads(index_dir, sample_file, out_file, filt='aligned', threads=48, ed
         cmd = binary + " single " + index_dir + " " + sample_file + " -o " + out_file + " -t" + str(threads) + " -d " + str(edit_distance) + " -mrl " + str(min_read_len)
     else:
         raise Exception("aligned must be 'aligned', 'unaligned', or 'all'")
+    print(cmd)
     exit_code = subprocess.call(cmd, shell=True,  stdout=FNULL, stderr=subprocess.STDOUT)
     FNULL.close()
     return exit_code
@@ -1050,15 +1051,17 @@ def test_lsqnonneg():
 
 
 def test_snap():
-    temp_file = tempfile.mktemp()
-    temp_file2 = tempfile.mktemp()
+    temp_file = tempfile.mktemp()+".fa"
+    temp_file2 = tempfile.mktemp()+".sam"
     temp_dir = tempfile.mkdtemp()
-    fid = open(temp_file+".fa", "w")
+    fid = open(temp_file, "w")
     fid.write(">seq1\n")
     fid.write("ACTGTTACGTCAGATGATGACTCGTGACGCATCGCAGCATGCATGTGATCCAGATCGATGCATG\n")
     fid.close()
-    build_reference(temp_file, temp_dir, large_index=True, seed_size=20, threads=1, binary="snap-aligner")
-    align_reads(temp_dir, temp_file, temp_file2, filt='aligned', threads=1, edit_distance=20, min_read_len=50, binary="snap-aligner")
+    res = build_reference(temp_file, temp_dir, large_index=True, seed_size=20, threads=1, binary="snap-aligner")
+    assert res == 0
+    res = align_reads(temp_dir, temp_file, temp_file2, filt='aligned', threads=1, edit_distance=20, min_read_len=50, binary="snap-aligner")
+    #assert res == 0
     print(temp_dir)
     print(temp_file)
 
