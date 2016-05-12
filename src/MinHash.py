@@ -15,6 +15,7 @@ from itertools import *
 import collections
 from blist import *  # note, the import functions import the _mins etc. as lists, and the CE class imports them as blists.
 # This shouldn't cause an issue, but will lead to slow performance if a CE is imported, then additional things are added.
+# I.e. If you import a CE, don't add new elements, or you might have a bad day (or at least a long one).
 import bisect
 import scipy.optimize
 import ctypes
@@ -26,7 +27,6 @@ warnings.simplefilter("ignore", RuntimeWarning)
 # After that point, can use amino acids
 # Get SNAP implemented
 # Get DIAMOND implemented
-# Make import functions import as blists
 
 
 notACTG = re.compile('[^ACTG]')

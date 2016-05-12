@@ -264,17 +264,20 @@ reference_file = "/nfs1/Koslicki_Lab/koslickd/CommonKmers/TrainingOnRepoPhlAnPyt
 fastq_out_basename = os.path.join(out_dir, os.path.basename(sample_file) + "_" + os.path.basename(reference_file))
 
 
-def build_reference(reference_file, output_dir):
-    cmd = "/home/pi/koslickd/./snap-aligner index " + reference_file + " " + output_dir
+def build_reference(reference_file, output_dir, large_index=True, seed_size=20, threads=48):
+    if large_index:
+        cmd = "/home/pi/koslickd/./snap-aligner index " + reference_file + " " + output_dir + " -large -s " + str(seed_size) + " -t " + str(threads)
+    else:
+        cmd = "/home/pi/koslickd/./snap-aligner index " + reference_file + " " + output_dir + " -s " + str(seed_size) + " -t " + str(threads)
     dummy = subprocess.call(cmd, shell=True,  stdout=FNULL, stderr=subprocess.STDOUT)
     return
 
 
-def align_reads(index_dir, sample_file, out_file, aligned=True):  # NOTE: snap-aligner will take SAM and BAM as INPUT!!
+def align_reads(index_dir, sample_file, out_file, aligned=True, threads=48, edit_distance=20, min_read_len=50):  # NOTE: snap-aligner will take SAM and BAM as INPUT!!
     if aligned:
-        cmd = "/home/pi/koslickd/./snap-aligner single " + index_dir + " " + sample_file + " -o " + out_file + " -F a -t 48 -d 20"
+        cmd = "/home/pi/koslickd/./snap-aligner single " + index_dir + " " + sample_file + " -o " + out_file + " -F a -t " + str(threads) + " -d " + str(edit_distance) + " -mrl " + str(min_read_len)
     elif not aligned:
-        cmd = "/home/pi/koslickd/./snap-aligner single " + index_dir + " " + sample_file + " -o " + out_file + " -F u -t 48 -d 20"
+        cmd = "/home/pi/koslickd/./snap-aligner single " + index_dir + " " + sample_file + " -o " + out_file + " -F u -t " + str(threads) + " -d " + str(edit_distance) + " -mrl " + str(min_read_len)
     else:
         raise Exception("aligned must be True or False")
     dummy = subprocess.call(cmd, shell=True,  stdout=FNULL, stderr=subprocess.STDOUT)
