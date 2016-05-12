@@ -944,7 +944,7 @@ def stream_aligned_save_unaligned(index_dirs, sample_file, out_file, filt='unali
             else:
                 raise Exception("aligned must be 'aligned', 'unaligned', or 'all'")
         i += 1
-        big_cmd = big_cmd + " " + cmd
+        big_cmd = big_cmd + " | " + cmd
         print(big_cmd)
 
 
