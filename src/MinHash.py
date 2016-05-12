@@ -940,6 +940,7 @@ def stream_aligned_save_unaligned(index_dirs, sample_file, out_file, filt='unali
                 cmd = binary + " single " + index_dir + " " + sample_file + " -o -sam - -f -t " + str(threads) + " -d " + str(edit_distance) + " -mrl " + str(min_read_len)
             else:
                 raise Exception("aligned must be 'aligned', 'unaligned', or 'all'")
+            big_cmd = cmd
         elif i < len(index_dir) - 1:
             if filt == 'aligned':
                 cmd = binary + " single " + index_dir + " -sam - -o -sam - -f -F a -t " + str(threads) + " -d " + str(edit_distance) + " -mrl " + str(min_read_len)
@@ -949,6 +950,7 @@ def stream_aligned_save_unaligned(index_dirs, sample_file, out_file, filt='unali
                 cmd = binary + " single " + index_dir + " -sam - -o -sam - -f -t " + str(threads) + " -d " + str(edit_distance) + " -mrl " + str(min_read_len)
             else:
                 raise Exception("aligned must be 'aligned', 'unaligned', or 'all'")
+            big_cmd = big_cmd + " | " + cmd
         else:
             if filt == 'aligned':
                 cmd = binary + " single " + index_dir + " -sam - -o " + out_file + " -f -F a -t " + str(threads) + " -d " + str(edit_distance) + " -mrl " + str(min_read_len)
@@ -958,8 +960,8 @@ def stream_aligned_save_unaligned(index_dirs, sample_file, out_file, filt='unali
                 cmd = binary + " single " + index_dir + " -sam - -o " + out_file + " -f -t " + str(threads) + " -d " + str(edit_distance) + " -mrl " + str(min_read_len)
             else:
                 raise Exception("aligned must be 'aligned', 'unaligned', or 'all'")
+            big_cmd = big_cmd + " | " + cmd
         i += 1
-        big_cmd = big_cmd + " | " + cmd
         print(big_cmd)
         #exit_code = subprocess.call(big_cmd, shell=True,  stdout=FNULL, stderr=subprocess.STDOUT)
 
