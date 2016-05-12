@@ -1051,19 +1051,19 @@ def test_lsqnonneg():
 
 
 def test_snap():
-    temp_file = tempfile.mktemp()+".fa"
-    temp_file2 = tempfile.mktemp()+".sam"
     temp_dir = tempfile.mkdtemp()
-    fid = open(temp_file, "w")
+    in_file = os.path.join(temp_dir,"in.fasta")
+    out_file = os.path.joing(temp_dir,"out.sam")
+    fid = open(in_file, "w")
     fid.write(">seq1\n")
     fid.write("ACTGTTACGTCAGATGATGACTCGTGACGCATCGCAGCATGCATGTGATCCAGATCGATGCATG\n")
     fid.close()
-    res = build_reference(temp_file, temp_dir, large_index=True, seed_size=20, threads=1, binary="snap-aligner")
+    res = build_reference(in_file, temp_dir, large_index=True, seed_size=20, threads=1, binary="snap-aligner")
     assert res == 0
-    res = align_reads(temp_dir, temp_file, temp_file2, filt='aligned', threads=1, edit_distance=20, min_read_len=50, binary="snap-aligner")
+    res = align_reads(temp_dir, in_file, out_file, filt='aligned', threads=1, edit_distance=20, min_read_len=50, binary="snap-aligner")
     #assert res == 0
-    print(temp_dir)
-    print(temp_file)
+    print(in_file)
+    print(out_file)
 
 
 
