@@ -1052,7 +1052,7 @@ def test_snap():
     temp_file = tempfile.mktemp()
     temp_file2 = tempfile.mktemp()
     temp_dir = tempfile.mkdtemp()
-    fid = open(temp_file, "w")
+    fid = open(temp_file+".fa", "w")
     fid.write(">seq1\n")
     fid.write("ACTGTTACGTCAGATGATGACTCGTGACGCATCGCAGCATGCATGTGATCCAGATCGATGCATG\n")
     fid.close()
