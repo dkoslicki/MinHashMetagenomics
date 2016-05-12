@@ -26,6 +26,7 @@ warnings.simplefilter("ignore", RuntimeWarning)
 # Implement hash_murmur3 to leave the khmer package. Need to implement reverse complement myself, etc.
 # After that point, can use amino acids
 # Get SNAP implemented
+# SNAP paired or single reads
 # Get DIAMOND implemented
 
 
@@ -831,6 +832,10 @@ def get_prime_lt_x(target):
     if i <= 0:
         raise RuntimeError("unable to find a prime number < %d" % (target))
 
+
+
+##########################################################################
+# Tests
 
 def test_jaccard_1():
     E1 = CountEstimator(n=0, ksize=21)
