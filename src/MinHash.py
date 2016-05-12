@@ -874,11 +874,11 @@ def align_reads(index_dir, sample_file, out_file, filt='aligned', threads=48, ed
     """
     FNULL = open(os.devnull, 'w')
     if filt == 'aligned':
-        cmd = binary + " single " + index_dir + " " + sample_file + " -o " + out_file + " -F a -t" + str(threads) + " -d " + str(edit_distance) + " -mrl " + str(min_read_len)
+        cmd = binary + " single " + index_dir + " " + sample_file + " -o " + out_file + " -F a -t " + str(threads) + " -d " + str(edit_distance) + " -mrl " + str(min_read_len)
     elif filt == 'unaligned':
-        cmd = binary + " single " + index_dir + " " + sample_file + " -o " + out_file + " -F u -t" + str(threads) + " -d " + str(edit_distance) + " -mrl " + str(min_read_len)
+        cmd = binary + " single " + index_dir + " " + sample_file + " -o " + out_file + " -F u -t " + str(threads) + " -d " + str(edit_distance) + " -mrl " + str(min_read_len)
     elif filt == 'all':
-        cmd = binary + " single " + index_dir + " " + sample_file + " -o " + out_file + " -t" + str(threads) + " -d " + str(edit_distance) + " -mrl " + str(min_read_len)
+        cmd = binary + " single " + index_dir + " " + sample_file + " -o " + out_file + " -t " + str(threads) + " -d " + str(edit_distance) + " -mrl " + str(min_read_len)
     else:
         raise Exception("aligned must be 'aligned', 'unaligned', or 'all'")
     print(cmd)
@@ -1063,7 +1063,7 @@ def test_snap():
     fid.write("@SRR172902.1213325\n")
     fid.write("GGATTGGTGTATTCACGCTAGAATTCTTGTTAATCATATTATAACACTGGTTAATAGAGGAATGCAAAAAGATGC\n")
     fid.write("+\n")
-    fid.write("BB@BABB<B>BBBBBBBBABB@@AAAA@A<@@@@A@A@@?@A?A@?@AB@;@@>@@A?>@>@<?@?=9==>?<<@")
+    fid.write("BB@BABB<B>BBBBBBBBABB@@AAAA@A<@@@@A@A@@?@A?A@?@AB@;@@>@@A?>@>@<?@?=9==>?<<@\n")
     fid.close()
     res = build_reference(index_file, temp_dir, large_index=True, seed_size=20, threads=1, binary="snap-aligner")
     assert res == 0
