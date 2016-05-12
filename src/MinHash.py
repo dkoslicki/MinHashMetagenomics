@@ -22,6 +22,7 @@ import ctypes
 import warnings
 import subprocess
 import filecmp
+import shutil
 warnings.simplefilter("ignore", RuntimeWarning)
 
 # To Do:
@@ -855,7 +856,6 @@ def build_reference(reference_file, output_dir, large_index=True, seed_size=20, 
         cmd = binary + " index " + reference_file + " " + output_dir + " -s " + str(seed_size) + " -t" + str(threads)
     print(cmd)
     exit_code = subprocess.call(cmd, shell=True,  stdout=FNULL, stderr=subprocess.STDOUT)
-    FNULL.close()
     return exit_code
 
 
@@ -882,7 +882,6 @@ def align_reads(index_dir, sample_file, out_file, filt='aligned', threads=48, ed
         cmd = binary + " single " + index_dir + " " + sample_file + " -o " + out_file + " -t " + str(threads) + " -d " + str(edit_distance) + " -mrl " + str(min_read_len)
     else:
         raise Exception("aligned must be 'aligned', 'unaligned', or 'all'")
-    print(cmd)
     exit_code = subprocess.call(cmd, shell=True,  stdout=FNULL, stderr=subprocess.STDOUT)
     FNULL.close()
     return exit_code
@@ -1073,9 +1072,8 @@ def test_snap():
     assert res == 0
     sam2fastq(out_sam, out_fastq)
     assert filecmp.cmp(align_file, out_fastq)
-    print(index_file)
-    print(align_file)
-    print(out_sam)
+    #shutil.rmtree(temp_dir)
+
 
 
 
