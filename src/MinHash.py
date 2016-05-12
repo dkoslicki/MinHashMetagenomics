@@ -31,6 +31,7 @@ warnings.simplefilter("ignore", RuntimeWarning)
 # SNAP paired or single reads
 # Get DIAMOND implemented
 # Make the snap streaming automatically chunk the index_dirs if there are too many (can get max command len with xargs --show-limits)
+# Finish build_one_reference_from_many
 
 
 notACTG = re.compile('[^ACTG]')
@@ -865,7 +866,8 @@ def build_reference(reference_file, output_dir, large_index=True, seed_size=20, 
     exit_code = subprocess.call(cmd, shell=True,  stdout=FNULL, stderr=subprocess.STDOUT)
     return exit_code
 
-def build_reference_multiple(reference_files, output_dir, large_index=True, seed_size=20, threads=multiprocessing.cpu_count(), binary="snap-aligner"):
+
+def build_references(reference_files, output_dir, large_index=True, seed_size=20, threads=multiprocessing.cpu_count(), binary="snap-aligner"):
     """
     Will build indexes for SNAP aligner for multiple references
     :param reference_files: input reference fasta files
@@ -885,6 +887,10 @@ def build_reference_multiple(reference_files, output_dir, large_index=True, seed
         exit_code = build_reference(reference_file_name, reference_dir, large_index=large_index, seed_size=seed_size, threads=threads, binary=binary)
     return index_dirs
 
+
+def build_one_reference_from_many(reference_files, output_dir, large_index=True, seed_size=20, threads=multiprocessing.cpu_count(), binary="snap-aligner"):
+    #Cat the files together, then call build_reference.
+    return
 
 def align_reads(index_dir, sample_file, out_file, filt='aligned', threads=multiprocessing.cpu_count(), edit_distance=20, min_read_len=50, binary="snap-aligner"):  # NOTE: snap-aligner will take SAM and BAM as INPUT!
     """

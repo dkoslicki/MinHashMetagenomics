@@ -324,6 +324,7 @@ import os
 import MinHash as MH
 import shutil
 import timeit
+outT0 = timeit.default_timer()
 fid = open('/nfs1/Koslicki_Lab/koslickd/MinHash/Data/FileNames.txt', 'r')
 file_names = fid.readlines()
 fid.close()
@@ -336,6 +337,7 @@ MCE_in_comparison = MH.import_single_hdf5('/nfs1/Koslicki_Lab/koslickd/MinHash/O
 MCE_all = MH.import_single_hdf5('/nfs1/Koslicki_Lab/koslickd/MinHash/Out/SRR172902.fastq.CE_N'+str(n)+'_k31_all.h5')
 Y_count_in_comparison = MCE_in_comparison.count_vector(CEs)
 reference_files = []
+eps = .001
 reconstruction = MH.jaccard_count_lsqnonneg(CEs, Y_count_in_comparison, .001)
 N = 40
 indicies = reconstruction.argsort()[-N:][::-1]
@@ -346,7 +348,7 @@ index_dir = "/scratch/temp/SNAP/"
 out_dir = "/nfs1/Koslicki_Lab/koslickd/MinHash/Out/Temp/"
 sample_file = "/nfs1/Koslicki_Lab/koslickd/MinHash/Data/SRR172902.fastq"
 
-index_dirs = MH.build_reference_multiple(reference_files, index_dir)
+index_dirs = MH.build_references(reference_files, index_dir)
 out_sam = "/nfs1/Koslicki_Lab/koslickd/MinHash/Out/Temp/out.sam"
 t0 = timeit.default_timer()
 MH.stream_aligned_save_unaligned(index_dirs, sample_file, out_sam)
@@ -355,6 +357,8 @@ print("Alignment time: %f" % (t1-t0))
 pre, ext = os.path.splitext(out_sam)
 out_fastq = pre + ".fastq"
 MH.sam2fastq(out_sam, out_fastq)
+outT1 = timeit.default_timer()
+print("Total time: %f" % (outT1-outT0))
 
 # Clean up
 os.remove(out_sam)
@@ -362,7 +366,8 @@ for index_dir in index_dirs:
     shutil.rmtree(index_dir)
 
 
-
+# 230 for SAM
+# 209.065743 for BAM. Let's go with BAM
 
 
 
