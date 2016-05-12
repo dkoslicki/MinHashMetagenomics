@@ -966,7 +966,7 @@ def stream_aligned_save_unaligned(index_dirs, sample_file, out_file, filt='unali
         raise Exception("The typical maximum command length is 2616670, and running it with this many indicies would exceed that. Please iterate over index_dirs in chunks.")
     else:
         #exit_code = subprocess.call(big_cmd, shell=True,  stdout=FNULL, stderr=subprocess.STDOUT)
-    print(big_cmd)
+        print(big_cmd)
     return exit_code
 
 
