@@ -301,7 +301,8 @@ indicies = reconstruction.argsort()[-N:][::-1]
 for index in indicies:
     reference_files.append(CEs[index].input_file_name)
 
-index_dir = "/nfs1/Koslicki_Lab/koslickd/MinHash/Out/Temp/SNAP"
+#index_dir = "/nfs1/Koslicki_Lab/koslickd/MinHash/Out/Temp/SNAP"
+index_dir = "/scratch/temp/SNAP/"
 out_dir = "/nfs1/Koslicki_Lab/koslickd/MinHash/Out/Temp/"
 sample_file = "/nfs1/Koslicki_Lab/koslickd/MinHash/Data/SRR172902.fastq"
 
@@ -313,6 +314,12 @@ out_sam = MH.top_down_align(sample_file, reference_files[0:10], index_dir, out_d
 pre, ext = os.path.splitext(out_sam)
 out_fastq = pre + ".fastq"
 MH.sam2fastq(out_sam, out_fastq)
+
+
+##############################
+# Try the streaming approach
+index_dirs = MH.build_reference_multiple(reference_files[0:10], index_dir)
+MH.stream_aligned_save_unaligned(index_dirs, sample_file, "/nfs1/Koslicki_Lab/koslickd/MinHash/Out/Temp/out.sam")
 
 
 

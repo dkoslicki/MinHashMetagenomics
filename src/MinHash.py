@@ -876,16 +876,16 @@ def build_reference_multiple(reference_files, output_dir, large_index=True, seed
     :param binary: location of the snap-aligner binary
     :return: list of location of all the indexes
     """
-    reference_dirs = []
+    index_dirs = []
     for reference_file_name in reference_files:
         prefix, ext = os.path.splitext(os.path.basename(reference_file_name))
         reference_dir = os.path.join(output_dir, prefix)
-        reference_dirs.append(reference_dir)
+        index_dirs.append(reference_dir)
         exit_code = build_reference(reference_file_name, reference_dir, large_index=large_index, seed_size=seed_size, threads=threads, binary=binary)
-    return reference_dirs
+    return index_dirs
 
 
-def align_reads(index_dir, sample_file, out_file, filt='aligned', threads=multiprocessing.cpu_count(), edit_distance=20, min_read_len=50, binary="snap-aligner"):  # NOTE: snap-aligner will take SAM and BAM as INPUT!!
+def align_reads(index_dir, sample_file, out_file, filt='aligned', threads=multiprocessing.cpu_count(), edit_distance=20, min_read_len=50, binary="snap-aligner"):  # NOTE: snap-aligner will take SAM and BAM as INPUT!
     """
     Wrapper for the SNAP aligner.
     :param index_dir: Directory in which the index was placed (from build_reference
@@ -911,6 +911,41 @@ def align_reads(index_dir, sample_file, out_file, filt='aligned', threads=multip
     exit_code = subprocess.call(cmd, shell=True,  stdout=FNULL, stderr=subprocess.STDOUT)
     FNULL.close()
     return exit_code
+
+def stream_aligned_save_unaligned(index_dirs, sample_file, out_file, filt='unaligned', threads=multiprocessing.cpu_count(), edit_distance=20, min_read_len=50, binary="snap-aligner"):
+    big_cmd = ''
+    i = 0
+    for index_dir in index_dirs:
+        if i == 0:
+            if filt == 'aligned':
+                cmd = binary + " single " + index_dir + " " + sample_file + " -o -sam - -f -F a -t " + str(threads) + " -d " + str(edit_distance) + " -mrl " + str(min_read_len)
+            elif filt == 'unaligned':
+                cmd = binary + " single " + index_dir + " " + sample_file + " -o -sam - -f -F u -t " + str(threads) + " -d " + str(edit_distance) + " -mrl " + str(min_read_len)
+            elif filt == 'all':
+                cmd = binary + " single " + index_dir + " " + sample_file + " -o -sam - -f -t " + str(threads) + " -d " + str(edit_distance) + " -mrl " + str(min_read_len)
+            else:
+                raise Exception("aligned must be 'aligned', 'unaligned', or 'all'")
+        elif i < len(index_dir) - 1:
+            if filt == 'aligned':
+                cmd = binary + " single " + index_dir + " -sam - -o -sam - -f -F a -t " + str(threads) + " -d " + str(edit_distance) + " -mrl " + str(min_read_len)
+            elif filt == 'unaligned':
+                cmd = binary + " single " + index_dir + " -sam - -o -sam - -f -F u -t " + str(threads) + " -d " + str(edit_distance) + " -mrl " + str(min_read_len)
+            elif filt == 'all':
+                cmd = binary + " single " + index_dir + " -sam - -o -sam - -f -t " + str(threads) + " -d " + str(edit_distance) + " -mrl " + str(min_read_len)
+            else:
+                raise Exception("aligned must be 'aligned', 'unaligned', or 'all'")
+        else:
+            if filt == 'aligned':
+                cmd = binary + " single " + index_dir + " -sam - -o " + out_file + " -f -F a -t " + str(threads) + " -d " + str(edit_distance) + " -mrl " + str(min_read_len)
+            elif filt == 'unaligned':
+                cmd = binary + " single " + index_dir + " -sam - -o " + out_file + " -f -F u -t " + str(threads) + " -d " + str(edit_distance) + " -mrl " + str(min_read_len)
+            elif filt == 'all':
+                cmd = binary + " single " + index_dir + " -sam - -o " + out_file + " -f -t " + str(threads) + " -d " + str(edit_distance) + " -mrl " + str(min_read_len)
+            else:
+                raise Exception("aligned must be 'aligned', 'unaligned', or 'all'")
+        i += 1
+        big_cmd = big_cmd + " " + cmd
+        print(big_cmd)
 
 
 def sam2fastq(sam_file, out_file):
