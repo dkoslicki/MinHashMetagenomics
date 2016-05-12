@@ -880,11 +880,11 @@ def align_reads(index_dir, sample_file, out_file, filt='aligned', threads=48, ed
     """
     FNULL = open(os.devnull, 'w')
     if filt == 'aligned':
-        cmd = binary + " single " + index_dir + " " + sample_file + " -o " + out_file + " -F a -t " + str(threads) + " -d " + str(edit_distance) + " -mrl " + str(min_read_len)
+        cmd = binary + " single " + index_dir + " " + sample_file + " -o " + out_file + " -f -F a -t " + str(threads) + " -d " + str(edit_distance) + " -mrl " + str(min_read_len)
     elif filt == 'unaligned':
-        cmd = binary + " single " + index_dir + " " + sample_file + " -o " + out_file + " -F u -t " + str(threads) + " -d " + str(edit_distance) + " -mrl " + str(min_read_len)
+        cmd = binary + " single " + index_dir + " " + sample_file + " -o " + out_file + " -f -F u -t " + str(threads) + " -d " + str(edit_distance) + " -mrl " + str(min_read_len)
     elif filt == 'all':
-        cmd = binary + " single " + index_dir + " " + sample_file + " -o " + out_file + " -t " + str(threads) + " -d " + str(edit_distance) + " -mrl " + str(min_read_len)
+        cmd = binary + " single " + index_dir + " " + sample_file + " -o " + out_file + " -f -t " + str(threads) + " -d " + str(edit_distance) + " -mrl " + str(min_read_len)
     else:
         raise Exception("aligned must be 'aligned', 'unaligned', or 'all'")
     exit_code = subprocess.call(cmd, shell=True,  stdout=FNULL, stderr=subprocess.STDOUT)
@@ -906,8 +906,8 @@ def sam2fastq(sam_file, out_file):
     return exit_code
 
 def top_down_align(sample_file, reference_files, index_dir, out_dir, threads=multiprocessing.cpu_count(), large_index=True, seed_size=20, edit_distance=20, min_read_len=50, binary="snap-aligner"):
-    sam_out_file_prev = os.path.join(out_dir, sample_file + "_unaligned_prev.sam")
-    sam_out_file = os.path.join(out_dir, sample_file + "_unaligned.sam")
+    sam_out_file_prev = os.path.join(out_dir, os.path.basename(sample_file) + "_unaligned_prev.sam")
+    sam_out_file = os.path.join(out_dir, os.path.basename(sample_file) + "_unaligned.sam")
     for i in range(len(reference_files)):
         reference_file = reference_files[i]
         if i == 0:
