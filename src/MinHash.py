@@ -579,7 +579,7 @@ def jaccard_count_lsqnonneg(CEs, Y, eps, machine_eps=1e-07):
     :return: a vector x that approximately solves A x = Y subject to x >= 0 while ignoring rows/columns with Y[i] < eps
     """
     indicies = Y >= eps
-    if not indicies:
+    if not indicies.any():
         raise Exception("No entries of Y are above eps: %f. Please decrease eps." % eps)
     Y_eps = Y[indicies]
     CEs_eps = []
