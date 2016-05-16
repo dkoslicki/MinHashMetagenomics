@@ -395,7 +395,86 @@ for index_dir in index_dirs:
 
 #############################################
 # The whole kit and kaboodle on a soil sample
+import sys
+sys.path.append('/nfs1/Koslicki_Lab/koslickd/Repositories/MinHashMetagenomics/src/')
+import os
+import MinHash as MH
+import shutil
+import timeit
+import h5py
+outT0 = timeit.default_timer()
+n = 50000
+# Get the mins in the training database
+fid = h5py.File('/nfs1/Koslicki_Lab/koslickd/MinHash/Out/N'+str(n)+'k31_mins.h5', 'r')
+hash_list = set(fid["hash_list"][...])
+fid.close()
 
+#Make the CEs for the soil sample
+t0 = timeit.default_timer()
+soil_sample_file = "/nfs1/Koslicki_Lab/koslickd/CommonKmers/SoilSamples/Data/Metagenomes/4539591.3.fastq"
+soil_out_dir = "/nfs1/Koslicki_Lab/koslickd/MinHash/Out/SoilSamples"
+MCE_in_comparison = MH.CountEstimator(n=n, max_prime=9999999999971., ksize=31, input_file_name=soil_sample_file, save_kmers='y', hash_list=hash_list)
+MCE_in_comparison.export(os.path.join(soil_out_dir, os.path.basename(soil_sample_file)+'_N'+str(n)+'_k31_inComparison.h5'))
+MCE_in_all = MH.CountEstimator(n=n, max_prime=9999999999971., ksize=31, input_file_name=soil_sample_file, save_kmers='y')
+MCE_in_all.export(os.path.join(soil_out_dir, os.path.basename(soil_sample_file)+'_N'+str(n)+'_k31_all.h5'))
+t1 = timeit.default_timer()
+print("Sample formation and export time: %f" % (t1-t0))  # 15279.804780 -> 4.24 hours
+
+# Read it back in after it's computed
+MCE_in_comparison = MH.import_single_hdf5(os.path.join(soil_out_dir,os.path.basename(soil_sample_file)+'_N'+str(n)+'_k31_inComparison.h5'))
+MCE_in_all = MH.import_single_hdf5(os.path.join(soil_out_dir,os.path.basename(soil_sample_file)+'_N'+str(n)+'_k31_all.h5'))
+
+#Read in the training CE's
+fid = open('/nfs1/Koslicki_Lab/koslickd/MinHash/Data/FileNames.txt', 'r')
+file_names = fid.readlines()
+fid.close()
+file_names = [name.strip() for name in file_names]
+training_n = 5000
+out_file_names = ["/nfs1/Koslicki_Lab/koslickd/MinHash/Out/N"+str(training_n)+"k31/" + os.path.basename(item) + ".CE.h5" for item in file_names]
+CEs = MH.import_multiple_hdf5(out_file_names)
+Y_count_in_comparison = MCE_in_comparison.count_vector(CEs)
+eps = .001
+reconstruction = MH.jaccard_count_lsqnonneg(CEs, Y_count_in_comparison, eps)
+reconstruction = reconstruction/float(sum(reconstruction))
+indicies = reconstruction.argsort()[::-1]
+reference_files = []
+for index in indicies:
+    reference_files.append(CEs[index].input_file_name)
+    if reconstruction[index] < eps:  # Add at leat one more index below the threshold (to make sure I don't have an empty list of indexes)
+        break
+
+print("Number of indicies to build: %d" % len(reference_files))
+
+index_dir = "/scratch/temp/SNAP/"
+
+index_dirs = MH.build_references(reference_files, index_dir)
+out_sam = os.path.join(soil_out_dir, "out.sam")
+t0 = timeit.default_timer()
+MH.stream_aligned_save_unaligned(index_dirs, soil_sample_file, out_sam)  # Why did this result in no orgamisms?
+t1 = timeit.default_timer()
+print("Alignment time: %f" % (t1-t0))  # 1.35 hours (4880.337301 seconds)
+pre, ext = os.path.splitext(out_sam)
+out_fastq = pre + ".fastq"
+MH.sam2fastq(out_sam, out_fastq)
+outT1 = timeit.default_timer()
+print("Total time: %f" % (outT1-outT0))  # 6 hours all together
+
+
+# Let's do it one at a time to see what's going on...(looks like ~100K reads per reference are being filtered out)
+MH.top_down_align(soil_sample_file, reference_files, index_dir, "/scratch/temp/SNAP/")
+
+
+
+
+
+
+
+
+
+# Clean up
+os.remove(out_sam)
+for index_dir in index_dirs:
+    shutil.rmtree(index_dir)
 
 
 

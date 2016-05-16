@@ -33,6 +33,8 @@ warnings.simplefilter("ignore", RuntimeWarning)
 # Make the snap streaming automatically chunk the index_dirs if there are too many (can get max command len with xargs --show-limits)
 # Finish build_one_reference_from_many
 # Make the count vector over a shared array (just like the kmer matricies)
+# Make an option to save the intermediately aligned BAM/SAM/FASTQ files from the streaming alignment
+
 
 
 notACTG = re.compile('[^ACTG]')
@@ -577,6 +579,8 @@ def jaccard_count_lsqnonneg(CEs, Y, eps, machine_eps=1e-07):
     :return: a vector x that approximately solves A x = Y subject to x >= 0 while ignoring rows/columns with Y[i] < eps
     """
     indicies = Y >= eps
+    if not indicies:
+        raise Exception("No entries of Y are above eps: %f. Please decrease eps." % eps)
     Y_eps = Y[indicies]
     CEs_eps = []
     for i in range(len(indicies)):
@@ -893,7 +897,7 @@ def build_one_reference_from_many(reference_files, output_dir, large_index=True,
     #Cat the files together, then call build_reference.
     return
 
-def align_reads(index_dir, sample_file, out_file, filt='aligned', threads=multiprocessing.cpu_count(), edit_distance=20, min_read_len=50, binary="snap-aligner"):  # NOTE: snap-aligner will take SAM and BAM as INPUT!
+def align_reads(index_dir, sample_file, out_file, filt='aligned', threads=multiprocessing.cpu_count(), edit_distance=14, min_read_len=50, binary="snap-aligner"):  # NOTE: snap-aligner will take SAM and BAM as INPUT!
     """
     Wrapper for the SNAP aligner.
     :param index_dir: Directory in which the index was placed (from build_reference
@@ -920,7 +924,7 @@ def align_reads(index_dir, sample_file, out_file, filt='aligned', threads=multip
     FNULL.close()
     return exit_code
 
-def stream_aligned_save_unaligned(index_dirs, sample_file, out_file, filt='unaligned', threads=multiprocessing.cpu_count(), edit_distance=20, min_read_len=50, binary="snap-aligner"):
+def stream_aligned_save_unaligned(index_dirs, sample_file, out_file, filt='unaligned', threads=multiprocessing.cpu_count(), edit_distance=14, min_read_len=50, binary="snap-aligner"):
     """
     This will take a directory of indexes and stream filter the sample reads through it
     :param index_dirs: list of directories of snap indexes
@@ -990,7 +994,7 @@ def sam2fastq(sam_file, out_file):
     return exit_code
 
 
-def top_down_align(sample_file, reference_files, index_dir, out_dir, threads=multiprocessing.cpu_count(), large_index=True, seed_size=20, edit_distance=20, min_read_len=50, binary="snap-aligner"):
+def top_down_align(sample_file, reference_files, index_dir, out_dir, threads=multiprocessing.cpu_count(), large_index=True, seed_size=20, edit_distance=14, min_read_len=50, binary="snap-aligner"):
     sam_out_file_prev = os.path.join(out_dir, os.path.basename(sample_file) + "_unaligned_prev.sam")
     sam_out_file = os.path.join(out_dir, os.path.basename(sample_file) + "_unaligned.sam")
     for i in range(len(reference_files)):
@@ -1173,7 +1177,7 @@ def test_snap():
     fid.close()
     res = build_reference(index_file, temp_dir, large_index=True, seed_size=20, threads=1, binary="snap-aligner")
     assert res == 0
-    res = align_reads(temp_dir, align_file, out_sam, filt='aligned', threads=1, edit_distance=20, min_read_len=50, binary="snap-aligner")
+    res = align_reads(temp_dir, align_file, out_sam, filt='aligned', threads=1, edit_distance=14, min_read_len=50, binary="snap-aligner")
     assert res == 0
     sam2fastq(out_sam, out_fastq)
     assert filecmp.cmp(align_file, out_fastq)
