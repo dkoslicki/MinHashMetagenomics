@@ -450,9 +450,10 @@ index_dir = "/scratch/temp/SNAP/"
 index_dirs = MH.build_references(reference_files, index_dir)
 out_sam = os.path.join(soil_out_dir, "out.sam")
 t0 = timeit.default_timer()
-MH.stream_aligned_save_unaligned(index_dirs, soil_sample_file, out_sam)  # Why did this result in no orgamisms?
+MH.stream_aligned_save_unaligned(index_dirs, soil_sample_file, out_sam, format="sam")  # Why did this result in no organisms? Looks like there really wasn't anything new...maybe decrease the edit distance to 14
 t1 = timeit.default_timer()
 print("Alignment time: %f" % (t1-t0))  # 1.35 hours (4880.337301 seconds)
+
 pre, ext = os.path.splitext(out_sam)
 out_fastq = pre + ".fastq"
 MH.sam2fastq(out_sam, out_fastq)
