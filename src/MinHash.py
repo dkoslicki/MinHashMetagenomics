@@ -32,7 +32,8 @@ warnings.simplefilter("ignore", RuntimeWarning)
 # Get DIAMOND implemented
 # Make the snap streaming automatically chunk the index_dirs if there are too many (can get max command len with xargs --show-limits)
 # Make the count vector over a shared array (just like the kmer matricies)
-# Make an option to save the intermediately aligned BAM/SAM/FASTQ files from the streaming alignment
+# Use sam tools to partition the reads into aligned and unaligned (be careful with mate pairs)
+# Implement paired reads for snap-aligner
 
 
 
@@ -595,7 +596,7 @@ def jaccard_count_lsqnonneg(CEs, Y, eps, machine_eps=1e-07):
     for i in range(len(x)):
         if x[i] < machine_eps:
             x[i] = 0
-    return x
+    return (x, A_eps, indicies)
 
 def jaccard_lsqnonneg(CEs, Y, eps, machine_eps=1e-07):
     """
@@ -622,7 +623,7 @@ def jaccard_lsqnonneg(CEs, Y, eps, machine_eps=1e-07):
     for i in range(len(x)):
         if x[i] < machine_eps:
             x[i] = 0
-    return x
+    return (x, A_eps, indicies)
 
 ##########################################
 
@@ -1013,6 +1014,24 @@ def sam2fastq(sam_file, out_file):
 
 
 def top_down_align(sample_file, reference_files, index_dir, out_dir, threads=multiprocessing.cpu_count(), save_aligned=True, format="bam", large_index=True, seed_size=20, edit_distance=14, min_read_len=50, binary="snap-aligner"):
+    """
+    This function takes an input file and recursively aligns it to the individual reference files. Reads that are aligned are saved, and unaligned reads are passed to the next step in the alignment.
+    Currently this is quite inefficient since it performs the alignment twice. Could try to use samtools to partition the reads into aligned and unaligned.
+    :param sample_file: Input file on which to perform the alignment
+    :param reference_files: list of references files to align agains
+    :param index_dir: directory where the intermediate reference file indexes are stored
+    :param out_dir: output directory for the results
+    :param threads: number of threads to use
+    :param save_aligned: True/False to save/not save the intermediate aligned reads
+    :param format: one of 'sam' or 'bam'
+    :param large_index: makes the index about 30% bigger, but faster for quick/inaccurate alignements
+    :param seed_size: for initial match to begin alignment
+    :param edit_distance: the maximum edit distance to allow for an alignment
+    :param min_read_len: Specify the minimum read length to align, reads shorter than this (after clipping) stay unaligned.
+     This should be a good bit bigger than the seed length or you might get some questionable alignments.  Default 50
+    :param binary: location of the snap-aligner binary
+    :return:
+    """
     if format != "sam" and format != "bam":
         raise Exception("format must be one of 'sam' or 'bam'")
     sam_out_file_prev = os.path.join(out_dir, os.path.basename(sample_file) + "_unaligned_prev." + format)

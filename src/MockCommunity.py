@@ -434,7 +434,7 @@ out_file_names = ["/nfs1/Koslicki_Lab/koslickd/MinHash/Out/N"+str(training_n)+"k
 CEs = MH.import_multiple_hdf5(out_file_names)
 Y_count_in_comparison = MCE_in_comparison.count_vector(CEs)
 eps = .001
-reconstruction = MH.jaccard_count_lsqnonneg(CEs, Y_count_in_comparison, eps)
+(reconstruction, A_eps, indicies) = MH.jaccard_count_lsqnonneg(CEs, Y_count_in_comparison, eps)
 reconstruction = reconstruction/float(sum(reconstruction))
 indicies = reconstruction.argsort()[::-1]
 reference_files = []
@@ -462,8 +462,8 @@ print("Total time: %f" % (outT1-outT0))  # 6 hours all together
 
 
 # Let's do it one at a time to see what's going on...(looks like ~100K reads per reference are being filtered out)
-MH.top_down_align(soil_sample_file, reference_files, index_dir, "/scratch/temp/SNAP/")
-
+MH.top_down_align(soil_sample_file, reference_files, index_dir, "/scratch/temp/SNAP/", save_aligned=False, format="sam")
+MH.top_down_align(soil_sample_file, reference_files, index_dir, "/scratch/temp/SNAP/", save_aligned=True, format="bam")
 
 
 
@@ -500,17 +500,62 @@ for index_dir in index_dirs:
 #/local/cluster/jdk1.8.0_71/bin/java -jar /local/cluster/picard/dist/picard.jar FilterSamReads I=/nfs1/Koslicki_Lab/koslickd/MinHash/Out/Temp/SNAP/out.bam O=/nfs1/Koslicki_Lab/koslickd/MinHash/Out/Temp/SNAP/out_aligned.bam FILTER=includeAligned
 #/local/cluster/jdk1.8.0_71/bin/java -jar /local/cluster/picard/dist/picard.jar FilterSamReads I=/nfs1/Koslicki_Lab/koslickd/MinHash/Out/Temp/SNAP/out.bam O=/nfs1/Koslicki_Lab/koslickd/MinHash/Out/Temp/SNAP/out_unaligned.bam FILTER=excludeAligned
 
+# all
+# samtools view 4539591.3.fastq_G000502875.fna_aligned.bam | wc -l
+# 6033053
+
+# read unmapped
+# samtools view -f4 4539591.3.fastq_G000502875.fna_aligned.bam | wc -l
+# 6000248
+
+# read mapped
+# samtools view -F4 4539591.3.fastq_G000502875.fna_aligned.bam | wc -l
+# 32805
+
+# view alignment
+# samtools sort -@ 20 4539591.3.fastq_G000502875.fna_aligned.bam -o test.bam
+# samtools index test.bam
+# samtools faidx G000502875.fna
+# samtools tview test.bam
+
+# Let's try to see why it's showing so many reads unmapped
+# snap-aligner single G000502875 /nfs1/Koslicki_Lab/koslickd/CommonKmers/SoilSamples/Data/Metagenomes/4539591.3.fastq -o test.bam -F a
+# Total Reads    Aligned, MAPQ >= 10    Aligned, MAPQ < 10     Unaligned              Too Short/Too Many Ns  Filtered                  Reads/s   Time in Aligner (s)
+# 65,927,593     114,525 (0.17%)        2,029 (0.00%)          0 (0.00%)              6,000,248 (9.10%)      59,810,791 (90.72%)       688,668   96
+# samtools view test.bam | wc -l
+# 6116802 == 114525+2029+6000248
+# samtools view -f4 test.bam | wc -l
+# 6000248
+# samtools view -F4 test.bam | wc -l
+# 116554 == 114525+2029
 
 
 
 
 
+#snap-aligner single G000502875 /nfs1/Koslicki_Lab/koslickd/CommonKmers/SoilSamples/Data/Metagenomes/4539591.3.fastq -o test.bam -F a -f
+# Total Reads    Aligned, MAPQ >= 10    Aligned, MAPQ < 10     Unaligned              Too Short/Too Many Ns  Filtered                  Reads/s   Time in Aligner (s)
+# 65,927,593     0 (0.00%)              116,554 (0.18%)        0 (0.00%)              6,000,248 (9.10%)      59,810,791 (90.72%)       691,884   95
+
+#snap-aligner single G000502875 /nfs1/Koslicki_Lab/koslickd/CommonKmers/SoilSamples/Data/Metagenomes/4539591.3.fastq -o test.bam -F a -f -d 14 -mrl 50
+# Total Reads    Aligned, MAPQ >= 10    Aligned, MAPQ < 10     Unaligned              Too Short/Too Many Ns  Filtered                  Reads/s   Time in Aligner (s)
+# 65,927,593     0 (0.00%)              116,554 (0.18%)        0 (0.00%)              6,000,248 (9.10%)      59,810,791 (90.72%)       691,536   95
+
+# snap-aligner single G000502875 /nfs1/Koslicki_Lab/koslickd/CommonKmers/SoilSamples/Data/Metagenomes/4539591.3.fastq -o test.bam -E sm -f
+# samtools view -f4 test.bam | wc -l
+# 116554
 
 
+# sort reads
+# cat 4539591.3.fastq | paste - - - - | sort -k1,1 -S 3G | tr '\t' '\n' > sorted.fastq
 
+# Paired: save the pairs where at least one of the pairs aligned
+# samtools merge merged.bam <(samtools view -hb -F4 -f8 test.sam) <(samtools view -hb -F8 -f4 test.sam) <(samtools view -hb -F12 test.sam) -f
+# Paired: save the pairs where neither one of the pairs aligned
+# samtools merge merged.bam <(samtools view -hb -f12 test.sam) -f
 
-
-
+# Better yet!
+# samtools view -hb -f12 test.sam -o unaligned.sam -U aligned.sam
 
 
 
