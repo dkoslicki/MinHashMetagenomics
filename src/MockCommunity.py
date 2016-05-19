@@ -599,41 +599,35 @@ np.mean(Gcounts)
 
 
 ###################
-# Clustering
-(reconstruction, A_eps, A_indicies) = MH.jaccard_count_lsqnonneg(CEs, Y_count_in_comparison, eps)
-cluster_eps = .01
-A_indicies_numerical = np.where(A_indicies == True)[0]
-clusters = []
-for A_index in range(len(A_indicies_numerical)):
-    nearby = set(np.where(A_eps[A_index, :] >= cluster_eps)[0]) | set(np.where(A_eps[:, A_index] >= cluster_eps)[0])
-    in_flag = False
-    in_counter = 0
-    in_indicies = []
-    for i in range(len(clusters)):
-        if nearby & clusters[i]:
-            clusters[i].update(nearby)
-            in_counter += 1
-            in_indicies.append(i)
-            in_flag = True
-    if not in_flag:
-        clusters.append(set(nearby))
-    if in_counter > 1:
-        merged_cluster = set()
-        for in_index in in_indicies[::-1]:
-            merged_cluster.update(clusters[in_index])
-            del clusters[in_index]
-        clusters.append(merged_cluster)
-
-clusters_full_indicies = []
-for cluster in clusters:
-    cluster_full_indicies = set()
-    for item in cluster:
-        cluster_full_indicies.add(A_indicies_numerical[item])
-    clusters_full_indicies.append(cluster_full_indicies)
+# Taxonomy
+(clusters, LCAs) = MH.cluster_matrix(A_eps, A_indicies, cluster_eps=.01)
+LCAs = []
+for cluster in clusters_full_indicies:
+    if len(cluster) == 1:
+        LCAs.append(taxonomy[list(cluster)[0]].split()[2].split('|')[-1])
+        continue
+    cluster_taxonomy = []
+    for index in cluster:
+        cluster_taxonomy.append(taxonomy[index])
+    for rank in range(7, -1, -1):
+        rank_names = []
+        dummy_name = 0
+        for tax_path in cluster_taxonomy:
+            split_taxonomy = tax_path.split()[2].split('|')
+            if len(split_taxonomy) < rank + 1:
+                rank_names.append(str(dummy_name))
+            else:
+                rank_names.append(split_taxonomy[rank])
+        if len(set(rank_names)) == 1 and "0" not in rank_names:
+            LCAs.append(rank_names[0])
+            break
 
 
 
-A_clustered = np.zeros(A_eps.shape)
+
+
+
+# Export the clustered matrix
 clustered_inds = []
 for cluster in clusters:
     for ind in cluster:

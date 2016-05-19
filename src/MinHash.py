@@ -848,7 +848,7 @@ def get_prime_lt_x(target):
         raise RuntimeError("unable to find a prime number < %d" % (target))
 
 
-def cluster_matrix(A_eps, A_indicies, cluster_eps=.01):
+def cluster_matrix(A_eps, A_indicies, taxonomy, cluster_eps=.01):
     """
     This function clusters the indicies of A_eps such that for a given cluster, there is another element in that cluster
     with similarity (based on A_eps) >= cluster_eps for another element in that same cluster. For two elements of
@@ -856,7 +856,7 @@ def cluster_matrix(A_eps, A_indicies, cluster_eps=.01):
     :param A_eps: The jaccard or jaccard_count matrix containing the similarities
     :param A_indicies: The basis of the matrix A_eps (in terms of all the CEs)
     :param cluster_eps: The similarity threshold to cluster on
-    :return: a list of sets of indicies defining the clusters
+    :return: (a list of sets of indicies defining the clusters, LCAs of the clusters)
     """
     A_indicies_numerical = np.where(A_indicies == True)[0]
     # initialize the clusters
@@ -892,7 +892,38 @@ def cluster_matrix(A_eps, A_indicies, cluster_eps=.01):
         raise Exception("For some reason, the total number of indicies in the clusters doesn't equal the number of indicies you started with")
     if set([item for subset in clusters_full_indicies for item in subset]) != set(A_indicies_numerical):  # Make sure no indicies were missed or added
         raise Exception("For some reason, the indicies in all the clusters doesn't match the indicies you started with")
-    return clusters_full_indicies
+    return clusters_full_indicies, cluster_LCAs(clusters_full_indicies, taxonomy)
+
+
+def cluster_LCAs(clusters, taxonomy):
+    """
+    This function returns the lowest common ancestor in each one of the input clusters
+    :param clusters: input clusters
+    :param taxonomy: input taxonomy
+    :return: a list with the ith element being the lowest common ancestor of the ith cluster
+    """
+    LCAs = []
+    for cluster in clusters:
+        if len(cluster) == 1:
+            LCAs.append(taxonomy[list(cluster)[0]].split()[2].split('|')[-1])
+            continue
+        cluster_taxonomy = []
+        for index in cluster:
+            cluster_taxonomy.append(taxonomy[index])
+        for rank in range(7, -1, -1):
+            rank_names = []
+            dummy_name = 0
+            for tax_path in cluster_taxonomy:
+                split_taxonomy = tax_path.split()[2].split('|')
+                if len(split_taxonomy) < rank + 1:
+                    rank_names.append(str(dummy_name))
+                else:
+                    rank_names.append(split_taxonomy[rank])
+            if len(set(rank_names)) == 1 and "0" not in rank_names:
+                LCAs.append(rank_names[0])
+                break
+    return LCAs
+
 
 
 
