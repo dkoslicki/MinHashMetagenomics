@@ -434,7 +434,7 @@ out_file_names = ["/nfs1/Koslicki_Lab/koslickd/MinHash/Out/N"+str(training_n)+"k
 CEs = MH.import_multiple_hdf5(out_file_names)
 Y_count_in_comparison = MCE_in_comparison.count_vector(CEs)
 eps = .001
-(reconstruction, A_eps, indicies) = MH.jaccard_count_lsqnonneg(CEs, Y_count_in_comparison, eps)
+(reconstruction, A_eps, A_indicies) = MH.jaccard_count_lsqnonneg(CEs, Y_count_in_comparison, eps)
 reconstruction = reconstruction/float(sum(reconstruction))
 indicies = reconstruction.argsort()[::-1]
 reference_files = []
@@ -594,3 +594,49 @@ np.mean(Acounts)
 np.mean(Ccounts)
 np.mean(Tcounts)
 np.mean(Gcounts)
+
+
+
+
+###################
+# Clustering
+(reconstruction, A_eps, A_indicies) = MH.jaccard_count_lsqnonneg(CEs, Y_count_in_comparison, eps)
+cluster_eps = .01
+A_indicies_numerical = np.where(A_indicies == True)[0]
+clusters = []
+for A_index in range(len(A_indicies_numerical)):
+    nearby = set(np.where(A_eps[A_index, :] >= cluster_eps)[0]) | set(np.where(A_eps[:, A_index] >= cluster_eps)[0])
+    in_flag = False
+    in_counter = 0
+    in_indicies = []
+    for i in range(len(clusters)):
+        if nearby & clusters[i]:
+            clusters[i].update(nearby)
+            in_counter += 1
+            in_indicies.append(i)
+            in_flag = True
+    if not in_flag:
+        clusters.append(set(nearby))
+    if in_counter > 1:
+        merged_cluster = set()
+        for in_index in in_indicies[::-1]:
+            merged_cluster.update(clusters[in_index])
+            del clusters[in_index]
+        clusters.append(merged_cluster)
+
+clusters_full_indicies = []
+for cluster in clusters:
+    cluster_full_indicies = set()
+    for item in cluster:
+        cluster_full_indicies.add(A_indicies_numerical[item])
+    clusters_full_indicies.append(cluster_full_indicies)
+
+
+
+A_clustered = np.zeros(A_eps.shape)
+clustered_inds = []
+for cluster in clusters:
+    for ind in cluster:
+        clustered_inds.append(ind)
+
+A_clustered = A_eps[clustered_inds,:][:,clustered_inds]

@@ -848,6 +848,54 @@ def get_prime_lt_x(target):
         raise RuntimeError("unable to find a prime number < %d" % (target))
 
 
+def cluster_matrix(A_eps, A_indicies, cluster_eps=.01):
+    """
+    This function clusters the indicies of A_eps such that for a given cluster, there is another element in that cluster
+    with similarity (based on A_eps) >= cluster_eps for another element in that same cluster. For two elements of
+    distinct clusters, their similarity (based on A_eps) < cluster_eps.
+    :param A_eps: The jaccard or jaccard_count matrix containing the similarities
+    :param A_indicies: The basis of the matrix A_eps (in terms of all the CEs)
+    :param cluster_eps: The similarity threshold to cluster on
+    :return: a list of sets of indicies defining the clusters
+    """
+    A_indicies_numerical = np.where(A_indicies == True)[0]
+    # initialize the clusters
+    clusters = []
+    for A_index in range(len(A_indicies_numerical)):
+        # Find nearby elements
+        nearby = set(np.where(A_eps[A_index, :] >= cluster_eps)[0]) | set(np.where(A_eps[:, A_index] >= cluster_eps)[0])
+        in_flag = False
+        in_counter = 0
+        in_indicies = []
+        for i in range(len(clusters)):
+            if nearby & clusters[i]:
+                clusters[i].update(nearby)  # add the nearby indicies to the cluster
+                in_counter += 1  # keep track if the nearby elements belong to more than one of the previously formed clusters
+                in_indicies.append(i)  # which clusters nearby shares elements with
+                in_flag = True  # tells if it forms a new cluster
+        if not in_flag:  # if new cluster, then append to clusters
+            clusters.append(set(nearby))
+        if in_counter > 1:  # If it belongs to more than one cluster, merge them together
+            merged_cluster = set()
+            for in_index in in_indicies[::-1]:
+                merged_cluster.update(clusters[in_index])
+                del clusters[in_index]  # delete the old clusters (now merged)
+            clusters.append(merged_cluster)  # append the newly merged clusters
+    clusters_full_indicies = []
+    for cluster in clusters:
+        cluster_full_indicies = set()
+        for item in cluster:
+            cluster_full_indicies.add(A_indicies_numerical[item])
+        clusters_full_indicies.append(cluster_full_indicies)
+    # Check to make sure the clustering didn't go wrong
+    if sum([len(item) for item in clusters_full_indicies]) != len(A_indicies_numerical):  # Check the correct number of indicies
+        raise Exception("For some reason, the total number of indicies in the clusters doesn't equal the number of indicies you started with")
+    if set([item for subset in clusters_full_indicies for item in subset]) != set(A_indicies_numerical):  # Make sure no indicies were missed or added
+        raise Exception("For some reason, the indicies in all the clusters doesn't match the indicies you started with")
+    return clusters_full_indicies
+
+
+
 ##########################################################################
 # SNAP aligner
 def build_reference(reference_file, output_dir, large_index=True, seed_size=20, threads=multiprocessing.cpu_count(), binary="snap-aligner"):
