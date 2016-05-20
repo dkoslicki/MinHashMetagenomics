@@ -460,17 +460,16 @@ out_dir = '/scratch/temp/SNAP/training/'
 training_file_names = MH.make_cluster_fastas(out_dir, LCAs, clusters, CEs)
 index_dirs = MH.build_references(training_file_names, out_dir, large_index=True)
 
-#index_dir = "/scratch/temp/SNAP/"
-#index_dirs = MH.build_references(reference_files, index_dir)
-out_sam = os.path.join(out_dir, "out.sam")
+out_file = os.path.join(out_dir, "out.bam")
 t0 = timeit.default_timer()
-MH.stream_align_single(index_dirs, soil_sample_file, out_sam, format="sam")
+MH.stream_align_single(index_dirs[0:3], soil_sample_file, out_file, format="bam", filt="all")
+MH.stream_align_single(index_dirs, soil_sample_file, out_file, format="bam", filt="all")
 t1 = timeit.default_timer()
 print("Alignment time: %f" % (t1-t0))
 
-pre, ext = os.path.splitext(out_sam)
+pre, ext = os.path.splitext(out_file)
 out_fastq = pre + ".fastq"
-MH.sam2fastq(out_sam, out_fastq)
+MH.sam2fastq(out_file, out_fastq)
 outT1 = timeit.default_timer()
 print("Total time: %f" % (outT1-outT0))
 
