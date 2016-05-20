@@ -904,8 +904,10 @@ def cluster_LCAs(clusters, taxonomy):
     """
     LCAs = []
     for cluster in clusters:
+        found_LCA = False
         if len(cluster) == 1:
             LCAs.append(taxonomy[list(cluster)[0]].split()[2].split('|')[-1])
+            found_LCA = True
             continue
         cluster_taxonomy = []
         for index in cluster:
@@ -921,8 +923,10 @@ def cluster_LCAs(clusters, taxonomy):
                     rank_names.append(split_taxonomy[rank])
             if len(set(rank_names)) == 1 and "0" not in rank_names:
                 LCAs.append(rank_names[0])
+                found_LCA = True
                 break
-        LCAs.append('sk__-1_microorganism')  # In case they don't even have the kingdom in common
+        if not found_LCA:
+            LCAs.append('sk__-1_microorganism')  # In case they don't even have the kingdom in common
     return LCAs
 
 
