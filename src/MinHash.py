@@ -1147,7 +1147,7 @@ def stream_align_single(index_dirs, sample_file, out_file, format="bam", filt='a
             elif filt == 'unaligned':
                 cmd = snap_binary + " single " + index_dir + " -" + format + " - -o " + "-" + format + " " + out_file + " -f -F u -t " + str(threads) + " -d " + str(edit_distance) + " -mrl " + str(min_read_len)
             elif filt == 'all':
-                cmd = snap_binary + " single " + index_dir + " -" + format + " - -o -" + format + " - -f -t " + str(threads) + " -d " + str(edit_distance) + " -mrl " + str(min_read_len) + " | " + samtools_binary + " view -@ 5 -hb -f4 -o " + out_file + " -U " + os.path.join(out_dir, os.path.basename(sample_file) + "_" + index_dir.split(os.sep)[-1] + "_aligned.bam")
+                cmd = snap_binary + " single " + index_dir + " -" + format + " - -o -" + format + " - -f -t " + str(threads) + " -d " + str(edit_distance) + " -mrl " + str(min_read_len) + " | " + samtools_binary + " view -@ 5 -1 -hb -f4 -o " + out_file + " -U " + os.path.join(out_dir, os.path.basename(sample_file) + "_" + index_dir.split(os.sep)[-1] + "_aligned.bam")
             else:
                 raise Exception("aligned must be 'aligned', 'unaligned', or 'all'")
             big_cmd = big_cmd + " | " + cmd
