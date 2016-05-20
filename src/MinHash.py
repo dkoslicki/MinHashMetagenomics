@@ -1014,26 +1014,8 @@ def build_reference(reference_file, output_dir, large_index=True, seed_size=20, 
     else:
         cmd = binary + " index " + reference_file + " " + output_dir + " -s " + str(seed_size) + " -t" + str(threads)
     exit_code = subprocess.call(cmd, shell=True,  stdout=FNULL, stderr=subprocess.STDOUT)
-    #exit_code = subprocess.check_call(cmd, shell=True)
     return exit_code
 
-
-#class _build_references_helper(object):
-#    """
-#    Helper function for mapping CountEstimator class over multiple input_file arguments
-#    """
-#    def __init__(self, output_dir, large_index, seed_size, threads, binary):
-#        self.output_dir = output_dir
-#        self.large_index = large_index
-#        self.seed_size = seed_size
-#        self.threads = threads
-#        self.binary = binary
-#
-#    def __call__(self, reference_file_name):
-#        prefix, ext = os.path.splitext(os.path.basename(reference_file_name))
-#        reference_dir = os.path.join(self.output_dir, prefix)
-#        exit_code = build_reference(reference_file_name, reference_dir, large_index=self.large_index, seed_size=self.seed_size, threads=self.threads, binary=self.binary)
-#        return reference_dir
 
 def _build_reference_helper(reference_file_name, output_dir, large_index, seed_size, threads, binary):
     prefix, ext = os.path.splitext(os.path.basename(reference_file_name))
@@ -1062,15 +1044,7 @@ def build_references(reference_files, output_dir, large_index=True, seed_size=20
     """
     if threads > 5:
         raise Exception("Python multiprocessing doesn't play well with many subprocesses. Please decrease the number of threads to something 5 or smaller.")
-    # Note: I could parallelize this simple for loop if I wanted...
-    #index_dirs = []
-    #for reference_file_name in reference_files:
-    #    prefix, ext = os.path.splitext(os.path.basename(reference_file_name))
-    #    reference_dir = os.path.join(output_dir, prefix)
-    #    index_dirs.append(reference_dir)
-    #    exit_code = build_reference(reference_file_name, reference_dir, large_index=large_index, seed_size=seed_size, threads=threads, binary=binary)
     pool = multiprocessing.Pool(processes=threads)
-    #index_dirs = pool.map(_build_references_helper(output_dir, large_index, seed_size, threads, binary), reference_files, chunksize=1)
     index_dirs = pool.map(_build_reference_star, izip(reference_files, repeat(output_dir), repeat(large_index), repeat(seed_size), repeat(threads), repeat(binary)), chunksize=1)
     pool.close()
     pool.join()
