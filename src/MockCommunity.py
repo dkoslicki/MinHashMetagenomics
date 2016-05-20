@@ -405,18 +405,18 @@ import h5py
 outT0 = timeit.default_timer()
 n = 50000
 # Get the mins in the training database
-fid = h5py.File('/nfs1/Koslicki_Lab/koslickd/MinHash/Out/N'+str(n)+'k31_mins.h5', 'r')
-hash_list = set(fid["hash_list"][...])
-fid.close()
+# fid = h5py.File('/nfs1/Koslicki_Lab/koslickd/MinHash/Out/N'+str(n)+'k31_mins.h5', 'r')
+# hash_list = set(fid["hash_list"][...])
+# fid.close()
 
 #Make the CEs for the soil sample
 t0 = timeit.default_timer()
 soil_sample_file = "/nfs1/Koslicki_Lab/koslickd/CommonKmers/SoilSamples/Data/Metagenomes/4539591.3.fastq"
 soil_out_dir = "/nfs1/Koslicki_Lab/koslickd/MinHash/Out/SoilSamples"
-MCE_in_comparison = MH.CountEstimator(n=n, max_prime=9999999999971., ksize=31, input_file_name=soil_sample_file, save_kmers='y', hash_list=hash_list)
-MCE_in_comparison.export(os.path.join(soil_out_dir, os.path.basename(soil_sample_file)+'_N'+str(n)+'_k31_inComparison.h5'))
-MCE_in_all = MH.CountEstimator(n=n, max_prime=9999999999971., ksize=31, input_file_name=soil_sample_file, save_kmers='y')
-MCE_in_all.export(os.path.join(soil_out_dir, os.path.basename(soil_sample_file)+'_N'+str(n)+'_k31_all.h5'))
+# MCE_in_comparison = MH.CountEstimator(n=n, max_prime=9999999999971., ksize=31, input_file_name=soil_sample_file, save_kmers='y', hash_list=hash_list)
+# MCE_in_comparison.export(os.path.join(soil_out_dir, os.path.basename(soil_sample_file)+'_N'+str(n)+'_k31_inComparison.h5'))
+# MCE_in_all = MH.CountEstimator(n=n, max_prime=9999999999971., ksize=31, input_file_name=soil_sample_file, save_kmers='y')
+# MCE_in_all.export(os.path.join(soil_out_dir, os.path.basename(soil_sample_file)+'_N'+str(n)+'_k31_all.h5'))
 t1 = timeit.default_timer()
 print("Sample formation and export time: %f" % (t1-t0))  # 15279.804780 -> 4.24 hours
 

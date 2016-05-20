@@ -1030,7 +1030,7 @@ def build_references(reference_files, output_dir, large_index=True, seed_size=20
     #    index_dirs.append(reference_dir)
     #    exit_code = build_reference(reference_file_name, reference_dir, large_index=large_index, seed_size=seed_size, threads=threads, binary=binary)
     pool = multiprocessing.Pool(processes=threads)
-    index_dirs = pool.map(_build_references_helper(output_dir, large_index, seed_size, threads, binary), reference_files)
+    index_dirs = pool.map(_build_references_helper(output_dir, large_index, seed_size, threads, binary), reference_files, chunksize=1)
     pool.terminate()
 
     return index_dirs
