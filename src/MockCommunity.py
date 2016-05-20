@@ -600,27 +600,41 @@ np.mean(Gcounts)
 
 ###################
 # Taxonomy
-(clusters, LCAs) = MH.cluster_matrix(A_eps, A_indicies, cluster_eps=.01)
-LCAs = []
-for cluster in clusters_full_indicies:
-    if len(cluster) == 1:
-        LCAs.append(taxonomy[list(cluster)[0]].split()[2].split('|')[-1])
-        continue
-    cluster_taxonomy = []
+(clusters, LCAs) = MH.cluster_matrix(A_eps, A_indicies, taxonomy, cluster_eps=.001)
+
+
+###################
+# Form the training data
+import screed
+out_dir = '/scratch/temp/SNAP/training/'
+if not os.path.isdir(out_dir):
+    os.makedirs(out_dir)
+
+for cluster_index in range(len(clusters)):
+    cluster = clusters[cluster_index]
+    LCA = LCAs[cluster_index]
+    out_file_name = os.path.join(out_dir, LCA + ".fa")
+    out_file = open(out_file_name, 'w')
     for index in cluster:
-        cluster_taxonomy.append(taxonomy[index])
-    for rank in range(7, -1, -1):
-        rank_names = []
-        dummy_name = 0
-        for tax_path in cluster_taxonomy:
-            split_taxonomy = tax_path.split()[2].split('|')
-            if len(split_taxonomy) < rank + 1:
-                rank_names.append(str(dummy_name))
-            else:
-                rank_names.append(split_taxonomy[rank])
-        if len(set(rank_names)) == 1 and "0" not in rank_names:
-            LCAs.append(rank_names[0])
-            break
+        file_name = CEs[index].input_file_name
+        for record in screed.open(file_name):
+            out_file.write(">" + LCA)
+            out_file.write("\n")
+            out_file.write(record.sequence)
+            out_file.write("\n")
+    out_file.close()
+
+
+
+for record in screed.open(self.input_file_name):
+            self.add_sequence(record.sequence)
+
+
+
+
+
+
+
 
 
 

@@ -922,6 +922,7 @@ def cluster_LCAs(clusters, taxonomy):
             if len(set(rank_names)) == 1 and "0" not in rank_names:
                 LCAs.append(rank_names[0])
                 break
+        LCAs.append('sk__-1_microorganism')  # In case they don't even have the kingdom in common
     return LCAs
 
 
