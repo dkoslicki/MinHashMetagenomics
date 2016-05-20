@@ -994,6 +994,23 @@ def build_reference(reference_file, output_dir, large_index=True, seed_size=20, 
     return exit_code
 
 
+class _build_references_helper(object):
+    """
+    Helper function for mapping CountEstimator class over multiple input_file arguments
+    """
+    def __init__(self, output_dir, large_index, seed_size, threads, binary):
+        self.output_dir = output_dir
+        self.large_index = large_index
+        self.seed_size = seed_size
+        self.threads = threads
+        self.binary = binary
+
+    def __call__(self, reference_file_name):
+        prefix, ext = os.path.splitext(os.path.basename(reference_file_name))
+        reference_dir = os.path.join(self.output_dir, prefix)
+        exit_code = build_reference(reference_file_name, self.output_dir, large_index=self.large_index, seed_size=self.seed_size, threads=self.threads, binary=self.binary)
+        return reference_dir
+
 def build_references(reference_files, output_dir, large_index=True, seed_size=20, threads=multiprocessing.cpu_count(), binary="snap-aligner"):
     """
     Will build indexes for SNAP aligner for multiple references
@@ -1006,12 +1023,16 @@ def build_references(reference_files, output_dir, large_index=True, seed_size=20
     :return: list of location of all the indexes
     """
     # Note: I could parallelize this simple for loop if I wanted...
-    index_dirs = []
-    for reference_file_name in reference_files:
-        prefix, ext = os.path.splitext(os.path.basename(reference_file_name))
-        reference_dir = os.path.join(output_dir, prefix)
-        index_dirs.append(reference_dir)
-        exit_code = build_reference(reference_file_name, reference_dir, large_index=large_index, seed_size=seed_size, threads=threads, binary=binary)
+    #index_dirs = []
+    #for reference_file_name in reference_files:
+    #    prefix, ext = os.path.splitext(os.path.basename(reference_file_name))
+    #    reference_dir = os.path.join(output_dir, prefix)
+    #    index_dirs.append(reference_dir)
+    #    exit_code = build_reference(reference_file_name, reference_dir, large_index=large_index, seed_size=seed_size, threads=threads, binary=binary)
+    pool = multiprocessing.Pool(processes=threads)
+    index_dirs = pool.map(_build_references_helper(output_dir, large_index, seed_size, threads, binary), reference_files)
+    pool.terminate()
+
     return index_dirs
 
 
