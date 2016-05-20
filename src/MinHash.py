@@ -1032,7 +1032,9 @@ def build_references(reference_files, output_dir, large_index=True, seed_size=20
     #    exit_code = build_reference(reference_file_name, reference_dir, large_index=large_index, seed_size=seed_size, threads=threads, binary=binary)
     pool = multiprocessing.Pool(processes=threads)
     index_dirs = pool.map(_build_references_helper(output_dir, large_index, seed_size, threads, binary), reference_files, chunksize=1)
+    pool.close()
     pool.terminate()
+    pool.join()
     return index_dirs
 
 
@@ -1082,7 +1084,7 @@ def align_reads(index_dir, sample_file, out_file, filt='aligned', threads=multip
     return exit_code
 
 
-def stream_aligned_save_unaligned(index_dirs, sample_file, out_file, format="bam", filt='unaligned', threads=multiprocessing.cpu_count(), edit_distance=14, min_read_len=50, binary="snap-aligner"):
+def stream_aligned_save_unaligned(index_dirs, sample_file, out_file, format="bam", filt='unaligned', threads=multiprocessing.cpu_count(), edit_distance=14, min_read_len=50, snap_binary="snap-aligner", samtools_binary="/local/cluster/samtools/bin/samtools"):
     """
     This will take a directory of indexes and stream filter the sample reads through it
     :param index_dirs: list of directories of snap indexes
@@ -1093,44 +1095,44 @@ def stream_aligned_save_unaligned(index_dirs, sample_file, out_file, format="bam
     :param edit_distance: max edit distance to allow for an alignment
     :param min_read_len: Specify the minimum read length to align, reads shorter than this (after clipping) stay unaligned.
      This should be a good bit bigger than the seed length or you might get some questionable alignments.  Default 50
-    :param binary: location of the snap-aligner binary
+    :param snap_binary: location of the snap-aligner snap_binary
     :return: exit code of SNAP
     """
-    # cmd = binary + " single " + index_dir + " " + sample_file + " -o -" + format + " - -f -F a -t " + str(threads) + " -d " + str(edit_distance) + " -mrl " + str(min_read_len) + " | tee " + os.path.join(out_dir, os.path.basename(sample_file) + "_" + index_dir.split(os.sep)[-1] + "_" + filt + ".bam")
+    # cmd = snap_binary + " single " + index_dir + " " + sample_file + " -o -" + format + " - -f -F a -t " + str(threads) + " -d " + str(edit_distance) + " -mrl " + str(min_read_len) + " | tee " + os.path.join(out_dir, os.path.basename(sample_file) + "_" + index_dir.split(os.sep)[-1] + "_" + filt + ".bam")
     if format != "bam" and format != "sam":
         raise Exception("Invalid format choice %s. Format must be one of 'bam' or 'sam'" % format)
-    #out_dir = os.path.dirname(out_file)
+    out_dir = os.path.dirname(out_file)
     FNULL = open(os.devnull, 'w')
     big_cmd = ''
     i = 0
     for index_dir in index_dirs:
         if i == 0:
             if filt == 'aligned':
-                cmd = binary + " single " + index_dir + " " + sample_file + " -o -" + format + " - -f -F a -t " + str(threads) + " -d " + str(edit_distance) + " -mrl " + str(min_read_len)
+                cmd = snap_binary + " single " + index_dir + " " + sample_file + " -o -" + format + " - -f -F a -t " + str(threads) + " -d " + str(edit_distance) + " -mrl " + str(min_read_len)
             elif filt == 'unaligned':
-                cmd = binary + " single " + index_dir + " " + sample_file + " -o -" + format + " - -f -F u -t " + str(threads) + " -d " + str(edit_distance) + " -mrl " + str(min_read_len)
+                cmd = snap_binary + " single " + index_dir + " " + sample_file + " -o -" + format + " - -f -F u -t " + str(threads) + " -d " + str(edit_distance) + " -mrl " + str(min_read_len)
             elif filt == 'all':
-                cmd = binary + " single " + index_dir + " " + sample_file + " -o -" + format + " - -f -t " + str(threads) + " -d " + str(edit_distance) + " -mrl " + str(min_read_len)
+                cmd = snap_binary + " single " + index_dir + " " + sample_file + " -o -" + format + " - -f -t " + str(threads) + " -d " + str(edit_distance) + " -mrl " + str(min_read_len) + " " + samtools_binary + " view -hb -f12 -o - -U " + os.path.join(out_dir, os.path.basename(sample_file) + "_" + index_dir.split(os.sep)[-1] + "_aligned.bam")
             else:
                 raise Exception("aligned must be 'aligned', 'unaligned', or 'all'")
             big_cmd = " " + cmd
         elif not i == len(index_dirs)-1:
             if filt == 'aligned':
-                cmd = binary + " single " + index_dir + " -" + format + " - -o -" + format + " - -f -F a -t " + str(threads) + " -d " + str(edit_distance) + " -mrl " + str(min_read_len)
+                cmd = snap_binary + " single " + index_dir + " -" + format + " - -o -" + format + " - -f -F a -t " + str(threads) + " -d " + str(edit_distance) + " -mrl " + str(min_read_len)
             elif filt == 'unaligned':
-                cmd = binary + " single " + index_dir + " -" + format + " - -o -" + format + " - -f -F u -t " + str(threads) + " -d " + str(edit_distance) + " -mrl " + str(min_read_len)
+                cmd = snap_binary + " single " + index_dir + " -" + format + " - -o -" + format + " - -f -F u -t " + str(threads) + " -d " + str(edit_distance) + " -mrl " + str(min_read_len)
             elif filt == 'all':
-                cmd = binary + " single " + index_dir + " -" + format + " - -o -" + format + " - -f -t " + str(threads) + " -d " + str(edit_distance) + " -mrl " + str(min_read_len)
+                cmd = snap_binary + " single " + index_dir + " -" + format + " - -o -" + format + " - -f -t " + str(threads) + " -d " + str(edit_distance) + " -mrl " + str(min_read_len) + " " + samtools_binary + " view -hb -f12 -o - -U " + os.path.join(out_dir, os.path.basename(sample_file) + "_" + index_dir.split(os.sep)[-1] + "_aligned.bam")
             else:
                 raise Exception("aligned must be 'aligned', 'unaligned', or 'all'")
             big_cmd = big_cmd + " | " + cmd
         else:
             if filt == 'aligned':
-                cmd = binary + " single " + index_dir + " -" + format + " - -o " + "-" + format + " " + out_file + " -f -F a -t " + str(threads) + " -d " + str(edit_distance) + " -mrl " + str(min_read_len)
+                cmd = snap_binary + " single " + index_dir + " -" + format + " - -o " + "-" + format + " " + out_file + " -f -F a -t " + str(threads) + " -d " + str(edit_distance) + " -mrl " + str(min_read_len)
             elif filt == 'unaligned':
-                cmd = binary + " single " + index_dir + " -" + format + " - -o " + "-" + format + " " + out_file + " -f -F u -t " + str(threads) + " -d " + str(edit_distance) + " -mrl " + str(min_read_len)
+                cmd = snap_binary + " single " + index_dir + " -" + format + " - -o " + "-" + format + " " + out_file + " -f -F u -t " + str(threads) + " -d " + str(edit_distance) + " -mrl " + str(min_read_len)
             elif filt == 'all':
-                cmd = binary + " single " + index_dir + " -" + format + " - -o " + "-" + format + " " + out_file + " -f -t " + str(threads) + " -d " + str(edit_distance) + " -mrl " + str(min_read_len)
+                cmd = snap_binary + " single " + index_dir + " -" + format + " - -o -" + format + " - -f -t " + str(threads) + " -d " + str(edit_distance) + " -mrl " + str(min_read_len) + " " + samtools_binary + " view -hb -f12 -o "+ out_file +" -U " + os.path.join(out_dir, os.path.basename(sample_file) + "_" + index_dir.split(os.sep)[-1] + "_aligned.bam")
             else:
                 raise Exception("aligned must be 'aligned', 'unaligned', or 'all'")
             big_cmd = big_cmd + " | " + cmd
