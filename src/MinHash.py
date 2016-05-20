@@ -23,6 +23,7 @@ import warnings
 import subprocess
 import filecmp
 import shutil
+import traceback
 warnings.simplefilter("ignore", RuntimeWarning)
 
 # To Do:
@@ -1037,7 +1038,10 @@ def build_reference(reference_file, output_dir, large_index=True, seed_size=20, 
 def _build_reference_helper(reference_file_name, output_dir, large_index, seed_size, threads, binary):
     prefix, ext = os.path.splitext(os.path.basename(reference_file_name))
     reference_dir = os.path.join(output_dir, prefix)
-    exit_code = build_reference(reference_file_name, reference_dir, large_index=large_index, seed_size=seed_size, threads=threads, binary=binary)
+    try:
+        exit_code = build_reference(reference_file_name, reference_dir, large_index=large_index, seed_size=seed_size, threads=threads, binary=binary)
+    except:
+        print('%s: %s' % (reference_file_name, traceback.format_exc()))
     return reference_dir
 
 
