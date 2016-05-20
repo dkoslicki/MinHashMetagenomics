@@ -1049,7 +1049,7 @@ def _build_reference_star(args):
     return _build_reference_helper(*args)
 
 
-def build_references(reference_files, output_dir, large_index=True, seed_size=20, threads=multiprocessing.cpu_count(), binary="snap-aligner"):
+def build_references(reference_files, output_dir, large_index=True, seed_size=20, threads=5, binary="snap-aligner"):
     """
     Will build indexes for SNAP aligner for multiple references
     :param reference_files: input reference fasta files
@@ -1060,6 +1060,8 @@ def build_references(reference_files, output_dir, large_index=True, seed_size=20
     :param binary: location of the snap-aligner binary
     :return: list of location of all the indexes
     """
+    if threads > 5:
+        raise Exception("Python multiprocessing doesn't play well with many subprocesses. Please decrease the number of threads to something 5 or smaller.")
     # Note: I could parallelize this simple for loop if I wanted...
     #index_dirs = []
     #for reference_file_name in reference_files:
