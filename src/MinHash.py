@@ -1325,7 +1325,7 @@ def test_hash_list():
     CE1 = CountEstimator(n=5, max_prime=1e10, ksize=3, save_kmers='y')
     seq1='acgtagtctagtctacgtagtcgttgtattataaaatcgtcgtagctagtgctat'
     CE1.add_sequence(seq1)
-    hash_list = {424517919, 660397082L}
+    hash_list = {424517919, 660397082}
     CE2 = CountEstimator(n=5, max_prime=1e10, ksize=3, hash_list=hash_list, save_kmers='y')
     CE2.add_sequence(seq1)
     assert CE1.jaccard(CE2) == 0.4
