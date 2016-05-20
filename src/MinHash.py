@@ -1064,7 +1064,7 @@ def build_references(reference_files, output_dir, large_index=True, seed_size=20
     #    exit_code = build_reference(reference_file_name, reference_dir, large_index=large_index, seed_size=seed_size, threads=threads, binary=binary)
     pool = multiprocessing.Pool(processes=threads)
     #index_dirs = pool.map(_build_references_helper(output_dir, large_index, seed_size, threads, binary), reference_files, chunksize=1)
-    index_dirs = pool.map(_build_reference_star, zip(reference_files, repeat(output_dir), repeat(large_index), repeat(seed_size), repeat(threads), repeat(binary)), chunksize=1)
+    index_dirs = pool.map(_build_reference_star, izip(reference_files, repeat(output_dir), repeat(large_index), repeat(seed_size), repeat(threads), repeat(binary)), chunksize=1)
     #pool.close()
     pool.terminate()
     #pool.join()
