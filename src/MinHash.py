@@ -589,14 +589,24 @@ def jaccard_count_lsqnonneg(CEs, Y, eps, machine_eps=1e-07):
 
     A_eps = form_jaccard_count_matrix(CEs_eps)
     x_eps = scipy.optimize.nnls(A_eps, Y_eps)[0]
+    # only take the entries of x_eps above the epsilon
+    x_eps = x_eps/float(sum(x_eps))
+    indicies_sorted = x_eps.argsort()[::-1]
+    indicies_above_eps = []
+    for index in indicies_sorted:
+        indicies_above_eps.append(index)
+        if x_eps[index] < eps:  # Add at leat one more index below the threshold (to make sure I don't have an empty list of indexes)
+            break
+    A_eps_above_eps = A_eps[indicies_above_eps, :][:, indicies_above_eps]
     x = np.zeros(len(Y))
     # repopulate the indicies
-    x[indicies] = x_eps
+    x[indicies_above_eps] = x_eps
     # set anything below machine_eps to zero
     for i in range(len(x)):
         if x[i] < machine_eps:
             x[i] = 0
-    return (x, A_eps, indicies)
+    return (x, A_eps_above_eps, indicies_above_eps)
+
 
 def jaccard_lsqnonneg(CEs, Y, eps, machine_eps=1e-07):
     """
@@ -616,14 +626,23 @@ def jaccard_lsqnonneg(CEs, Y, eps, machine_eps=1e-07):
 
     A_eps = form_jaccard_matrix(CEs_eps)
     x_eps = scipy.optimize.nnls(A_eps, Y_eps)[0]
+    # only take the entries of x_eps above the epsilon
+    x_eps = x_eps/float(sum(x_eps))
+    indicies_sorted = x_eps.argsort()[::-1]
+    indicies_above_eps = []
+    for index in indicies_sorted:
+        indicies_above_eps.append(index)
+        if x_eps[index] < eps:  # Add at leat one more index below the threshold (to make sure I don't have an empty list of indexes)
+            break
+    A_eps_above_eps = A_eps[indicies_above_eps, :][:, indicies_above_eps]
     x = np.zeros(len(Y))
     # repopulate the indicies
-    x[indicies] = x_eps
+    x[indicies_above_eps] = x_eps
     # set anything below machine_eps to zero
     for i in range(len(x)):
         if x[i] < machine_eps:
             x[i] = 0
-    return (x, A_eps, indicies)
+    return (x, A_eps_above_eps, indicies_above_eps)
 
 ##########################################
 
@@ -1012,6 +1031,7 @@ class _build_references_helper(object):
         reference_dir = os.path.join(self.output_dir, prefix)
         exit_code = build_reference(reference_file_name, reference_dir, large_index=self.large_index, seed_size=self.seed_size, threads=self.threads, binary=self.binary)
         return reference_dir
+
 
 def build_references(reference_files, output_dir, large_index=True, seed_size=20, threads=multiprocessing.cpu_count(), binary="snap-aligner"):
     """

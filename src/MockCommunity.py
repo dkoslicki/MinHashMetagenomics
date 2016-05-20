@@ -434,7 +434,7 @@ out_file_names = ["/nfs1/Koslicki_Lab/koslickd/MinHash/Out/N"+str(training_n)+"k
 CEs = MH.import_multiple_hdf5(out_file_names)
 Y_count_in_comparison = MCE_in_comparison.count_vector(CEs)
 eps = .001
-(reconstruction, A_eps, A_indicies) = MH.jaccard_count_lsqnonneg(CEs, Y_count_in_comparison, eps)
+(reconstruction, A_eps, A_indicies) = MH.jaccard_count_lsqnonneg(CEs, Y_count_in_comparison, eps)  # !!!!NOTE: I should truncate the reconstruction and A_eps based on eps as well
 
 
 #reconstruction = reconstruction/float(sum(reconstruction))
