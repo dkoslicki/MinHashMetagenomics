@@ -435,30 +435,44 @@ CEs = MH.import_multiple_hdf5(out_file_names)
 Y_count_in_comparison = MCE_in_comparison.count_vector(CEs)
 eps = .001
 (reconstruction, A_eps, A_indicies) = MH.jaccard_count_lsqnonneg(CEs, Y_count_in_comparison, eps)
-reconstruction = reconstruction/float(sum(reconstruction))
-indicies = reconstruction.argsort()[::-1]
-reference_files = []
-for index in indicies:
-    reference_files.append(CEs[index].input_file_name)
-    if reconstruction[index] < eps:  # Add at leat one more index below the threshold (to make sure I don't have an empty list of indexes)
-        break
 
-print("Number of indicies to build: %d" % len(reference_files))
 
-index_dir = "/scratch/temp/SNAP/"
+#reconstruction = reconstruction/float(sum(reconstruction))
+#indicies = reconstruction.argsort()[::-1]
+#reference_files = []
+#for index in indicies:
+#    reference_files.append(CEs[index].input_file_name)
+#    if reconstruction[index] < eps:  # Add at leat one more index below the threshold (to make sure I don't have an empty list of indexes)
+#        break
 
-index_dirs = MH.build_references(reference_files, index_dir)
-out_sam = os.path.join(soil_out_dir, "out.sam")
+#print("Number of indicies to build: %d" % len(reference_files))
+
+
+# Read in the taxonomy and see which are the largest entries of which Y vectors
+fid = open('/nfs1/Koslicki_Lab/koslickd/MinHash/Data/Taxonomy.txt', 'r')
+taxonomy = fid.readlines()
+fid.close()
+taxonomy = [item.strip() for item in taxonomy]
+taxonomy_names = [item.split('\t')[0] for item in taxonomy]
+
+out_dir = '/scratch/temp/SNAP/training/'
+(clusters, LCAs) = MH.cluster_matrix(A_eps, A_indicies, taxonomy, cluster_eps=.01)
+training_file_names = MH.make_cluster_fastas(out_dir, LCAs, clusters, CEs)
+index_dirs = MH.build_references(training_file_names, out_dir, large_index=True)
+
+#index_dir = "/scratch/temp/SNAP/"
+#index_dirs = MH.build_references(reference_files, index_dir)
+out_sam = os.path.join(out_dir, "out.sam")
 t0 = timeit.default_timer()
-MH.stream_aligned_save_unaligned(index_dirs, soil_sample_file, out_sam, format="sam")  # Why did this result in no organisms? Looks like there really wasn't anything new...maybe decrease the edit distance to 14
+MH.stream_aligned_save_unaligned(index_dirs, soil_sample_file, out_sam, format="sam")
 t1 = timeit.default_timer()
-print("Alignment time: %f" % (t1-t0))  # 1.35 hours (4880.337301 seconds)
+print("Alignment time: %f" % (t1-t0))
 
 pre, ext = os.path.splitext(out_sam)
 out_fastq = pre + ".fastq"
 MH.sam2fastq(out_sam, out_fastq)
 outT1 = timeit.default_timer()
-print("Total time: %f" % (outT1-outT0))  # 6 hours all together
+print("Total time: %f" % (outT1-outT0))
 
 
 # Let's do it one at a time to see what's going on...(looks like ~100K reads per reference are being filtered out)
@@ -600,7 +614,7 @@ np.mean(Gcounts)
 
 ###################
 # Taxonomy
-(clusters, LCAs) = MH.cluster_matrix(A_eps, A_indicies, taxonomy, cluster_eps=.001)
+(clusters, LCAs) = MH.cluster_matrix(A_eps, A_indicies, taxonomy, cluster_eps=.01)
 
 
 ###################
@@ -610,10 +624,12 @@ out_dir = '/scratch/temp/SNAP/training/'
 if not os.path.isdir(out_dir):
     os.makedirs(out_dir)
 
+out_file_names = []
 for cluster_index in range(len(clusters)):
     cluster = clusters[cluster_index]
     LCA = LCAs[cluster_index]
-    out_file_name = os.path.join(out_dir, LCA + ".fa")
+    out_file_name = os.path.join(out_dir, LCA + "_" + str(cluster_index) + "_" + ".fa")  # put the cluster index in the name in case there are shared LCAs
+    out_file_names.append(out_file_name)
     out_file = open(out_file_name, 'w')
     for index in cluster:
         file_name = CEs[index].input_file_name
@@ -623,6 +639,28 @@ for cluster_index in range(len(clusters)):
             out_file.write(record.sequence)
             out_file.write("\n")
     out_file.close()
+
+def _write_single(tup):
+    out_dir = tup[0]
+    LCA = tup[1]
+    cluster_index = tup[2]
+    input_file_names = tup[3]
+    out_file_name = os.path.join(out_dir, LCA + "_" + str(cluster_index) + "_" + ".fa")  # put the cluster index in the name in case there are shared LCAs
+    out_file = open(out_file_name, 'w')
+    for file_name in input_file_names:
+        for record in screed.open(file_name):
+            out_file.write(">" + LCA)
+            out_file.write("\n")
+            out_file.write(record.sequence)
+            out_file.write("\n")
+    out_file.close()
+    return out_file_name
+
+write_single((out_dir, LCAs[0], 0, [CEs[i].input_file_name for i in clusters[0]]))
+
+
+pool = multiprocessing.Pool(processes=multiprocessing.cpu_count())
+res = pool.map(_write_single, zip(repeat(out_dir), LCAs, range(len(LCAs)), [[CEs[i].input_file_name for i in cluster] for cluster in clusters]), chunksize=1)
 
 
 
@@ -648,3 +686,13 @@ for cluster in clusters:
         clustered_inds.append(ind)
 
 A_clustered = A_eps[clustered_inds,:][:,clustered_inds]
+
+
+############
+# All index build time: 70.36 min. (1227 bacterial genomes)
+# All align time: 235s (snap-aligner single . ../4539591.3.fastq -o test_all.bam)
+# Total Reads    Aligned, MAPQ >= 10    Aligned, MAPQ < 10     Unaligned              Too Short/Too Many Ns     Reads/s   Time in Aligner (s)
+# 65,927,593     3,078,885 (4.67%)      1,562,255 (2.37%)      55,286,205 (83.86%)    6,000,248 (9.10%)         279,994   235
+# All align time with multiple hits:  (snap-aligner single . ../4539591.3.fastq -o test_all.bam -om 5 -D 5 -d 20)
+# Total Reads    Aligned, MAPQ >= 10    Aligned, MAPQ < 10     Unaligned              Too Short/Too Many Ns   Extra Alignments    Reads/s   Time in Aligner (s)
+# 65,927,593     6,544,469 (9.93%)      4,004,920 (6.07%)      49,377,956 (74.90%)    6,000,248 (9.10%)       99,489,436          209,932   314

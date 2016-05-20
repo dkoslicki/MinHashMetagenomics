@@ -930,6 +930,44 @@ def cluster_LCAs(clusters, taxonomy):
     return LCAs
 
 
+def _write_single(tup):
+    """
+    Helper function. Writes a single fast file consisting of all the sequences in input_file_names
+    :param tup: input tuple (out_dir, LCA, cluster_index, input_file_names)
+    :return: the name of the created file
+    """
+    out_dir = tup[0]
+    LCA = tup[1]
+    cluster_index = tup[2]
+    input_file_names = tup[3]
+    out_file_name = os.path.join(out_dir, LCA + "_" + str(cluster_index) + "_" + ".fa")  # put the cluster index in the name in case there are shared LCAs
+    out_file = open(out_file_name, 'w')
+    for file_name in input_file_names:
+        for record in screed.open(file_name):
+            out_file.write(">" + LCA)
+            out_file.write("\n")
+            out_file.write(record.sequence)
+            out_file.write("\n")
+    out_file.close()
+    return out_file_name
+
+def make_cluster_fastas(out_dir, LCAs, clusters, CEs, threads=multiprocessing.cpu_count()):
+    """
+    This function will write a single fasta file for each of the clusters
+    :param out_dir: the output directory in which to write the fasta files
+    :param LCAs: the least common ancestors (from cluster_LCAs())
+    :param clusters: the clusters (from cluster_matrix())
+    :param CEs: The list of count estimators
+    :param threads: number of threads to use
+    :return: a list of files created (to be used in build_reference())
+    """
+    if not os.path.isdir(out_dir):
+        os.makedirs(out_dir)
+    pool = multiprocessing.Pool(processes=threads)
+    file_names = pool.map(_write_single, zip(repeat(out_dir), LCAs, range(len(LCAs)), [[CEs[i].input_file_name for i in cluster] for cluster in clusters]), chunksize=1)
+
+    return file_names
+
 
 
 ##########################################################################
