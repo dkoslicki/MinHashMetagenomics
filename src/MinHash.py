@@ -966,8 +966,8 @@ def make_cluster_fastas(out_dir, LCAs, clusters, CEs, threads=multiprocessing.cp
     pool = multiprocessing.Pool(processes=threads)
     file_names = pool.map(_write_single, zip(repeat(out_dir), LCAs, range(len(LCAs)), [[CEs[i].input_file_name for i in cluster] for cluster in clusters]), chunksize=1)
     pool.close()
-    pool.terminate()
-    pool.join()
+    #pool.terminate()
+    #pool.join()
     return file_names
 
 
@@ -1034,8 +1034,8 @@ def build_references(reference_files, output_dir, large_index=True, seed_size=20
     pool = multiprocessing.Pool(processes=threads)
     index_dirs = pool.map(_build_references_helper(output_dir, large_index, seed_size, threads, binary), reference_files, chunksize=1)
     pool.close()
-    pool.terminate()
-    pool.join()
+    #pool.terminate()
+    #pool.join()
     return index_dirs
 
 
