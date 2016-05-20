@@ -951,7 +951,7 @@ def cluster_LCAs(clusters, taxonomy):
     return LCAs
 
 
-def _write_single(tup):
+def _write_single_cluster(tup):
     """
     Helper function. Writes a single fast file consisting of all the sequences in input_file_names
     :param tup: input tuple (out_dir, LCA, cluster_index, input_file_names)
@@ -985,7 +985,7 @@ def make_cluster_fastas(out_dir, LCAs, clusters, CEs, threads=multiprocessing.cp
     if not os.path.isdir(out_dir):
         os.makedirs(out_dir)
     pool = multiprocessing.Pool(processes=threads)
-    file_names = pool.map(_write_single, zip(repeat(out_dir), LCAs, range(len(LCAs)), [[CEs[i].input_file_name for i in cluster] for cluster in clusters]), chunksize=1)
+    file_names = pool.map(_write_single_cluster, zip(repeat(out_dir), LCAs, range(len(LCAs)), [[CEs[i].input_file_name for i in cluster] for cluster in clusters]), chunksize=1)
     pool.close()
     #pool.terminate()
     #pool.join()
@@ -1127,7 +1127,7 @@ def stream_align_single(index_dirs, sample_file, out_file, format="bam", filt='a
             elif filt == 'unaligned':
                 cmd = snap_binary + " single " + index_dir + " " + sample_file + " -o -" + format + " - -f -F u -t " + str(threads) + " -d " + str(edit_distance) + " -mrl " + str(min_read_len)
             elif filt == 'all':
-                cmd = snap_binary + " single " + index_dir + " " + sample_file + " -o -" + format + " - -f -t " + str(threads) + " -d " + str(edit_distance) + " -mrl " + str(min_read_len) + " | " + samtools_binary + " view -hbu -f4 -o - -U " + os.path.join(out_dir, os.path.basename(sample_file) + "_" + index_dir.split(os.sep)[-1] + "_aligned.bam")
+                cmd = snap_binary + " single " + index_dir + " " + sample_file + " -o -" + format + " - -f -t " + str(threads) + " -d " + str(edit_distance) + " -mrl " + str(min_read_len) + " | " + samtools_binary + " view -@ 5 -hbu -f4 -o - -U " + os.path.join(out_dir, os.path.basename(sample_file) + "_" + index_dir.split(os.sep)[-1] + "_aligned.bam")
             else:
                 raise Exception("aligned must be 'aligned', 'unaligned', or 'all'")
             big_cmd = " " + cmd
@@ -1137,7 +1137,7 @@ def stream_align_single(index_dirs, sample_file, out_file, format="bam", filt='a
             elif filt == 'unaligned':
                 cmd = snap_binary + " single " + index_dir + " -" + format + " - -o -" + format + " - -f -F u -t " + str(threads) + " -d " + str(edit_distance) + " -mrl " + str(min_read_len)
             elif filt == 'all':
-                cmd = snap_binary + " single " + index_dir + " -" + format + " - -o -" + format + " - -f -t " + str(threads) + " -d " + str(edit_distance) + " -mrl " + str(min_read_len) + " | " + samtools_binary + " view -hbu -f4 -o - -U " + os.path.join(out_dir, os.path.basename(sample_file) + "_" + index_dir.split(os.sep)[-1] + "_aligned.bam")
+                cmd = snap_binary + " single " + index_dir + " -" + format + " - -o -" + format + " - -f -t " + str(threads) + " -d " + str(edit_distance) + " -mrl " + str(min_read_len) + " | " + samtools_binary + " view -@ 5 -hbu -f4 -o - -U " + os.path.join(out_dir, os.path.basename(sample_file) + "_" + index_dir.split(os.sep)[-1] + "_aligned.bam")
             else:
                 raise Exception("aligned must be 'aligned', 'unaligned', or 'all'")
             big_cmd = big_cmd + " | " + cmd
