@@ -1013,7 +1013,7 @@ def build_reference(reference_file, output_dir, large_index=True, seed_size=20, 
     else:
         cmd = binary + " index " + reference_file + " " + output_dir + " -s " + str(seed_size) + " -t" + str(threads)
     #exit_code = subprocess.call(cmd, shell=True,  stdout=FNULL, stderr=subprocess.STDOUT)
-    exit_code = subprocess.call(cmd, shell=True)
+    exit_code = subprocess.check_call(cmd, shell=True)
     return exit_code
 
 
@@ -1066,9 +1066,9 @@ def build_references(reference_files, output_dir, large_index=True, seed_size=20
     pool = multiprocessing.Pool(processes=threads)
     #index_dirs = pool.map(_build_references_helper(output_dir, large_index, seed_size, threads, binary), reference_files, chunksize=1)
     index_dirs = pool.map(_build_reference_star, izip(reference_files, repeat(output_dir), repeat(large_index), repeat(seed_size), repeat(threads), repeat(binary)), chunksize=1)
-    #pool.close()
+    pool.close()
+    pool.join()
     pool.terminate()
-    #pool.join()
     return index_dirs
 
 
