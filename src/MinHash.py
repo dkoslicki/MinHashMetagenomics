@@ -877,7 +877,8 @@ def cluster_matrix(A_eps, A_indicies, taxonomy, cluster_eps=.01):
     :param cluster_eps: The similarity threshold to cluster on
     :return: (a list of sets of indicies defining the clusters, LCAs of the clusters)
     """
-    A_indicies_numerical = np.where(A_indicies == True)[0]
+    #A_indicies_numerical = np.where(A_indicies == True)[0]
+    A_indicies_numerical = A_indicies
     # initialize the clusters
     clusters = []
     for A_index in range(len(A_indicies_numerical)):
