@@ -434,19 +434,7 @@ out_file_names = ["/nfs1/Koslicki_Lab/koslickd/MinHash/Out/N"+str(training_n)+"k
 CEs = MH.import_multiple_hdf5(out_file_names)
 Y_count_in_comparison = MCE_in_comparison.count_vector(CEs)
 eps = .001
-(reconstruction, A_eps, A_indicies) = MH.jaccard_count_lsqnonneg(CEs, Y_count_in_comparison, eps)  # !!!!NOTE: I should truncate the reconstruction and A_eps based on eps as well
-
-
-#reconstruction = reconstruction/float(sum(reconstruction))
-#indicies = reconstruction.argsort()[::-1]
-#reference_files = []
-#for index in indicies:
-#    reference_files.append(CEs[index].input_file_name)
-#    if reconstruction[index] < eps:  # Add at leat one more index below the threshold (to make sure I don't have an empty list of indexes)
-#        break
-
-#print("Number of indicies to build: %d" % len(reference_files))
-
+(reconstruction, A_eps, A_indicies) = MH.jaccard_count_lsqnonneg(CEs, Y_count_in_comparison, eps)
 
 # Read in the taxonomy and see which are the largest entries of which Y vectors
 fid = open('/nfs1/Koslicki_Lab/koslickd/MinHash/Data/Taxonomy.txt', 'r')
@@ -460,23 +448,22 @@ out_dir = '/scratch/temp/SNAP/training/'
 training_file_names = MH.make_cluster_fastas(out_dir, LCAs, clusters, CEs)
 index_dirs = MH.build_references(training_file_names, out_dir, large_index=True)
 
-out_file = os.path.join(out_dir, "out.bam")
+sorted_clusters = [item[1] for item in sorted(zip([sum([reconstruction[i] for i in clusters[j]]) for j in range(len(clusters))], clusters), reverse=True)]
+sorted_LCAs = [item[1] for item in sorted(zip([sum([reconstruction[i] for i in clusters[j]]) for j in range(len(clusters))], LCAs), reverse=True)]
+sorted_index_dirs = [item[1] for item in sorted(zip([sum([reconstruction[i] for i in clusters[j]]) for j in range(len(clusters))], index_dirs), reverse=True)]
+
+out_file = os.path.join(out_dir, os.path.basename(soil_sample_file) + "_unaligned.bam")
 t0 = timeit.default_timer()
-MH.stream_align_single(index_dirs[0:3], soil_sample_file, out_file, format="bam", filt="all")
-MH.stream_align_single(index_dirs, soil_sample_file, out_file, format="bam", filt="all")
+MH.stream_align_single(sorted_index_dirs, soil_sample_file, out_file, format="bam", filt="all")
+#MH.stream_align_single(index_dirs, soil_sample_file, out_file, format="bam", filt="all")
 t1 = timeit.default_timer()
 print("Alignment time: %f" % (t1-t0))
 
-pre, ext = os.path.splitext(out_file)
-out_fastq = pre + ".fastq"
-MH.sam2fastq(out_file, out_fastq)
-outT1 = timeit.default_timer()
-print("Total time: %f" % (outT1-outT0))
-
-
-# Let's do it one at a time to see what's going on...(looks like ~100K reads per reference are being filtered out)
-MH.top_down_align(soil_sample_file, reference_files, index_dir, "/scratch/temp/SNAP/", save_aligned=False, format="sam")
-MH.top_down_align(soil_sample_file, reference_files, index_dir, "/scratch/temp/SNAP/", save_aligned=True, format="bam")
+#pre, ext = os.path.splitext(out_file)
+#out_fastq = pre + ".fastq"
+#MH.sam2fastq(out_file, out_fastq)
+#outT1 = timeit.default_timer()
+#print("Total time: %f" % (outT1-outT0))
 
 
 
