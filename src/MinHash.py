@@ -1016,22 +1016,32 @@ def build_reference(reference_file, output_dir, large_index=True, seed_size=20, 
     return exit_code
 
 
-class _build_references_helper(object):
-    """
-    Helper function for mapping CountEstimator class over multiple input_file arguments
-    """
-    def __init__(self, output_dir, large_index, seed_size, threads, binary):
-        self.output_dir = output_dir
-        self.large_index = large_index
-        self.seed_size = seed_size
-        self.threads = threads
-        self.binary = binary
+#class _build_references_helper(object):
+#    """
+#    Helper function for mapping CountEstimator class over multiple input_file arguments
+#    """
+#    def __init__(self, output_dir, large_index, seed_size, threads, binary):
+#        self.output_dir = output_dir
+#        self.large_index = large_index
+#        self.seed_size = seed_size
+#        self.threads = threads
+#        self.binary = binary
+#
+#    def __call__(self, reference_file_name):
+#        prefix, ext = os.path.splitext(os.path.basename(reference_file_name))
+#        reference_dir = os.path.join(self.output_dir, prefix)
+#        exit_code = build_reference(reference_file_name, reference_dir, large_index=self.large_index, seed_size=self.seed_size, threads=self.threads, binary=self.binary)
+#        return reference_dir
 
-    def __call__(self, reference_file_name):
-        prefix, ext = os.path.splitext(os.path.basename(reference_file_name))
-        reference_dir = os.path.join(self.output_dir, prefix)
-        exit_code = build_reference(reference_file_name, reference_dir, large_index=self.large_index, seed_size=self.seed_size, threads=self.threads, binary=self.binary)
-        return reference_dir
+def _build_reference_helper(reference_file_name, output_dir, large_index, seed_size, threads, binary):
+    prefix, ext = os.path.splitext(os.path.basename(reference_file_name))
+    reference_dir = os.path.join(output_dir, prefix)
+    exit_code = build_reference(reference_file_name, reference_dir, large_index=large_index, seed_size=seed_size, threads=threads, binary=binary)
+    return reference_dir
+
+
+def _build_reference_star(args):
+    return _build_reference_helper(*args)
 
 
 def build_references(reference_files, output_dir, large_index=True, seed_size=20, threads=multiprocessing.cpu_count(), binary="snap-aligner"):
@@ -1053,9 +1063,10 @@ def build_references(reference_files, output_dir, large_index=True, seed_size=20
     #    index_dirs.append(reference_dir)
     #    exit_code = build_reference(reference_file_name, reference_dir, large_index=large_index, seed_size=seed_size, threads=threads, binary=binary)
     pool = multiprocessing.Pool(processes=threads)
-    index_dirs = pool.map(_build_references_helper(output_dir, large_index, seed_size, threads, binary), reference_files, chunksize=1)
-    pool.close()
-    #pool.terminate()
+    #index_dirs = pool.map(_build_references_helper(output_dir, large_index, seed_size, threads, binary), reference_files, chunksize=1)
+    index_dirs = pool.map(_build_reference_star, zip(reference_files, repeat(output_dir), repeat(large_index), repeat(seed_size), repeat(threads), repeat(binary)), chunksize=1)
+    #pool.close()
+    pool.terminate()
     #pool.join()
     return index_dirs
 
@@ -1107,7 +1118,7 @@ def align_reads(index_dir, sample_file, out_file, filt='aligned', threads=multip
     return exit_code
 
 
-def stream_aligned_save_unaligned(index_dirs, sample_file, out_file, format="bam", filt='unaligned', threads=multiprocessing.cpu_count(), edit_distance=14, min_read_len=50, snap_binary="snap-aligner", samtools_binary="/local/cluster/samtools/bin/samtools"):
+def stream_align_single(index_dirs, sample_file, out_file, format="bam", filt='all', threads=multiprocessing.cpu_count(), edit_distance=14, min_read_len=50, snap_binary="snap-aligner", samtools_binary="/local/cluster/samtools/bin/samtools"):
     """
     This will take a directory of indexes and stream filter the sample reads through it
     :param index_dirs: list of directories of snap indexes
@@ -1223,7 +1234,6 @@ def top_down_align(sample_file, reference_files, index_dir, out_dir, threads=mul
     return sam_out_file
 
 
-
 ##########################################################################
 # Tests
 
@@ -1265,6 +1275,7 @@ def test_yield_overlaps_3():
     x2 = [1, 2, 6]
     assert len(list(_yield_overlaps(x1, x2))) == 2
     assert len(list(_yield_overlaps(x2, x1))) == 2
+
 
 def test_CompositionSketch():
     CS1 = CompositionSketch(n=5, max_prime=1e10, ksize=11, prefixsize=1, save_kmers='y')
@@ -1395,8 +1406,6 @@ def test_snap():
     sam2fastq(out_sam, out_fastq)
     assert filecmp.cmp(align_file, out_fastq)
     shutil.rmtree(temp_dir)
-
-
 
 
 def test_suite():

@@ -357,7 +357,7 @@ sample_file = "/nfs1/Koslicki_Lab/koslickd/MinHash/Data/SRR172902.fastq"
 index_dirs = MH.build_references(reference_files, index_dir)
 out_sam = "/nfs1/Koslicki_Lab/koslickd/MinHash/Out/Temp/out.sam"
 t0 = timeit.default_timer()
-MH.stream_aligned_save_unaligned(index_dirs, sample_file, out_sam)
+MH.stream_align_single(index_dirs, sample_file, out_sam)
 t1 = timeit.default_timer()
 print("Alignment time: %f" % (t1-t0))
 pre, ext = os.path.splitext(out_sam)
@@ -464,7 +464,7 @@ index_dirs = MH.build_references(training_file_names, out_dir, large_index=True)
 #index_dirs = MH.build_references(reference_files, index_dir)
 out_sam = os.path.join(out_dir, "out.sam")
 t0 = timeit.default_timer()
-MH.stream_aligned_save_unaligned(index_dirs, soil_sample_file, out_sam, format="sam")
+MH.stream_align_single(index_dirs, soil_sample_file, out_sam, format="sam")
 t1 = timeit.default_timer()
 print("Alignment time: %f" % (t1-t0))
 
