@@ -1008,7 +1008,7 @@ class _build_references_helper(object):
     def __call__(self, reference_file_name):
         prefix, ext = os.path.splitext(os.path.basename(reference_file_name))
         reference_dir = os.path.join(self.output_dir, prefix)
-        exit_code = build_reference(reference_file_name, self.output_dir, large_index=self.large_index, seed_size=self.seed_size, threads=self.threads, binary=self.binary)
+        exit_code = build_reference(reference_file_name, reference_dir, large_index=self.large_index, seed_size=self.seed_size, threads=self.threads, binary=self.binary)
         return reference_dir
 
 def build_references(reference_files, output_dir, large_index=True, seed_size=20, threads=multiprocessing.cpu_count(), binary="snap-aligner"):
