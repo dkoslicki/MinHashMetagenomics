@@ -965,7 +965,9 @@ def make_cluster_fastas(out_dir, LCAs, clusters, CEs, threads=multiprocessing.cp
         os.makedirs(out_dir)
     pool = multiprocessing.Pool(processes=threads)
     file_names = pool.map(_write_single, zip(repeat(out_dir), LCAs, range(len(LCAs)), [[CEs[i].input_file_name for i in cluster] for cluster in clusters]), chunksize=1)
-
+    pool.close()
+    pool.terminate()
+    pool.join()
     return file_names
 
 
