@@ -1127,7 +1127,7 @@ def stream_align_single(index_dirs, sample_file, out_file, format="bam", filt='a
             elif filt == 'unaligned':
                 cmd = snap_binary + " single " + index_dir + " " + sample_file + " -o -" + format + " - -f -F u -t " + str(threads) + " -d " + str(edit_distance) + " -mrl " + str(min_read_len)
             elif filt == 'all':
-                cmd = snap_binary + " single " + index_dir + " " + sample_file + " -o -" + format + " - -f -xf 1.1 -t " + str(threads) + " -d " + str(edit_distance) + " -mrl " + str(min_read_len) + " | " + samtools_binary + " view -@ 5 -h -b -f4 -o - -U " + os.path.join(out_dir, os.path.basename(sample_file) + "_" + index_dir.split(os.sep)[-1] + "_aligned.bam")
+                cmd = snap_binary + " single " + index_dir + " " + sample_file + " -o -" + format + " - -f -xf 100.1 -t " + str(threads) + " -d " + str(edit_distance) + " -mrl " + str(min_read_len) + " | " + samtools_binary + " view -@ 5 -h -b -f4 -o - -U " + os.path.join(out_dir, os.path.basename(sample_file) + "_" + index_dir.split(os.sep)[-1] + "_aligned.bam")
             else:
                 raise Exception("aligned must be 'aligned', 'unaligned', or 'all'")
             big_cmd = " " + cmd
@@ -1156,8 +1156,7 @@ def stream_align_single(index_dirs, sample_file, out_file, format="bam", filt='a
         raise Exception("The typical maximum command length is 2616670, and running it with this many indicies would exceed that. Please iterate over index_dirs in chunks.")
     else:
         #exit_code = subprocess.call(big_cmd, shell=True,  stdout=FNULL, stderr=subprocess.STDOUT)
-        print(big_cmd)
-        exit_code = subprocess.call(big_cmd, shell=True)
+        exit_code = subprocess.call(big_cmd, shell=True,  stdout=FNULL)
     return exit_code
 
 

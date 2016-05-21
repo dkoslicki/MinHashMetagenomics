@@ -457,7 +457,7 @@ t0 = timeit.default_timer()
 MH.stream_align_single(sorted_index_dirs, soil_sample_file, out_file, format="bam", filt="all")
 #MH.stream_align_single(index_dirs, soil_sample_file, out_file, format="bam", filt="all")
 t1 = timeit.default_timer()
-print("Alignment time: %f" % (t1-t0))
+print("Alignment time: %f" % (t1-t0))  # 8752.601766s == 2.43 hours
 
 #pre, ext = os.path.splitext(out_file)
 #out_fastq = pre + ".fastq"
