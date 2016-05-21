@@ -443,7 +443,7 @@ fid.close()
 taxonomy = [item.strip() for item in taxonomy]
 taxonomy_names = [item.split('\t')[0] for item in taxonomy]
 
-out_dir = '/scratch/temp/SNAP/training/'
+out_dir = '/scratch/temp/SNAP/training/temp'
 (clusters, LCAs) = MH.cluster_matrix(A_eps, A_indicies, taxonomy, cluster_eps=.01)
 training_file_names = MH.make_cluster_fastas(out_dir, LCAs, clusters, CEs)
 index_dirs = MH.build_references(training_file_names, out_dir, large_index=True)
