@@ -1158,7 +1158,7 @@ def stream_align_single(index_dirs, sample_file, out_file, format="bam", filt='a
     else:
         #exit_code = subprocess.call(big_cmd, shell=True,  stdout=FNULL, stderr=subprocess.STDOUT)
         exit_code = subprocess.check_call(big_cmd, shell=True,  stdout=FNULL, stderr=out_message_file)
-        print(exit_code)
+        #print(exit_code)
     return exit_code
 
 
