@@ -1157,7 +1157,7 @@ def stream_align_single(index_dirs, sample_file, out_file, format="bam", filt='a
         raise Exception("The typical maximum command length is 2616670, and running it with this many indicies would exceed that. Please iterate over index_dirs in chunks.")
     else:
         #exit_code = subprocess.call(big_cmd, shell=True,  stdout=FNULL, stderr=subprocess.STDOUT)
-        exit_code = subprocess.call(big_cmd, shell=True,  stdout=FNULL, stderr=out_message_file)
+        exit_code = subprocess.check_call(big_cmd, shell=True,  stdout=FNULL, stderr=out_message_file)
         print(exit_code)
     return exit_code
 
