@@ -1117,7 +1117,8 @@ def stream_align_single(index_dirs, sample_file, out_file, format="bam", filt='a
     if format != "bam" and format != "sam":
         raise Exception("Invalid format choice %s. Format must be one of 'bam' or 'sam'" % format)
     out_dir = os.path.dirname(out_file)
-    FNULL = open(os.devnull, 'w')
+    #FNULL = open(os.devnull, 'w')
+    out_message_file = open(os.path.join(out_dir,"std_out_messages.txt"), 'w')
     big_cmd = ''
     i = 0
     for index_dir in index_dirs:
@@ -1156,7 +1157,8 @@ def stream_align_single(index_dirs, sample_file, out_file, format="bam", filt='a
         raise Exception("The typical maximum command length is 2616670, and running it with this many indicies would exceed that. Please iterate over index_dirs in chunks.")
     else:
         #exit_code = subprocess.call(big_cmd, shell=True,  stdout=FNULL, stderr=subprocess.STDOUT)
-        exit_code = subprocess.call(big_cmd, shell=True,  stdout=FNULL)
+        exit_code = subprocess.call(big_cmd, shell=True,  stdout=out_message_file, stderr=subprocess.STDOUT)
+        print(exit_code)
     return exit_code
 
 
