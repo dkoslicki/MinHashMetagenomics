@@ -1118,7 +1118,8 @@ def stream_align_single(index_dirs, sample_file, out_file, format="bam", filt='a
         raise Exception("Invalid format choice %s. Format must be one of 'bam' or 'sam'" % format)
     out_dir = os.path.dirname(out_file)
     FNULL = open(os.devnull, 'w')
-    out_message_file = open(os.path.join(out_dir,"std_out_messages.txt"), 'w')
+    out_message_file_name = os.path.join(out_dir,"stream_align_stdout.txt")
+    out_message_file = open(out_message_file_name, 'w')
     big_cmd = ''
     i = 0
     for index_dir in index_dirs:
@@ -1156,10 +1157,13 @@ def stream_align_single(index_dirs, sample_file, out_file, format="bam", filt='a
     if len(big_cmd) >= 2616670:
         raise Exception("The typical maximum command length is 2616670, and running it with this many indicies would exceed that. Please iterate over index_dirs in chunks.")
     else:
-        #exit_code = subprocess.call(big_cmd, shell=True,  stdout=FNULL, stderr=subprocess.STDOUT)
-        exit_code = subprocess.check_call(big_cmd, shell=True,  stdout=FNULL, stderr=out_message_file)
-        #print(exit_code)
-    #return exit_code
+        # exit_code = subprocess.call(big_cmd, shell=True,  stdout=FNULL, stderr=subprocess.STDOUT)
+        big_cmd = "set -o pipefail; " + big_cmd
+        exit_code = subprocess.call(big_cmd, shell=True,  stdout=FNULL, stderr=out_message_file)
+        if exit_code != 0:
+            raise Exception("stream_align_single failed. Due to how snap-align prints its error messages, you will have to go digging in the file " + out_message_file_name + " to find the error. If you find an error regarding -xf, increase it slightly (say, 1.2) and try again. If you get an mmap erro, you will need to decrease -xf or else try with fewer index_dirs.")
+        # print(exit_code)
+    # return exit_code
 
 
 def sam2fastq(sam_file, out_file):
