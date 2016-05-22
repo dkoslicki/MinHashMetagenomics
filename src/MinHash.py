@@ -1159,6 +1159,7 @@ def stream_align_single(index_dirs, sample_file, out_file, format="bam", filt='a
     else:
         # exit_code = subprocess.call(big_cmd, shell=True,  stdout=FNULL, stderr=subprocess.STDOUT)
         big_cmd = "set -o pipefail; " + big_cmd
+        print(big_cmd)
         exit_code = subprocess.call(big_cmd, shell=True,  stdout=FNULL, stderr=out_message_file)
         if exit_code != 0:
             raise Exception("stream_align_single failed. Due to how snap-align prints its error messages, you will have to go digging in the file " + out_message_file_name + " to find the error. If you find an error regarding -xf, increase it slightly (say, 1.2) and try again. If you get an mmap error, you will need to decrease -xf or else try with fewer index_dirs.")
