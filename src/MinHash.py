@@ -963,12 +963,14 @@ def _write_single_cluster(tup):
     input_file_names = tup[3]
     out_file_name = os.path.join(out_dir, LCA + "_" + str(cluster_index) + "_" + ".fa")  # put the cluster index in the name in case there are shared LCAs
     out_file = open(out_file_name, 'w')
+    i = 0
     for file_name in input_file_names:
         for record in screed.open(file_name):
-            out_file.write(">" + LCA)
+            out_file.write(">" + LCA + "_" + str(i))
             out_file.write("\n")
             out_file.write(record.sequence)
             out_file.write("\n")
+            i += 1
     out_file.close()
     return out_file_name
 

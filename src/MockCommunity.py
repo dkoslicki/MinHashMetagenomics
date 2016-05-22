@@ -395,6 +395,7 @@ for index_dir in index_dirs:
 
 #############################################
 # The whole kit and kaboodle on a soil sample
+# NOTE: Might want to compare the cluster->assemble results to (single genome bins)->assemble results
 import sys
 sys.path.append('/nfs1/Koslicki_Lab/koslickd/Repositories/MinHashMetagenomics/src/')
 import os
@@ -443,7 +444,7 @@ fid.close()
 taxonomy = [item.strip() for item in taxonomy]
 taxonomy_names = [item.split('\t')[0] for item in taxonomy]
 
-out_dir = '/scratch/temp/SNAP/training/temp'
+out_dir = '/scratch/temp/SNAP/training/'
 (clusters, LCAs) = MH.cluster_matrix(A_eps, A_indicies, taxonomy, cluster_eps=.01)
 training_file_names = MH.make_cluster_fastas(out_dir, LCAs, clusters, CEs)
 index_dirs = MH.build_references(training_file_names, out_dir, large_index=True)
@@ -452,9 +453,9 @@ sorted_clusters = [item[1] for item in sorted(zip([sum([reconstruction[i] for i 
 sorted_LCAs = [item[1] for item in sorted(zip([sum([reconstruction[i] for i in clusters[j]]) for j in range(len(clusters))], LCAs), reverse=True)]
 sorted_index_dirs = [item[1] for item in sorted(zip([sum([reconstruction[i] for i in clusters[j]]) for j in range(len(clusters))], index_dirs), reverse=True)]
 
-out_file = os.path.join(out_dir, os.path.basename(soil_sample_file) + "_unaligned.bam")
+out_file = os.path.join(out_dir, os.path.basename(soil_sample_file) + "_unaligned.sam")
 t0 = timeit.default_timer()
-MH.stream_align_single(sorted_index_dirs, soil_sample_file, out_file, format="bam", filt="all")
+MH.stream_align_single(sorted_index_dirs, soil_sample_file, out_file, format="sam", filt="all")
 #MH.stream_align_single(index_dirs, soil_sample_file, out_file, format="bam", filt="all")
 t1 = timeit.default_timer()
 print("Alignment time: %f" % (t1-t0))  # 8752.601766s == 2.43 hours
