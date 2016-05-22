@@ -1129,7 +1129,7 @@ def stream_align_single(index_dirs, sample_file, out_file, format="bam", filt='a
             elif filt == 'unaligned':
                 cmd = snap_binary + " single " + index_dir + " " + sample_file + " -o -" + format + " - -f -F u -t " + str(threads) + " -d " + str(edit_distance) + " -mrl " + str(min_read_len)
             elif filt == 'all':
-                cmd = snap_binary + " single " + index_dir + " " + sample_file + " -o -" + format + " - -f -xf 1.1 -t " + str(threads) + " -d " + str(edit_distance) + " -mrl " + str(min_read_len) + " | " + samtools_binary + "view -@ 5 -h -b -f4 -o - -U " + os.path.join(out_dir, os.path.basename(sample_file) + "_" + index_dir.split(os.sep)[-1] + "_aligned.bam")
+                cmd = snap_binary + " single " + index_dir + " " + sample_file + " -o -" + format + " - -f -xf 1.1 -t " + str(threads) + " -d " + str(edit_distance) + " -mrl " + str(min_read_len) + " | " + samtools_binary + " view -@ 5 -h -b -f4 -o - -U " + os.path.join(out_dir, os.path.basename(sample_file) + "_" + index_dir.split(os.sep)[-1] + "_aligned.bam")
             else:
                 raise Exception("aligned must be 'aligned', 'unaligned', or 'all'")
             big_cmd = " " + cmd
@@ -1161,7 +1161,7 @@ def stream_align_single(index_dirs, sample_file, out_file, format="bam", filt='a
         big_cmd = "set -o pipefail; " + big_cmd
         exit_code = subprocess.call(big_cmd, shell=True,  stdout=FNULL, stderr=out_message_file)
         if exit_code != 0:
-            raise Exception("stream_align_single failed. Due to how snap-align prints its error messages, you will have to go digging in the file " + out_message_file_name + " to find the error. If you find an error regarding -xf, increase it slightly (say, 1.2) and try again. If you get an mmap erro, you will need to decrease -xf or else try with fewer index_dirs.")
+            raise Exception("stream_align_single failed. Due to how snap-align prints its error messages, you will have to go digging in the file " + out_message_file_name + " to find the error. If you find an error regarding -xf, increase it slightly (say, 1.2) and try again. If you get an mmap error, you will need to decrease -xf or else try with fewer index_dirs.")
         # print(exit_code)
     # return exit_code
 
