@@ -1233,7 +1233,7 @@ def top_down_align(sample_file, reference_files, index_dir, out_dir, threads=mul
     shutil.move(sam_out_file_prev, sam_out_file)
     return sam_out_file
 
-def top_down_align2(sample_file, reference_files, index_dir, out_dir, threads=multiprocessing.cpu_count(), save_aligned=True, format="bam", large_index=True, seed_size=20, edit_distance=14, min_read_len=50, snap_binary="snap-aligner", samtools_binary="/local/cluster/samtools/bin/samtools"):
+def top_down_align2(sample_file, reference_files, index_dir, out_dir, threads=multiprocessing.cpu_count(), save_aligned=True, format="bam", large_index=True, seed_size=20, edit_distance=14, min_read_len=50, xf=1.2, snap_binary="snap-aligner", samtools_binary="/local/cluster/samtools/bin/samtools"):
     """
     This function takes an input file and recursively aligns it to the individual reference files. Reads that are aligned are saved, and unaligned reads are passed to the next step in the alignment.
     Currently this is quite inefficient since it performs the alignment twice. Could try to use samtools to partition the reads into aligned and unaligned.
@@ -1264,14 +1264,14 @@ def top_down_align2(sample_file, reference_files, index_dir, out_dir, threads=mu
         if i == 0:
             build_reference(reference_file, index_dir, large_index=large_index, seed_size=seed_size, threads=threads, binary=snap_binary)
             aligned_out_file = os.path.join(out_dir, os.path.basename(sample_file) + "_" + os.path.basename(reference_file) + "_" + "aligned." + format)
-            cmd = "set -o pipefail; " + snap_binary + " single " + index_dir + " " + sample_file + " -o -" + format + " - -f -xf 1.1 -t " + str(threads) + " -d " + str(edit_distance) + " -mrl " + str(min_read_len) + " | " + samtools_binary + " view -@ 5 -h -b -f4 -o " + unaligned_prev + " -U " + aligned_out_file
+            cmd = "set -o pipefail; " + snap_binary + " single " + index_dir + " " + sample_file + " -o -sam - -f -xf " + str(xf) + " -t " + str(threads) + " -d " + str(edit_distance) + " -mrl " + str(min_read_len) + " | " + samtools_binary + " view -@ " + str(threads) + " -h -b -1 -f4 -o " + unaligned_prev + " -U " + aligned_out_file
             exit_code = subprocess.check_call(cmd, shell=True,  stdout=FNULL, stderr=out_message_file)
             # align_reads(index_dir, sample_file, aligned_out_file, filt="aligned", threads=threads, edit_distance=edit_distance, min_read_len=min_read_len, binary=binary)
             # align_reads(index_dir, sample_file, sam_out_file_prev, filt="unaligned", threads=threads, edit_distance=edit_distance, min_read_len=min_read_len, binary=binary)
         else:
             build_reference(reference_file, index_dir, large_index=large_index, seed_size=seed_size, threads=threads, binary=snap_binary)
             aligned_out_file = os.path.join(out_dir, os.path.basename(sample_file) + "_" + os.path.basename(reference_file) + "_" + "aligned." + format)
-            cmd = "set -o pipefail; " + snap_binary + " single " + index_dir + " " + unaligned_prev + " -o -" + format + " - -f -xf 1.1 -t " + str(threads) + " -d " + str(edit_distance) + " -mrl " + str(min_read_len) + " | " + samtools_binary + " view -@ 5 -h -b -f4 -o " + unaligned + " -U " + aligned_out_file
+            cmd = "set -o pipefail; " + snap_binary + " single " + index_dir + " " + unaligned_prev + " -o -sam - -f -xf " + str(xf) + " -t " + str(threads) + " -d " + str(edit_distance) + " -mrl " + str(min_read_len) + " | " + samtools_binary + " view -@ " + str(threads) + " -h -b -1 -f4 -o " + unaligned + " -U " + aligned_out_file
             exit_code = subprocess.check_call(cmd, shell=True,  stdout=FNULL, stderr=out_message_file)
             # align_reads(index_dir, sample_file, aligned_out_file, filt="aligned", threads=threads, edit_distance=edit_distance, min_read_len=min_read_len, binary=binary)
             # align_reads(index_dir, sample_file, sam_out_file_prev, filt="unaligned", threads=threads, edit_distance=edit_distance, min_read_len=min_read_len, binary=binary)            shutil.move(sam_out_file, sam_out_file_prev)  # need to check if this is ok
