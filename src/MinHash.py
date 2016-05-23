@@ -1233,6 +1233,52 @@ def top_down_align(sample_file, reference_files, index_dir, out_dir, threads=mul
     shutil.move(sam_out_file_prev, sam_out_file)
     return sam_out_file
 
+def top_down_align2(sample_file, reference_files, index_dir, out_dir, threads=multiprocessing.cpu_count(), save_aligned=True, format="bam", large_index=True, seed_size=20, edit_distance=14, min_read_len=50, snap_binary="snap-aligner", samtools_binary="/local/cluster/samtools/bin/samtools"):
+    """
+    This function takes an input file and recursively aligns it to the individual reference files. Reads that are aligned are saved, and unaligned reads are passed to the next step in the alignment.
+    Currently this is quite inefficient since it performs the alignment twice. Could try to use samtools to partition the reads into aligned and unaligned.
+    :param sample_file: Input file on which to perform the alignment
+    :param reference_files: list of references files to align agains
+    :param index_dir: directory where the intermediate reference file indexes are stored
+    :param out_dir: output directory for the results
+    :param threads: number of threads to use
+    :param save_aligned: True/False to save/not save the intermediate aligned reads
+    :param format: one of 'sam' or 'bam'
+    :param large_index: makes the index about 30% bigger, but faster for quick/inaccurate alignements
+    :param seed_size: for initial match to begin alignment
+    :param edit_distance: the maximum edit distance to allow for an alignment
+    :param min_read_len: Specify the minimum read length to align, reads shorter than this (after clipping) stay unaligned.
+     This should be a good bit bigger than the seed length or you might get some questionable alignments.  Default 50
+    :param binary: location of the snap-aligner binary
+    :return:
+    """
+    FNULL = open(os.devnull, 'w')
+    out_message_file_name = os.path.join(out_dir, "top_down_align_stdout.txt")
+    out_message_file = open(out_message_file_name, 'w')
+    if format != "sam" and format != "bam":
+        raise Exception("format must be one of 'sam' or 'bam'")
+    unaligned_prev = os.path.join(out_dir, os.path.basename(sample_file) + "_unaligned_prev." + format)
+    unaligned = os.path.join(out_dir, os.path.basename(sample_file) + "_unaligned." + format)
+    for i in range(len(reference_files)):
+        reference_file = reference_files[i]
+        if i == 0:
+            build_reference(reference_file, index_dir, large_index=large_index, seed_size=seed_size, threads=threads, binary=snap_binary)
+            aligned_out_file = os.path.join(out_dir, os.path.basename(sample_file) + "_" + os.path.basename(reference_file) + "_" + "aligned." + format)
+            cmd = "set -o pipefail; " + snap_binary + " single " + index_dir + " " + sample_file + " -o -" + format + " - -f -xf 1.1 -t " + str(threads) + " -d " + str(edit_distance) + " -mrl " + str(min_read_len) + " | " + samtools_binary + " view -@ 5 -h -b -f4 -o " + unaligned_prev + " -U " + aligned_out_file
+            exit_code = subprocess.check_call(cmd, shell=True,  stdout=FNULL, stderr=out_message_file)
+            # align_reads(index_dir, sample_file, aligned_out_file, filt="aligned", threads=threads, edit_distance=edit_distance, min_read_len=min_read_len, binary=binary)
+            # align_reads(index_dir, sample_file, sam_out_file_prev, filt="unaligned", threads=threads, edit_distance=edit_distance, min_read_len=min_read_len, binary=binary)
+        else:
+            build_reference(reference_file, index_dir, large_index=large_index, seed_size=seed_size, threads=threads, binary=snap_binary)
+            aligned_out_file = os.path.join(out_dir, os.path.basename(sample_file) + "_" + os.path.basename(reference_file) + "_" + "aligned." + format)
+            cmd = "set -o pipefail; " + snap_binary + " single " + index_dir + " " + unaligned_prev + " -o -" + format + " - -f -xf 1.1 -t " + str(threads) + " -d " + str(edit_distance) + " -mrl " + str(min_read_len) + " | " + samtools_binary + " view -@ 5 -h -b -f4 -o " + unaligned + " -U " + aligned_out_file
+            exit_code = subprocess.check_call(cmd, shell=True,  stdout=FNULL, stderr=out_message_file)
+            # align_reads(index_dir, sample_file, aligned_out_file, filt="aligned", threads=threads, edit_distance=edit_distance, min_read_len=min_read_len, binary=binary)
+            # align_reads(index_dir, sample_file, sam_out_file_prev, filt="unaligned", threads=threads, edit_distance=edit_distance, min_read_len=min_read_len, binary=binary)            shutil.move(sam_out_file, sam_out_file_prev)  # need to check if this is ok
+            shutil.move(unaligned, unaligned_prev)
+
+
+
 
 ##########################################################################
 # Tests

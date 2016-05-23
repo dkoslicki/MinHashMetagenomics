@@ -452,6 +452,7 @@ index_dirs = MH.build_references(training_file_names, out_dir, large_index=True)
 sorted_clusters = [item[1] for item in sorted(zip([sum([reconstruction[i] for i in clusters[j]]) for j in range(len(clusters))], clusters), reverse=True)]
 sorted_LCAs = [item[1] for item in sorted(zip([sum([reconstruction[i] for i in clusters[j]]) for j in range(len(clusters))], LCAs), reverse=True)]
 sorted_index_dirs = [item[1] for item in sorted(zip([sum([reconstruction[i] for i in clusters[j]]) for j in range(len(clusters))], index_dirs), reverse=True)]
+sorted_training_file_names = [item[1] for item in sorted(zip([sum([reconstruction[i] for i in clusters[j]]) for j in range(len(clusters))], training_file_names), reverse=True)]
 
 out_file = os.path.join(out_dir, os.path.basename(soil_sample_file) + "_unaligned.sam")
 t0 = timeit.default_timer()
@@ -459,6 +460,12 @@ MH.stream_align_single(sorted_index_dirs, soil_sample_file, out_file, format="sa
 #MH.stream_align_single(index_dirs, soil_sample_file, out_file, format="bam", filt="all")
 t1 = timeit.default_timer()
 print("Alignment time: %f" % (t1-t0))  # 8752.601766s == 2.43 hours
+
+
+t0 = timeit.default_timer()
+MH.top_down_align2(soil_sample_file, sorted_training_file_names, out_dir, out_dir, save_aligned=True, format="bam")
+t1 = timeit.default_timer()
+print("Alignment time: %f" % (t1-t0))
 
 #pre, ext = os.path.splitext(out_file)
 #out_fastq = pre + ".fastq"
