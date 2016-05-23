@@ -1276,6 +1276,7 @@ def top_down_align2(sample_file, reference_files, index_dir, out_dir, threads=mu
             # align_reads(index_dir, sample_file, aligned_out_file, filt="aligned", threads=threads, edit_distance=edit_distance, min_read_len=min_read_len, binary=binary)
             # align_reads(index_dir, sample_file, sam_out_file_prev, filt="unaligned", threads=threads, edit_distance=edit_distance, min_read_len=min_read_len, binary=binary)            shutil.move(sam_out_file, sam_out_file_prev)  # need to check if this is ok
             shutil.move(unaligned, unaligned_prev)
+    shutil.move(unaligned_prev, unaligned)
 
 
 

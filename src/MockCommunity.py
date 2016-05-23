@@ -465,7 +465,7 @@ print("Alignment time: %f" % (t1-t0))  # 8752.601766s == 2.43 hours
 t0 = timeit.default_timer()
 MH.top_down_align2(soil_sample_file, sorted_training_file_names, out_dir, out_dir, save_aligned=True, format="bam")
 t1 = timeit.default_timer()
-print("Alignment time: %f" % (t1-t0))
+print("Alignment time: %f" % (t1-t0))  # time samtools filter:
 
 #pre, ext = os.path.splitext(out_file)
 #out_fastq = pre + ".fastq"
