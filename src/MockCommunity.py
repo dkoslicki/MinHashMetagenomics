@@ -474,11 +474,23 @@ print("Alignment time: %f" % (t1-t0))  # time samtools filter: 4.517 hours (only
 #print("Total time: %f" % (outT1-outT0))
 
 
+# Assembly
+# /local/cluster/velvet/velvet/./velveth assembly 31 -bam 4539591.3.fastq_s__1144344_Bradyrhizobium_sp_YR681_57_.fa_aligned.bam
+# /local/cluster/velvet/velvet/./velvetg assembly/ -unused_reads yes
 
+# Should try the columbus module
+# /local/cluster/velvet/velvet/./velveth assembly 31 -reference s__1144344_Bradyrhizobium_sp_YR681_57_.fa -short -bam 4539591.3.fastq_s__1144344_Bradyrhizobium_sp_YR681_57_.fa_aligned.bam
+# /local/cluster/velvet/velvet/./velvetg assembly/ -unused_reads yes
 
-
-
-
+# snap-aligner index contigs.fa .
+# snap-aligner single . -bam ../4539591.3.fastq_s__1144344_Bradyrhizobium_sp_YR681_57_.fa_aligned.bam -o -bam aligned_to_contigs.bam
+# samtools sort aligned_to_contigs.bam -o aligned_to_contigs_sorted.bam
+# samtools index aligned_to_contigs_sorted.bam
+# snap-aligner single . ../../4539591.3.fastq -o -bam all_aligned_to_contigs.bam -F a
+# samtools sort all_aligned_to_contigs.bam -o all_aligned_to_contigs_sorted.bam
+# samtools index all_aligned_to_contigs_sorted.bam
+# cp all_aligned_to_contigs_sorted.bam /nfs1/Koslicki_Lab/Temp/Assembly
+# cp all_aligned_to_contigs_sorted.bam.bai /nfs1/Koslicki_Lab/Temp/Assembly
 
 # Clean up
 os.remove(out_sam)
@@ -487,6 +499,78 @@ for index_dir in index_dirs:
 
 
 
+######################################
+# Whole kit and kaboodle on an HMP WGS sample
+import sys
+sys.path.append('/nfs1/Koslicki_Lab/koslickd/Repositories/MinHashMetagenomics/src/')
+import os
+import MinHash as MH
+import shutil
+import timeit
+import h5py
+outT0 = timeit.default_timer()
+n = 50000
+# Get the mins in the training database
+# fid = h5py.File('/nfs1/Koslicki_Lab/koslickd/MinHash/Out/N'+str(n)+'k31_mins.h5', 'r')
+# hash_list = set(fid["hash_list"][...])
+# fid.close()
+
+#Make the CEs for the sample
+t0 = timeit.default_timer()
+soil_sample_file = "/nfs1/Koslicki_Lab/koslickd/CommonKmers/SoilSamples/Data/Metagenomes/4539591.3.fastq"
+soil_out_dir = "/nfs1/Koslicki_Lab/koslickd/MinHash/Out/SoilSamples"
+# MCE_in_comparison = MH.CountEstimator(n=n, max_prime=9999999999971., ksize=31, input_file_name=soil_sample_file, save_kmers='y', hash_list=hash_list)
+# MCE_in_comparison.export(os.path.join(soil_out_dir, os.path.basename(soil_sample_file)+'_N'+str(n)+'_k31_inComparison.h5'))
+# MCE_in_all = MH.CountEstimator(n=n, max_prime=9999999999971., ksize=31, input_file_name=soil_sample_file, save_kmers='y')
+# MCE_in_all.export(os.path.join(soil_out_dir, os.path.basename(soil_sample_file)+'_N'+str(n)+'_k31_all.h5'))
+t1 = timeit.default_timer()
+print("Sample formation and export time: %f" % (t1-t0))  # 15279.804780 -> 4.24 hours
+
+# Read it back in after it's computed
+MCE_in_comparison = MH.import_single_hdf5(os.path.join(soil_out_dir,os.path.basename(soil_sample_file)+'_N'+str(n)+'_k31_inComparison.h5'))
+MCE_in_all = MH.import_single_hdf5(os.path.join(soil_out_dir,os.path.basename(soil_sample_file)+'_N'+str(n)+'_k31_all.h5'))
+
+#Read in the training CE's
+fid = open('/nfs1/Koslicki_Lab/koslickd/MinHash/Data/FileNames.txt', 'r')
+file_names = fid.readlines()
+fid.close()
+file_names = [name.strip() for name in file_names]
+training_n = 5000
+out_file_names = ["/nfs1/Koslicki_Lab/koslickd/MinHash/Out/N"+str(training_n)+"k31/" + os.path.basename(item) + ".CE.h5" for item in file_names]
+CEs = MH.import_multiple_hdf5(out_file_names)
+Y_count_in_comparison = MCE_in_comparison.count_vector(CEs)
+eps = .001
+(reconstruction, A_eps, A_indicies) = MH.jaccard_count_lsqnonneg(CEs, Y_count_in_comparison, eps)
+
+# Read in the taxonomy and see which are the largest entries of which Y vectors
+fid = open('/nfs1/Koslicki_Lab/koslickd/MinHash/Data/Taxonomy.txt', 'r')
+taxonomy = fid.readlines()
+fid.close()
+taxonomy = [item.strip() for item in taxonomy]
+taxonomy_names = [item.split('\t')[0] for item in taxonomy]
+
+out_dir = '/scratch/temp/SNAP/training/'
+(clusters, LCAs) = MH.cluster_matrix(A_eps, A_indicies, taxonomy, cluster_eps=.01)
+training_file_names = MH.make_cluster_fastas(out_dir, LCAs, clusters, CEs)
+index_dirs = MH.build_references(training_file_names, out_dir, large_index=True)
+
+sorted_clusters = [item[1] for item in sorted(zip([sum([reconstruction[i] for i in clusters[j]]) for j in range(len(clusters))], clusters), reverse=True)]
+sorted_LCAs = [item[1] for item in sorted(zip([sum([reconstruction[i] for i in clusters[j]]) for j in range(len(clusters))], LCAs), reverse=True)]
+sorted_index_dirs = [item[1] for item in sorted(zip([sum([reconstruction[i] for i in clusters[j]]) for j in range(len(clusters))], index_dirs), reverse=True)]
+sorted_training_file_names = [item[1] for item in sorted(zip([sum([reconstruction[i] for i in clusters[j]]) for j in range(len(clusters))], training_file_names), reverse=True)]
+
+out_file = os.path.join(out_dir, os.path.basename(soil_sample_file) + "_unaligned.sam")
+t0 = timeit.default_timer()
+MH.stream_align_single(sorted_index_dirs, soil_sample_file, out_file, format="sam", filt="all")
+#MH.stream_align_single(index_dirs, soil_sample_file, out_file, format="bam", filt="all")
+t1 = timeit.default_timer()
+print("Alignment time: %f" % (t1-t0))  # 8752.601766s == 2.43 hours
+
+
+t0 = timeit.default_timer()
+MH.top_down_align2(soil_sample_file, sorted_training_file_names, out_dir, out_dir, save_aligned=True, format="bam")
+t1 = timeit.default_timer()
+print("Alignment time: %f" % (t1-t0))  # time samtools filter: 4.517 hours (only got through 42 before throwing an -xf error). time align twice:
 
 
 
