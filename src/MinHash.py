@@ -1308,12 +1308,12 @@ def minia_top_down_assemble(out_dir, sample_file, reference_files, format='bam',
             files_to_assemble = [aligned_out_file]
         if i != 0:  # Add the contigs from the previous run
             files_to_assemble.append(os.path.join(out_dir, "prev_contigs.fa"))
-        fid = open(os.path.join(out_dir, "to_assemble.txt"),'w')
+        fid = open(os.path.join(out_dir, "to_assemble.txt"), 'w')
         for file_name in files_to_assemble:
             fid.write(file_name + "\n")
         fid.close()
         # Run minia
-        cmd = minia_binary + " -in to_assemble.txt -kmer-size 31 -abundance-min 1 -out " + os.path.join(out_dir, "minia_out")
+        cmd = minia_binary + " -in " + os.path.join(out_dir, "to_assemble.txt") + " -kmer-size 31 -abundance-min 1 -out " + os.path.join(out_dir, "minia_out")
         exit_code = subprocess.check_call(cmd, shell=True)
         shutil.move(os.path.join(out_dir, "minia_out.contigs.fa"), os.path.join(out_dir, "prev_contigs.fa"))
 
