@@ -1316,8 +1316,24 @@ def minia_top_down_assemble(out_dir, sample_file, reference_files, format='bam',
         cmd = minia_binary + " -in " + os.path.join(out_dir, "to_assemble.txt") + " -kmer-size 31 -abundance-min 1 -out " + os.path.join(out_dir, "minia_out")
         exit_code = subprocess.check_call(cmd, shell=True)
         shutil.move(os.path.join(out_dir, "minia_out.contigs.fa"), os.path.join(out_dir, "prev_contigs.fa"))
-
-
+    #Lastly, do the unassembled reads
+    reference_file = unaligned
+    aligned_out_file = os.path.join(out_dir, os.path.basename(sample_file) + "_" + os.path.basename(reference_file) + "_" + "aligned." + format)
+    if format == 'bam':
+        sam_out = os.path.join(out_dir, "temp.sam")
+        cmd = samtools_binary + " view " + aligned_out_file + " -o " + sam_out
+        exit_code = subprocess.check_call(cmd, shell=True,  stdout=FNULL, stderr=out_message_file)
+        sam2fastq(sam_out, os.path.join(out_dir, "temp.fastq"))
+        files_to_assemble = [os.path.join(out_dir, "temp.fastq")]
+    else:
+        files_to_assemble = [aligned_out_file]
+    fid = open(os.path.join(out_dir, "to_assemble.txt"), 'w')
+    for file_name in files_to_assemble:
+        fid.write(file_name + "\n")
+    fid.close()
+    cmd = minia_binary + " -in " + os.path.join(out_dir, "to_assemble.txt") + " -kmer-size 31 -abundance-min 1 -out " + os.path.join(out_dir, "minia_out")
+    exit_code = subprocess.check_call(cmd, shell=True)
+    shutil.move(os.path.join(out_dir, "minia_out.contigs.fa"), os.path.join(out_dir, "final_assembly.fa"))
 
 
 
