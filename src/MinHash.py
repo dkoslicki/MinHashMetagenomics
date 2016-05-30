@@ -24,6 +24,7 @@ import subprocess
 import filecmp
 import shutil
 import traceback
+import random
 warnings.simplefilter("ignore", RuntimeWarning)
 
 # To Do:
@@ -1369,6 +1370,80 @@ def minia_assemble(out_dir, sample_file, reference_files, format='bam', top_down
         fid.close()
         cmd = minia_binary + " -in " + os.path.join(out_dir, "to_assemble.txt") + " -kmer-size 31 -abundance-min 1 -out " + os.path.join(out_dir, "final_assembly")
         exit_code = subprocess.check_call(cmd, shell=True)
+
+def bam2consensus(in_bam, out_dir, gap_allow=50, samtools_binary="/local/cluster/samtools/bin/samtools"):
+    out_file = os.path.join(out_dir, os.path.basename(in_bam) + ".contigs.fa")
+    #out_file = '/scratch/temp/SNAP/training/test.contigs.fa'
+    # run mpileup on the input bam
+    cmd = samtools_binary + " sort " + in_bam + " -o " + os.path.join(out_dir, os.path.basename(in_bam)+".sorted.bam")
+    exit_code = subprocess.check_call(cmd, shell=True)
+    cmd = samtools_binary + " index " + os.path.join(out_dir, os.path.basename(in_bam)+".sorted.bam")
+    exit_code = subprocess.check_call(cmd, shell=True)
+    cmd = samtools_binary + " mpileup " + os.path.join(out_dir, os.path.basename(in_bam)+".sorted.bam") + " -o " + os.path.join(out_dir, os.path.basename(in_bam) + ".pileup")
+    exit_code = subprocess.check_call(cmd, shell=True)
+    os.remove(os.path.join(out_dir, os.path.basename(in_bam)+".sorted.bam"))
+    os.remove(os.path.join(out_dir, os.path.basename(in_bam)+".sorted.bam.bai"))
+    in_file = os.path.join(out_dir, os.path.basename(in_bam) + ".pileup")
+    out_fid = open(out_file, 'w')
+    fid = open(in_file, 'r')
+    i = 0
+    regex = re.compile(r'[actgACTG\*]')
+    for line in fid.readlines():
+        call = ''
+        line_split = line.split()
+        # get number of reads aligning to this base
+        num_reads = float(line_split[3])
+        # genomic position of this base
+        position = int(line_split[1])
+        if i == 0:
+            prev_position = position - 1
+            out_fid.write('>seq0\n')
+            i = 1
+        # If there is a small enough gap, fill with N's
+        if position - prev_position <= gap_allow and position - prev_position != 1:
+            for dummy in range(position - prev_position - 1):
+                out_fid.write('N')
+        elif position - prev_position > gap_allow:
+            out_fid.write(call)
+            out_fid.write('\n')
+            out_fid.write('>seq%i\n' % i)
+            i += 1
+        if num_reads > 0:
+            chars = line_split[4]
+            # get only the ACTG's
+            chars_only_bases = "".join(regex.findall(chars)).upper()
+            # get the most frequent
+            letters_and_counts = collections.Counter(chars_only_bases).most_common()
+            to_pick = []
+            to_pick.append(letters_and_counts[0][0])
+            for j in range(1,len(letters_and_counts)):
+                if letters_and_counts[j][1] == letters_and_counts[j - 1][1]:
+                    to_pick.append(letters_and_counts[j][0])
+            if len(to_pick) > 1:  # If more than one maximum likelihood base, randomly pick one
+                choice = random.choice(to_pick)
+                if choice == '*':  # If the most common is a deletion, don't include an N
+                    #call = call + ''
+                    whatevs = 0
+                else:
+                    out_fid.write(choice)
+            elif len(to_pick) == 1:  # If there's only a single maximum likelihood base, make this it
+                if to_pick[0] == '*':
+                    whatevs = 0
+                else:
+                    #call = call + to_pick[0]
+                    out_fid.write(to_pick[0])
+            else:  # If there is no base, make it an N
+                out_fid.write('N')
+            if letters_and_counts[0][1] < num_reads / float(2):  # In case the majority of reads say there should be a deletion here
+                whatevs = 0
+        else:
+            out_fid.write('N')
+        prev_position = position
+
+    out_fid.write('\n')
+    out_fid.close()
+    fid.close()
+
 
 
 ##########################################################################
