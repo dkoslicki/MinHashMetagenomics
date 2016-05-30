@@ -1443,6 +1443,7 @@ def bam2consensus(in_bam, out_dir, gap_allow=50, samtools_binary="/local/cluster
     out_fid.write('\n')
     out_fid.close()
     fid.close()
+    os.remove(os.path.join(out_dir, os.path.basename(in_bam) + ".pileup"))
 
 
 
