@@ -1364,7 +1364,8 @@ def minia_assemble(out_dir, sample_file, reference_files, format='bam', top_down
             else:
                 reference_file = reference_files[i - 1]
             file_name = os.path.join(out_dir, os.path.basename(reference_file) + "_minia_out.contigs.fa")
-            fid.write(file_name + "\n")
+            if os.path.exists(file_name):
+                fid.write(file_name + "\n")
         fid.close()
         cmd = minia_binary + " -in " + os.path.join(out_dir, "to_assemble.txt") + " -kmer-size 31 -abundance-min 1 -out " + os.path.join(out_dir, "final_assembly")
         exit_code = subprocess.check_call(cmd, shell=True)
