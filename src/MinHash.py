@@ -1300,7 +1300,7 @@ def minia_top_down_assemble(out_dir, sample_file, reference_files, format='bam',
         aligned_out_file = os.path.join(out_dir, os.path.basename(sample_file) + "_" + os.path.basename(reference_file) + "_" + "aligned." + format)
         if format == 'bam':
             sam_out = os.path.join(out_dir, "temp.sam")
-            cmd = samtools_binary + " " + aligned_out_file + " -o " + sam_out
+            cmd = samtools_binary + " view " + aligned_out_file + " -o " + sam_out
             exit_code = subprocess.check_call(cmd, shell=True,  stdout=FNULL, stderr=out_message_file)
             sam2fastq(sam_out, os.path.join(out_dir, "temp.fastq"))
             files_to_assemble = [os.path.join(out_dir, "temp.fastq")]
