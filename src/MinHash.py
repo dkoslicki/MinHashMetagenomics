@@ -1326,6 +1326,7 @@ def minia_top_down_assemble(out_dir, sample_file, reference_files, format='bam',
         files_to_assemble = [os.path.join(out_dir, "temp.fastq")]
     else:
         files_to_assemble = [aligned_out_file]
+    files_to_assemble.append(os.path.join(out_dir, "prev_contigs.fa"))
     fid = open(os.path.join(out_dir, "to_assemble.txt"), 'w')
     for file_name in files_to_assemble:
         fid.write(file_name + "\n")
