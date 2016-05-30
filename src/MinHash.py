@@ -1186,7 +1186,7 @@ def sam2fastq(sam_file, out_file):
     :return: exit code
     """
     FNULL = open(os.devnull, 'w')
-    cmd = "cat " + sam_file + " | grep -v ^@ | awk '{print \"@\"$1\"\\n\"$10\"\\n+\\n\"$11}' > " + out_file
+    cmd = "cat " + sam_file + " | grep -v ^@ | awk '{print \"@\"$1\"\\n\"$10\"\\n+\\n\"$11}' > " + out_file  # grep -v ^@ | awk '{print "@"$1"\n"$10"\n+\n"$11}'
     exit_code = subprocess.call(cmd, shell=True,  stdout=FNULL, stderr=subprocess.STDOUT)
     FNULL.close()
     return exit_code
@@ -1280,6 +1280,44 @@ def top_down_align2(sample_file, reference_files, index_dir, out_dir, threads=mu
             # align_reads(index_dir, sample_file, sam_out_file_prev, filt="unaligned", threads=threads, edit_distance=edit_distance, min_read_len=min_read_len, binary=binary)            shutil.move(sam_out_file, sam_out_file_prev)  # need to check if this is ok
             shutil.move(unaligned, unaligned_prev)
     shutil.move(unaligned_prev, unaligned)
+
+
+def minia_top_down_assemble(out_dir, sample_file, reference_files, format='bam', minia_binary='/home/pi/koslickd/minia-2.0.3-Linux/bin/./minia', samtools_binary="/local/cluster/samtools/bin/samtools"):
+    """
+    For each one of the reference_files, convert bam to sam, sam to fastq, then assemble. Iterate while including contigs from previous runs
+    :param out_dir:
+    :param sample_file:
+    :param reference_files:
+    :param minia_binary:
+    :return:
+    """
+    FNULL = open(os.devnull, 'w')
+    out_message_file_name = os.path.join(out_dir, "minia_align_stdout.txt")
+    out_message_file = open(out_message_file_name, 'w')
+    unaligned = os.path.join(out_dir, os.path.basename(sample_file) + "_unaligned." + format)
+    for i in range(len(reference_files)):
+        reference_file = reference_files[i]
+        aligned_out_file = os.path.join(out_dir, os.path.basename(sample_file) + "_" + os.path.basename(reference_file) + "_" + "aligned." + format)
+        if format == 'bam':
+            sam_out = os.path.join(out_dir, "temp.sam")
+            cmd = samtools_binary + " " + aligned_out_file + " -o " + sam_out
+            exit_code = subprocess.check_call(cmd, shell=True,  stdout=FNULL, stderr=out_message_file)
+            sam2fastq(sam_out, os.path.join(out_dir, "temp.fastq"))
+            files_to_assemble = [os.path.join(out_dir, "temp.fastq")]
+        else:
+            files_to_assemble = [aligned_out_file]
+        if i != 0:  # Add the contigs from the previous run
+            files_to_assemble.append(os.path.join(out_dir, "prev_contigs.fa"))
+        fid = open(os.path.join(out_dir, "to_assemble.txt"),'w')
+        for file_name in files_to_assemble:
+            fid.write(file_name + "\n")
+        fid.close()
+        # Run minia
+        cmd = minia_binary + " -in to_assemble.txt -kmer-size 31 -abundance-min 1 -out " + os.path.join(out_dir, "minia_out")
+        exit_code = subprocess.check_call(cmd, shell=True)
+        shutil.move(os.path.join(out_dir, "minia_out.contigs.fa"), os.path.join(out_dir, "prev_contigs.fa"))
+
+
 
 
 
