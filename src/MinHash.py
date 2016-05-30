@@ -1402,7 +1402,8 @@ def bam2consensus(in_bam, out_dir, gap_allow=50, samtools_binary="/local/cluster
         # If there is a small enough gap, fill with N's
         if position - prev_position <= gap_allow and position - prev_position != 1:
             for dummy in range(position - prev_position - 1):
-                out_fid.write('N')
+                #out_fid.write('N')
+                out_fid.write(random.choice('ACTG'))
         elif position - prev_position > gap_allow:
             out_fid.write(call)
             out_fid.write('\n')
@@ -1433,11 +1434,13 @@ def bam2consensus(in_bam, out_dir, gap_allow=50, samtools_binary="/local/cluster
                     #call = call + to_pick[0]
                     out_fid.write(to_pick[0])
             else:  # If there is no base, make it an N
-                out_fid.write('N')
+                #out_fid.write('N')
+                out_fid.write(random.choice('ACTG'))
             if letters_and_counts[0][1] < num_reads / float(2):  # In case the majority of reads say there should be a deletion here
                 whatevs = 0
         else:
-            out_fid.write('N')
+            #out_fid.write('N')
+            out_fid.write(random.choice('ACTG'))
         prev_position = position
 
     out_fid.write('\n')
