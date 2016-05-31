@@ -1090,11 +1090,14 @@ def align_reads(index_dir, sample_file, out_file, filt='aligned', threads=multip
     """
     FNULL = open(os.devnull, 'w')
     if filt == 'aligned':
-        cmd = binary + " single " + index_dir + " " + sample_file + " -o " + out_file + " -f -F a -t " + str(threads) + " -d " + str(edit_distance) + " -mrl " + str(min_read_len)
+        #cmd = binary + " single " + index_dir + " " + sample_file + " -o " + out_file + " -f -F a -t " + str(threads) + " -d " + str(edit_distance) + " -mrl " + str(min_read_len)
+        cmd = binary + " single " + index_dir + " " + sample_file + " -o " + out_file + " -F a -t " + str(threads) + " -d " + str(edit_distance) + " -mrl " + str(min_read_len)
     elif filt == 'unaligned':
-        cmd = binary + " single " + index_dir + " " + sample_file + " -o " + out_file + " -f -F u -t " + str(threads) + " -d " + str(edit_distance) + " -mrl " + str(min_read_len)
+        #cmd = binary + " single " + index_dir + " " + sample_file + " -o " + out_file + " -f -F u -t " + str(threads) + " -d " + str(edit_distance) + " -mrl " + str(min_read_len)
+        cmd = binary + " single " + index_dir + " " + sample_file + " -o " + out_file + " -F u -t " + str(threads) + " -d " + str(edit_distance) + " -mrl " + str(min_read_len)
     elif filt == 'all':
-        cmd = binary + " single " + index_dir + " " + sample_file + " -o " + out_file + " -f -t " + str(threads) + " -d " + str(edit_distance) + " -mrl " + str(min_read_len)
+        #cmd = binary + " single " + index_dir + " " + sample_file + " -o " + out_file + " -f -t " + str(threads) + " -d " + str(edit_distance) + " -mrl " + str(min_read_len)
+        cmd = binary + " single " + index_dir + " " + sample_file + " -o " + out_file + " -t " + str(threads) + " -d " + str(edit_distance) + " -mrl " + str(min_read_len)
     else:
         raise Exception("aligned must be 'aligned', 'unaligned', or 'all'")
     exit_code = subprocess.call(cmd, shell=True,  stdout=FNULL, stderr=subprocess.STDOUT)
