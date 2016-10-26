@@ -626,7 +626,7 @@ def jaccard_lsqnonneg(CEs, Y, eps, machine_eps=1e-07):
     for i in range(len(indicies)):
         if indicies[i] == True:
             CEs_eps.append(CEs[i])
-
+    Y_eps = Y_eps/sum(Y_eps)
     A_eps = form_jaccard_matrix(CEs_eps)
     x_eps = scipy.optimize.nnls(A_eps, Y_eps)[0]
     # only take the entries of x_eps above the epsilon
