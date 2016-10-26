@@ -59,8 +59,8 @@ def unwrap_jaccard_vector(arg):
     :param kwarg:
     :return:
     """
-    #return arg[0].jaccard(arg[1])
-    return arg[1].jaccard(arg[0])
+    return arg[0].jaccard(arg[1])
+    #return arg[1].jaccard(arg[0]) #Would like to test effect of using the other denominators
 
 
 class CountEstimator(object):
