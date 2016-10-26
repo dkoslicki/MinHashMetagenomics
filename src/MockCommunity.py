@@ -222,6 +222,7 @@ for it in range(len(vectors)):
     if it ==3:
         print("jaccard in all")
     reconstruction = MH.jaccard_lsqnonneg(CEs, test_Y, eps)  # Can also try jaccard_count_lsqnonneg
+    # I THINK SOMETHING IS WRONG WITH THE MATRIX FORMATION: 1392 vs 3709, Y_jaccard_all, A_eps[4,44], np.where(indicies)[0][44]
     i = 0
     print("Reconstruction Values")
     total_in = 0
