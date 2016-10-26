@@ -590,8 +590,7 @@ def jaccard_count_lsqnonneg(CEs, Y, eps, machine_eps=1e-07):
         if indicies[i] == True:
             CEs_eps.append(CEs[i])
 
-    #A_eps = form_jaccard_count_matrix(CEs_eps)
-    A_eps = form_jaccard_matrix(CEs_eps)
+    A_eps = form_jaccard_count_matrix(CEs_eps)
     x_eps = scipy.optimize.nnls(A_eps, Y_eps)[0]
     # only take the entries of x_eps above the epsilon
     x_eps = x_eps/float(sum(x_eps))
