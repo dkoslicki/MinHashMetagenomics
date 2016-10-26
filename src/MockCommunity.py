@@ -221,7 +221,7 @@ for it in range(len(vectors)):
         print("jaccard count in all")
     if it ==3:
         print("jaccard in all")
-    reconstruction = MH.jaccard_lsqnonneg(CEs, test_Y, eps)
+    reconstruction = MH.jaccard_lsqnonneg(CEs, test_Y, eps)  # Can also try jaccard_count_lsqnonneg
     i = 0
     print("Reconstruction Values")
     total_in = 0
@@ -237,11 +237,12 @@ for it in range(len(vectors)):
         print("\t name: %s abundance: %f, %d" %(taxonomy_names[index], value, in_flag))
         i += 1
         if i > 25:
-            print("Total Y vector: %f, total in: %d" %(sum(test_Y), total_in))
+            print("Total Y vector: %f, total in: %d" %(sum(reconstruction[0]), total_in))
             break
 
 
 # Plain ol' Jaccard is looking pretty good when combined with the nnlsq!
+# On second go around, looks like the nnlsq is pretty bad in comparison to just using the plain Y vector....
 
 
 #Let's now work on getting bowtie2 integrated, so we can do a top-down approach
