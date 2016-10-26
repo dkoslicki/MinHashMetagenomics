@@ -221,7 +221,7 @@ for it in range(len(vectors)):
         print("jaccard count in all")
     if it ==3:
         print("jaccard in all")
-    reconstruction = MH.jaccard_count_lsqnonneg(CEs, test_Y, eps)
+    reconstruction = MH.jaccard_lsqnonneg(CEs, test_Y, eps)
     i = 0
     print("Reconstruction Values")
     total_in = 0
