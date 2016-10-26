@@ -122,17 +122,34 @@ taxonomy = fid.readlines()
 fid.close()
 taxonomy = [item.strip() for item in taxonomy]
 taxonomy_names = [item.split('\t')[0] for item in taxonomy]
+#######################
+# Try the other way around
+Y_jaccard_in_comparison_reverse = np.zeros(6914)
+for i in range(6914):
+    Y_jaccard_in_comparison_reverse[i] = CEs[i].jaccard(MCE_all)
 
-for test_Y in [Y_count_in_comparison, Y_jaccard_in_comparison, Y_count_all, Y_jaccard_all]:
+#######################
+true_orgs = ["Acinetobacter_baumannii","Actinomyces_odontolyticus","Bacillus_cereus","Bacteroides_vulgatus","Candida_albicans","Clostridium_beijerinckii","Deinococcus_radiodurans","Enterococcus_faecalis","Escherichia_coli","Helicobacter_pylori","Lactobacillus_gasseri","Listeria_monocytogenes","Methanobrevibacter_smithii","Neisseria_meningitidis","Propionibacterium_acnes","Pseudomonas_aeruginosa","Rhodobacter_sphaeroides","Staphylococcus_aureus","Staphylococcus_epidermidis","Streptococcus_agalactiae","Streptococcus_mutans","Streptococcus_pneumoniae"]
+for test_Y in [Y_count_in_comparison, Y_jaccard_in_comparison, Y_count_all, Y_jaccard_all, Y_jaccard_in_comparison_reverse]:
     i = 0
+    total_in = 0
     print("Y_values")
     for pair in sorted(enumerate(test_Y), key=lambda x: x[1])[::-1]:
         index = pair[0]
         value = pair[1]
-        print("\t name: %s abundance: %f" %(taxonomy_names[index], value))
+        if "_".join(taxonomy_names[index].split("_")[1:3]) in true_orgs:
+            in_flag = 1
+        else:
+            in_flag = 0
+        total_in += in_flag
+        print("\t name: %s abundance: %f, %d" %(taxonomy_names[index], value, in_flag))
         i += 1
-        if i > 20:
+        if i > 25:
+            print("Total Y vector: %f, total in: %d" %(sum(test_Y), total_in))
             break
+# Let's check agains the true organisms FP/FN/TP/etc
+
+
 
 # n=500, Y_jaccard_in_comparison did quite well
 # n=50,000 is definitely the best so far.
@@ -206,7 +223,8 @@ for it in range(len(vectors)):
     reconstruction = MH.jaccard_count_lsqnonneg(CEs, test_Y, eps)
     i = 0
     print("Reconstruction Values")
-    for pair in sorted(enumerate(reconstruction), key=lambda x: x[1])[::-1]:
+    #for pair in sorted(enumerate(reconstruction), key=lambda x: x[1])[::-1]:
+    for pair in sorted(zip(reconstruction[2], reconstruction[0]), key=lambda x: x[1])[::-1]:
         index = pair[0]
         value = pair[1]
         print("\t name: %s abundance: %f" %(taxonomy_names[index], value))
