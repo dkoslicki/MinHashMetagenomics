@@ -608,7 +608,7 @@ def jaccard_count_lsqnonneg(CEs, Y, eps, machine_eps=1e-07):
     for i in range(len(x)):
         if x[i] < machine_eps:
             x[i] = 0
-    return (x, A_eps_above_eps, indicies_above_eps)
+    return (x, A_eps_above_eps, np.where(indicies)[0][indicies_above_eps])
 
 
 def jaccard_lsqnonneg(CEs, Y, eps, machine_eps=1e-07):
