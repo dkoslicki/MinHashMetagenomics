@@ -4,6 +4,7 @@ import MinHash as MH  # Our implementation of Min Hash
 import numpy as np
 import matplotlib.pyplot as plt
 from pybloom import BloomFilter  # basic bloom filter for comparison purposes
+import os
 
 prime = 9999999999971  # taking hashes mod this prime
 p = 0.001  # false positive rate for the bloom filter
@@ -17,7 +18,7 @@ h = 100  # number of hashes in sketch
 def i_size(j, k, n):
 	return int(n*j/float(1-j) + k)
 
-i_range = [i_size(val, ksize, n1) for val in np.arange(0, 1, 0.005)]
+i_range = [i_size(val, ksize, n1) for val in np.arange(0, 1, 0.05)]
 true_jaccards = np.zeros(len(i_range))
 estimate_jaccards = np.zeros(len(i_range))
 containment_jaccards = np.zeros(len(i_range))
@@ -76,6 +77,12 @@ for i_size in i_range:
 
 	it += 1
 
+font = {'family': 'serif',
+		'color':  'black',
+		'weight': 'normal',
+		'size': 18,
+		}
+
 differences = true_jaccards - estimate_jaccards
 sorted_true = sorted(true_jaccards)
 sorted_estimates = np.array([x for (y, x) in sorted(zip(true_jaccards, estimate_jaccards), key=lambda pair: pair[0])])
@@ -100,6 +107,7 @@ ax.plot(sorted_true, sorted_estimates)
 plt.ylabel('Estimate Jaccard')
 plt.xlabel('True Jaccard')
 plt.title('Classic Min Hash')
+axes.text(-.2, 1.15, 'a)', horizontalalignment='left', verticalalignment='bottom', fontdict=font)
 plt.savefig('../Paper/TrueVsEstimate.png')
 
 # Do a relative error plot
@@ -144,6 +152,7 @@ ax.plot(sorted_true, sorted_containment_estimates)
 plt.ylabel('Estimate Jaccard')
 plt.xlabel('True Jaccard')
 plt.title('Min Hash Via Containment')
+axes.text(-.2, 1.15, 'b)', horizontalalignment='left', verticalalignment='bottom', fontdict=font)
 plt.savefig('../Paper/ContainmentTrueVsEstimate.png')
 
 # Do a relative error plot
@@ -155,3 +164,13 @@ plt.axhline(0, color='black', linestyle='dashed', linewidth=2)
 plt.ylabel('Relative error')
 plt.xlabel('True Jaccard index')
 plt.savefig('../Paper/ContainmentRelativeError.png')
+
+# Print out stats and save to file for putting in the paper.
+print("Classic Min Hash mean: %f, variance: %f" % (np.mean(differences), np.var(differences)))
+print("Containment Min Hash mean: %f, variance: %f" % (np.mean(containment_differences), np.var(containment_differences)))
+fid = open(os.path.abspath('../Paper/SyntheticDataClassic.txt'), 'w')
+fid.write("$%f\pm%f$\n" % (np.mean(differences), np.var(differences)))
+fid.close()
+fid = open(os.path.abspath('../Paper/SyntheticDataContainment.txt'), 'w')
+fid.write("$%f\pm%f$\n" % (np.mean(containment_differences), np.var(containment_differences)))
+fid.close()
