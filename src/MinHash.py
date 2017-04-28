@@ -70,7 +70,8 @@ class CountEstimator(object):
     Still don't know what max_prime is...
     """
 
-    def __init__(self, n=None, max_prime=9999999999971., ksize=None, input_file_name=None, save_kmers='n', hash_list=None):
+    def __init__(self, n=None, max_prime=9999999999971., ksize=None, input_file_name=None, save_kmers='n', hash_list=None,
+                 rev_comp=False):
         if n is None:
             raise Exception
         if ksize is None:
@@ -102,16 +103,16 @@ class CountEstimator(object):
         # Initialize file name (if appropriate)
         self.input_file_name = input_file_name
         if self.input_file_name:
-            self.parse_file()
+            self.parse_file(rev_comp=rev_comp)
 
-    def parse_file(self):
+    def parse_file(self, rev_comp=False):
         """
         opens a file and populates the CountEstimator with it
         """
         for record in screed.open(self.input_file_name):
-            self.add_sequence(record.sequence)
+            self.add_sequence(record.sequence, rev_comp)
 
-    def add(self, kmer):
+    def add(self, kmer, rev_comp=False):
         """
         Add kmer into sketch, keeping sketch sorted, update counts accordingly
         """
@@ -119,7 +120,15 @@ class CountEstimator(object):
         _counts = self._counts
         _kmers = self._kmers
 
-        h = khmer.hash_murmur3(kmer)
+        if rev_comp:
+            h1 = khmer.hash_murmur3(kmer)
+            h2 = khmer.hash_murmur3(khmer.reverse_complement(kmer))
+            h = min(h1, h2)
+            if h == h2:
+                kmer = khmer.reverse_complement(kmer)
+        else:
+            h = khmer.hash_murmur3(kmer)
+
         h = h % self.p
         if self.hash_list:  # If I only want to include hashes that occur in hash_list
             if h not in self.hash_list:  # If the kmer isn't in the hash_list, then break
@@ -144,14 +153,14 @@ class CountEstimator(object):
 
         assert 0, "should never reach this"
 
-    def add_sequence(self, seq):
+    def add_sequence(self, seq, rev_comp=False):
         """
          Sanitize and add a sequence to the sketch.
         """
         # seq = seq.upper().replace('N', 'G')
         seq = notACTG.sub('G', seq.upper())  # more intelligent sanatization?
         for kmer in kmers(seq, self.ksize):
-            self.add(kmer)
+            self.add(kmer, rev_comp)
 
     def jaccard_count(self, other):
         """
@@ -549,244 +558,6 @@ def form_jaccard_matrix(all_CEs):
     return A
 
 
-def lsqnonneg(A, Y, eps, machine_eps=1e-07):
-    """
-    Solve Ax=y for x using nonnegative least squares, with a threshold parameter eps. This is to be used if the A matrix is pre-computed
-    :param A: The input common kmer or jaccard matrix
-    :param Y: The input kmer or jaccard count vector
-    :param eps: cutoff value. Only consider row/columns of A and entries of Y above this value
-    :param machine_eps: All values below this are treated as zeros. Defaults to 1e-07
-    :return: a vector x that approximately solves A x = Y subject to x >= 0 while ignoring rows/columns with Y[i] < eps
-    """
-    indicies = Y >= eps
-    Y_eps = Y[indicies]
-    A_eps = A[indicies, :][:, indicies]
-    x_eps = scipy.optimize.nnls(A_eps, Y_eps)[0]
-    x = np.zeros(len(Y))
-    # repopulate the indicies
-    x[indicies] = x_eps
-    # set anything below machine_eps to zero
-    for i in range(len(x)):
-        if x[i] < machine_eps:
-            x[i] = 0
-    return x
-
-
-def jaccard_count_lsqnonneg(CEs, Y, eps, machine_eps=1e-07):
-    """
-    Solve Ax=y for x using nonnegative least squares, with a threshold parameter eps. Only form A for subset of CEs with Y[i] > eps
-    :param CEs: Input list of count estimators
-    :param Y: The input kmer or jaccard count vector
-    :param eps: cutoff value. Only consider row/columns of A and entries of Y above this value
-    :param machine_eps: All values below this are treated as zeros. Defaults to 1e-07
-    :return: a vector x that approximately solves A x = Y subject to x >= 0 while ignoring rows/columns with Y[i] < eps
-    """
-    indicies = Y >= eps
-    if not indicies.any():
-        raise Exception("No entries of Y are above eps: %f. Please decrease eps." % eps)
-    Y_eps = Y[indicies]
-    CEs_eps = []
-    for i in range(len(indicies)):
-        if indicies[i] == True:
-            CEs_eps.append(CEs[i])
-
-    A_eps = form_jaccard_count_matrix(CEs_eps)
-    x_eps = scipy.optimize.nnls(A_eps, Y_eps)[0]  # Note: I don't know why I'm not using sparsity promoting here...
-    # only take the entries of x_eps above the epsilon
-    x_eps = x_eps/float(sum(x_eps))
-    indicies_sorted = x_eps.argsort()[::-1]
-    indicies_above_eps = []
-    for index in indicies_sorted:
-        indicies_above_eps.append(index)
-        if x_eps[index] < eps:  # Add at leat one more index below the threshold (to make sure I don't have an empty list of indexes)
-            break
-    A_eps_above_eps = A_eps[indicies_above_eps, :][:, indicies_above_eps]
-    x = np.zeros(len(Y))
-    # repopulate the indicies
-    #x[indicies_above_eps] = x_eps
-    x[np.where(indicies)[0][indicies_above_eps]] = x_eps
-    # set anything below machine_eps to zero
-    for i in range(len(x)):
-        if x[i] < machine_eps:
-            x[i] = 0
-    return (x, A_eps_above_eps, np.where(indicies)[0][indicies_above_eps])
-
-
-def jaccard_lsqnonneg(CEs, Y, eps, machine_eps=1e-07):
-    """
-    Solve Ax=y for x using nonnegative least squares, with a threshold parameter eps. Only form A for subset of CEs with Y[i] > eps
-    :param CEs: Input list of count estimators
-    :param Y: The input kmer or jaccard count vector
-    :param eps: cutoff value. Only consider row/columns of A and entries of Y above this value
-    :param machine_eps: All values below this are treated as zeros. Defaults to 1e-07
-    :return: a vector x that approximately solves A x = Y subject to x >= 0 while ignoring rows/columns with Y[i] < eps
-    """
-    indicies = Y >= eps
-    Y_eps = Y[indicies]
-    CEs_eps = []
-    for i in range(len(indicies)):
-        if indicies[i] == True:
-            CEs_eps.append(CEs[i])
-    #Y_eps = Y_eps/sum(Y_eps)
-    A_eps = form_jaccard_matrix(CEs_eps)
-    x_eps = scipy.optimize.nnls(A_eps, Y_eps)[0]
-    # only take the entries of x_eps above the epsilon
-    x_eps = x_eps/float(sum(x_eps))
-    indicies_sorted = x_eps.argsort()[::-1]
-    indicies_above_eps = []
-    for index in indicies_sorted:
-        indicies_above_eps.append(index)
-        if x_eps[index] < eps:  # Add at leat one more index below the threshold (to make sure I don't have an empty list of indexes)
-            break
-    A_eps_above_eps = A_eps[indicies_above_eps, :][:, indicies_above_eps]
-    x = np.zeros(len(Y))
-    # repopulate the indicies
-    #x[indicies_above_eps] = x_eps
-    x[np.where(indicies)[0][indicies_above_eps]] = x_eps
-    # set anything below machine_eps to zero
-    for i in range(len(x)):
-        if x[i] < machine_eps:
-            x[i] = 0
-    return (x, A_eps_above_eps, np.where(indicies)[0][indicies_above_eps])
-
-##########################################
-
-
-
-class CompositionSketch(object):
-    def __init__(self, n=None, max_prime=9999999999971., ksize=None, prefixsize=None, input_file_name=None, save_kmers='n'):
-        """
-        :param n: the number of kmer hashes to keep in the sketch. Must be >= 1
-        :param max_prime:
-        :param ksize: the kmer size to use. Must be >= 1
-        :param prefixsize: the size of the prefix that determines which hash to use. A total of 4**prefixsize hashes will be created. Must be  >= 1
-        :return:
-        """
-        if n is None:
-            raise Exception
-        if ksize is None:
-            raise Exception
-        if prefixsize is None:
-            raise Exception
-
-        self.prefixsize = prefixsize
-        self.ksize = ksize
-        self.threshold = 0.01
-
-        # get a prime to use for hashing
-        p = get_prime_lt_x(max_prime)
-        self.p = p
-
-        # initialize 4**prefixsize MinHash sketches
-        self.sketches = []
-        for i in range(4**prefixsize):
-            self.sketches.append(CountEstimator(n=n, max_prime=self.p, ksize=ksize, save_kmers=save_kmers))
-
-        self.input_file_name = input_file_name
-        if self.input_file_name:
-            self.parse_file()
-
-    def parse_file(self):
-        """
-        opens a file and populates the CountEstimator with it
-        """
-        for record in screed.open(self.input_file_name):
-            self.add_sequence(record.sequence)
-
-    def add(self, kmer):
-        # This will choose the estimator/hash list based on the prefix of the kmer, then add the sketch of the full kmer to the estimator/hash list.
-        #idx = khmer.forward_hash(kmer, self.prefixsize)  # This hashes just the first prefixsize number of nucleotides in kmer
-        idx = 0
-        for letter in kmer[0:self.prefixsize]:
-            if letter == 'A':
-                pass
-            if letter == 'C':
-                idx <<= 2
-                idx += 1
-            if letter == 'T':
-                idx <<= 2
-                idx += 2
-            if letter == 'G':
-                idx <<= 2
-                idx += 3
-
-        E = self.sketches[idx]
-        E.add(kmer)
-        #hash = khmer.hash_murmur3(kmer)
-        #E.add(hash)
-
-    def add_sequence(self, seq):
-        "Sanitize and add a sequence to the sketch."
-        # seq = seq.upper().replace('N', 'G')
-        seq = notACTG.sub('G', seq.upper())
-        for kmer in kmers(seq, self.ksize):
-            self.add(kmer)
-
-    def jaccard(self, other):
-        """
-        estimate of J(self,other) = |self \Cap other| / |self \Cup other|
-        In actuality an average of the jaccards of the constituent Sketches
-        """
-        total = 0.
-        count = 0
-        for n, v in enumerate(self.sketches):
-            try:
-                total += v.jaccard(other.sketches[n])
-                count += 1
-            except ValueError:
-                pass
-        return total / float(count)
-
-    def jaccard_count(self, other):
-        """
-        estimate of \sum_{w\in SW_k(g_i) \cap SW_k{g_j}} \frac{occ_w(g_j)}{|g_j| - k + 1}
-        In actuality an average of the jaccards of the constituent Sketches
-        """
-        total = [0.,0.]
-        count = 0
-        for n, v in enumerate(self.sketches):
-            try:
-                res = v.jaccard_count(other.sketches[n])
-                total[0] += res[0]
-                total[1] += res[1]
-                count += 1
-            except ValueError:
-                pass
-        return (total[0] / float(count), total[1] / float(count))
-
-    def similarity(self, other):
-        """
-        Returns the fraction of sketches that have jaccard > threshold
-        """
-        matches = 0
-        count = 0
-        for n, v in enumerate(self.sketches):
-            try:
-                f = v.jaccard(other.sketches[n])
-                count += 1
-                if f > self.threshold:
-                    matches += 1
-            except ValueError:
-                pass
-        return matches / float(count)
-
-    def count_similarity(self, other):
-        """
-        Returns the fraction of sketches that have count_jaccard > threshold
-        """
-        matches = 0
-        count = 0
-        for n, v in enumerate(self.sketches):
-            try:
-                f = v.count_jaccard(other.sketches[n])
-                count += 1
-                if f > self.threshold:
-                    matches += 1
-            except ValueError:
-                pass
-        return matches / float(count)
-
-
 def _yield_count_overlaps(mins1, mins2, counts1, counts2):
     """
     Return (\sum_{i \in indicies(mins1\cap min2)} counts1[i], \sum_{i \in indicies(mins1\cap min2)} counts2[i])
@@ -825,6 +596,7 @@ def _yield_overlaps(x1, x2):
                 j += 1
     except IndexError:
         return
+
 
 def kmers(seq, ksize):
     """yield all k-mers of len ksize from seq.
@@ -998,465 +770,6 @@ def make_cluster_fastas(out_dir, LCAs, clusters, CEs, threads=multiprocessing.cp
     return file_names
 
 
-
-##########################################################################
-# SNAP aligner
-def build_reference(reference_file, output_dir, large_index=True, seed_size=20, threads=multiprocessing.cpu_count(), binary="snap-aligner"):
-    """
-    Wrapper for the SNAP aligner index building
-    :param reference_file: file from which an index will be made
-    :param output_dir: directory in which to put the index files
-    :param large_index: makes the index about 30% bigger, but faster for quick/inaccurate alignements
-    :param seed_size: for initial match to begin alignment
-    :param threads: number of threads to use
-    :param binary: location of the snap-aligner binary
-    :return: exit code of SNAP
-    """
-    if not os.path.isdir(output_dir):
-        os.makedirs(output_dir)
-    FNULL = open(os.devnull, 'w')
-    if large_index:
-        cmd = binary + " index " + reference_file + " " + output_dir + " -large -s " + str(seed_size) + " -t" + str(threads)
-    else:
-        cmd = binary + " index " + reference_file + " " + output_dir + " -s " + str(seed_size) + " -t" + str(threads)
-    exit_code = subprocess.call(cmd, shell=True,  stdout=FNULL, stderr=subprocess.STDOUT)
-    return exit_code
-
-
-def _build_reference_helper(reference_file_name, output_dir, large_index, seed_size, threads, binary):
-    prefix, ext = os.path.splitext(os.path.basename(reference_file_name))
-    reference_dir = os.path.join(output_dir, prefix)
-    try:
-        exit_code = build_reference(reference_file_name, reference_dir, large_index=large_index, seed_size=seed_size, threads=threads, binary=binary)
-    except:
-        print('%s: %s' % (reference_file_name, traceback.format_exc()))
-    return reference_dir
-
-
-def _build_reference_star(args):
-    return _build_reference_helper(*args)
-
-
-def build_references(reference_files, output_dir, large_index=True, seed_size=20, threads=5, binary="snap-aligner"):
-    """
-    Will build indexes for SNAP aligner for multiple references
-    :param reference_files: input reference fasta files
-    :param output_dir: directory where all the indexes will be put
-    :param large_index: makes the index about 30% bigger, but faster for quick/inaccurate alignements
-    :param seed_size: for initial match to begin alignment
-    :param threads: number of threads to use
-    :param binary: location of the snap-aligner binary
-    :return: list of location of all the indexes
-    """
-    if threads > 5:
-        raise Exception("Python multiprocessing doesn't play well with many subprocesses. Please decrease the number of threads to something 5 or smaller.")
-    pool = multiprocessing.Pool(processes=threads)
-    index_dirs = pool.map(_build_reference_star, izip(reference_files, repeat(output_dir), repeat(large_index), repeat(seed_size), repeat(threads), repeat(binary)), chunksize=1)
-    pool.close()
-    pool.join()
-    pool.terminate()
-    return index_dirs
-
-
-def build_one_reference_from_many(reference_files, output_dir, large_index=True, seed_size=20, threads=multiprocessing.cpu_count(), binary="snap-aligner"):
-    # Make directory if necessary
-    if not os.path.isdir(output_dir):
-        os.makedirs(output_dir)
-    # Concatenate all the reference files
-    with open(os.path.join(output_dir, "all.fa"), 'w') as outfile:
-        for fname in reference_files:
-            with open(fname,'r') as infile:
-                for line in infile:
-                    outfile.write(line)
-                infile.close()
-        outfile.close()
-    # Build the index
-    exit_code = build_reference(os.path.join(output_dir, "all.fa"), output_dir, large_index=large_index, seed_size=seed_size, threads=threads, binary=binary)
-    # Remove the concatenated file
-    os.remove(os.path.join(output_dir, "all.fa"))
-    return
-
-
-def align_reads(index_dir, sample_file, out_file, filt='aligned', threads=multiprocessing.cpu_count(), edit_distance=14, min_read_len=50, binary="snap-aligner"):  # NOTE: snap-aligner will take SAM and BAM as INPUT!
-    """
-    Wrapper for the SNAP aligner.
-    :param index_dir: Directory in which the index was placed (from build_reference
-    :param sample_file: The file to align (can be fasta/fastq/sam/bam
-    :param out_file: the output alignments. Can be *.sam or *.bam
-    :param filt: If the output should be the aligned results ('aligned'), just the unaligned results ('unaligned'), or all results ('all')
-    :param threads: number of threads to use
-    :param edit_distance: the maximum edit distance to allow for an alignment
-    :param min_read_len: Specify the minimum read length to align, reads shorter than this (after clipping) stay unaligned.  This should be
-       a good bit bigger than the seed length or you might get some questionable alignments.  Default 50
-    :param binary: location of the snap-aligner binary
-    :return: exit code of SNAP
-    """
-    FNULL = open(os.devnull, 'w')
-    if filt == 'aligned':
-        #cmd = binary + " single " + index_dir + " " + sample_file + " -o " + out_file + " -f -F a -t " + str(threads) + " -d " + str(edit_distance) + " -mrl " + str(min_read_len)
-        cmd = binary + " single " + index_dir + " " + sample_file + " -o " + out_file + " -F a -t " + str(threads) + " -d " + str(edit_distance) + " -mrl " + str(min_read_len)
-    elif filt == 'unaligned':
-        #cmd = binary + " single " + index_dir + " " + sample_file + " -o " + out_file + " -f -F u -t " + str(threads) + " -d " + str(edit_distance) + " -mrl " + str(min_read_len)
-        cmd = binary + " single " + index_dir + " " + sample_file + " -o " + out_file + " -F u -t " + str(threads) + " -d " + str(edit_distance) + " -mrl " + str(min_read_len)
-    elif filt == 'all':
-        #cmd = binary + " single " + index_dir + " " + sample_file + " -o " + out_file + " -f -t " + str(threads) + " -d " + str(edit_distance) + " -mrl " + str(min_read_len)
-        cmd = binary + " single " + index_dir + " " + sample_file + " -o " + out_file + " -t " + str(threads) + " -d " + str(edit_distance) + " -mrl " + str(min_read_len)
-    else:
-        raise Exception("aligned must be 'aligned', 'unaligned', or 'all'")
-    exit_code = subprocess.call(cmd, shell=True,  stdout=FNULL, stderr=subprocess.STDOUT)
-    FNULL.close()
-    return exit_code
-
-
-def stream_align_single(index_dirs, sample_file, out_file, format="bam", filt='all', threads=multiprocessing.cpu_count(), edit_distance=14, min_read_len=50, snap_binary="snap-aligner", samtools_binary="/local/cluster/samtools/bin/samtools"):
-    """
-    This will take a directory of indexes and stream filter the sample reads through it
-    :param index_dirs: list of directories of snap indexes
-    :param sample_file: sample file to align
-    :param out_file: .sam or .bam file of reads that did/did not align to anything in the index_dirs
-    :param filt: filtering option (unaligned, aligned, or all)
-    :param threads: number of threads to use for each instance of snap-align
-    :param edit_distance: max edit distance to allow for an alignment
-    :param min_read_len: Specify the minimum read length to align, reads shorter than this (after clipping) stay unaligned.
-     This should be a good bit bigger than the seed length or you might get some questionable alignments.  Default 50
-    :param snap_binary: location of the snap-aligner snap_binary
-    :return: exit code of SNAP
-    """
-    # cmd = snap_binary + " single " + index_dir + " " + sample_file + " -o -" + format + " - -f -F a -t " + str(threads) + " -d " + str(edit_distance) + " -mrl " + str(min_read_len) + " | tee " + os.path.join(out_dir, os.path.basename(sample_file) + "_" + index_dir.split(os.sep)[-1] + "_" + filt + ".bam")
-    if format != "bam" and format != "sam":
-        raise Exception("Invalid format choice %s. Format must be one of 'bam' or 'sam'" % format)
-    out_dir = os.path.dirname(out_file)
-    FNULL = open(os.devnull, 'w')
-    out_message_file_name = os.path.join(out_dir,"stream_align_stdout.txt")
-    out_message_file = open(out_message_file_name, 'w')
-    big_cmd = ''
-    i = 0
-    for index_dir in index_dirs:
-        if i == 0:
-            if filt == 'aligned':
-                cmd = snap_binary + " single " + index_dir + " " + sample_file + " -o -" + format + " - -f -F a -t " + str(threads) + " -d " + str(edit_distance) + " -mrl " + str(min_read_len)
-            elif filt == 'unaligned':
-                cmd = snap_binary + " single " + index_dir + " " + sample_file + " -o -" + format + " - -f -F u -t " + str(threads) + " -d " + str(edit_distance) + " -mrl " + str(min_read_len)
-            elif filt == 'all':
-                if format == "bam":
-                    cmd = snap_binary + " single " + index_dir + " " + sample_file + " -o -" + format + " - -f -xf 1.1 -t " + str(threads) + " -d " + str(edit_distance) + " -mrl " + str(min_read_len) + " | " + samtools_binary + " view -@ 5 -h -b -f4 -o - -U " + os.path.join(out_dir, os.path.basename(sample_file) + "_" + index_dir.split(os.sep)[-1] + "_aligned.bam")
-                else:
-                    cmd = snap_binary + " single " + index_dir + " " + sample_file + " -o -" + format + " - -f -xf 1.1 -t " + str(threads) + " -d " + str(edit_distance) + " -mrl " + str(min_read_len) + " | " + samtools_binary + " view -h -f4 -o - -U " + os.path.join(out_dir, os.path.basename(sample_file) + "_" + index_dir.split(os.sep)[-1] + "_aligned.sam")
-            else:
-                raise Exception("aligned must be 'aligned', 'unaligned', or 'all'")
-            big_cmd = " " + cmd
-        elif not i == len(index_dirs)-1:
-            if filt == 'aligned':
-                cmd = snap_binary + " single " + index_dir + " -" + format + " - -o -" + format + " - -f -F a -t " + str(threads) + " -d " + str(edit_distance) + " -mrl " + str(min_read_len)
-            elif filt == 'unaligned':
-                cmd = snap_binary + " single " + index_dir + " -" + format + " - -o -" + format + " - -f -F u -t " + str(threads) + " -d " + str(edit_distance) + " -mrl " + str(min_read_len)
-            elif filt == 'all':
-                if format == "bam":
-                    cmd = snap_binary + " single " + index_dir + " -" + format + " - -o -" + format + " - -f -xf 1.1 -t " + str(threads) + " -d " + str(edit_distance) + " -mrl " + str(min_read_len) + " | " + samtools_binary + " view -@ 5 -h -b -f4 -o - -U " + os.path.join(out_dir, os.path.basename(sample_file) + "_" + index_dir.split(os.sep)[-1] + "_aligned.bam")
-                else:
-                    cmd = snap_binary + " single " + index_dir + " -" + format + " - -o -" + format + " - -f -xf 1.1 -t " + str(threads) + " -d " + str(edit_distance) + " -mrl " + str(min_read_len) + " | " + samtools_binary + " view -h -f4 -o - -U " + os.path.join(out_dir, os.path.basename(sample_file) + "_" + index_dir.split(os.sep)[-1] + "_aligned.sam")
-            else:
-                raise Exception("aligned must be 'aligned', 'unaligned', or 'all'")
-            big_cmd = big_cmd + " | " + cmd
-        else:
-            if filt == 'aligned':
-                cmd = snap_binary + " single " + index_dir + " -" + format + " - -o " + "-" + format + " " + out_file + " -f -F a -t " + str(threads) + " -d " + str(edit_distance) + " -mrl " + str(min_read_len)
-            elif filt == 'unaligned':
-                cmd = snap_binary + " single " + index_dir + " -" + format + " - -o " + "-" + format + " " + out_file + " -f -F u -t " + str(threads) + " -d " + str(edit_distance) + " -mrl " + str(min_read_len)
-            elif filt == 'all':
-                if format == "bam":
-                    cmd = snap_binary + " single " + index_dir + " -" + format + " - -o -" + format + " - -f -xf 1.1 -t " + str(threads) + " -d " + str(edit_distance) + " -mrl " + str(min_read_len) + " | " + samtools_binary + " view -@ 5 -h -b -f4 -o " + out_file + " -U " + os.path.join(out_dir, os.path.basename(sample_file) + "_" + index_dir.split(os.sep)[-1] + "_aligned.bam")
-                else:
-                    cmd = snap_binary + " single " + index_dir + " -" + format + " - -o -" + format + " - -f -xf 1.1 -t " + str(threads) + " -d " + str(edit_distance) + " -mrl " + str(min_read_len) + " | " + samtools_binary + " view -h -f4 -o " + out_file + " -U " + os.path.join(out_dir, os.path.basename(sample_file) + "_" + index_dir.split(os.sep)[-1] + "_aligned.sam")
-            else:
-                raise Exception("aligned must be 'aligned', 'unaligned', or 'all'")
-            big_cmd = big_cmd + " | " + cmd
-        i += 1
-    if len(big_cmd) >= 2616670:
-        raise Exception("The typical maximum command length is 2616670, and running it with this many indicies would exceed that. Please iterate over index_dirs in chunks.")
-    else:
-        # exit_code = subprocess.call(big_cmd, shell=True,  stdout=FNULL, stderr=subprocess.STDOUT)
-        big_cmd = "set -o pipefail; " + big_cmd
-        # print(big_cmd)
-        exit_code = subprocess.call(big_cmd, shell=True,  stdout=FNULL, stderr=out_message_file)
-        if exit_code != 0:
-            raise Exception("stream_align_single failed. Due to how snap-align prints its error messages, you will have to go digging in the file " + out_message_file_name + " to find the error. If you find an error regarding -xf, increase it slightly (say, 1.2) and try again. If you get an mmap error, you will need to decrease -xf or else try with fewer index_dirs.")
-        # print(exit_code)
-    # return exit_code
-
-
-def sam2fastq(sam_file, out_file):
-    """
-    Converts a SAM file to a FASTQ file. Quite hacky
-    :param sam_file: input SAM file
-    :param out_file: output FASTQ file
-    :return: exit code
-    """
-    FNULL = open(os.devnull, 'w')
-    cmd = "cat " + sam_file + " | grep -v ^@ | awk '{print \"@\"$1\"\\n\"$10\"\\n+\\n\"$11}' > " + out_file  # grep -v ^@ | awk '{print "@"$1"\n"$10"\n+\n"$11}'
-    exit_code = subprocess.call(cmd, shell=True,  stdout=FNULL, stderr=subprocess.STDOUT)
-    FNULL.close()
-    return exit_code
-
-
-def top_down_align(sample_file, reference_files, index_dir, out_dir, threads=multiprocessing.cpu_count(), save_aligned=True, format="bam", large_index=True, seed_size=20, edit_distance=14, min_read_len=50, binary="snap-aligner"):
-    """
-    This function takes an input file and recursively aligns it to the individual reference files. Reads that are aligned are saved, and unaligned reads are passed to the next step in the alignment.
-    Currently this is quite inefficient since it performs the alignment twice. Could try to use samtools to partition the reads into aligned and unaligned.
-    :param sample_file: Input file on which to perform the alignment
-    :param reference_files: list of references files to align agains
-    :param index_dir: directory where the intermediate reference file indexes are stored
-    :param out_dir: output directory for the results
-    :param threads: number of threads to use
-    :param save_aligned: True/False to save/not save the intermediate aligned reads
-    :param format: one of 'sam' or 'bam'
-    :param large_index: makes the index about 30% bigger, but faster for quick/inaccurate alignements
-    :param seed_size: for initial match to begin alignment
-    :param edit_distance: the maximum edit distance to allow for an alignment
-    :param min_read_len: Specify the minimum read length to align, reads shorter than this (after clipping) stay unaligned.
-     This should be a good bit bigger than the seed length or you might get some questionable alignments.  Default 50
-    :param binary: location of the snap-aligner binary
-    :return:
-    """
-    if format != "sam" and format != "bam":
-        raise Exception("format must be one of 'sam' or 'bam'")
-    sam_out_file_prev = os.path.join(out_dir, os.path.basename(sample_file) + "_unaligned_prev." + format)
-    sam_out_file = os.path.join(out_dir, os.path.basename(sample_file) + "_unaligned." + format)
-    for i in range(len(reference_files)):
-        reference_file = reference_files[i]
-        if i == 0:
-            build_reference(reference_file, index_dir, large_index=large_index, seed_size=seed_size, threads=threads, binary=binary)
-            if save_aligned:
-                aligned_out_file = os.path.join(out_dir, os.path.basename(sample_file) + "_" + os.path.basename(reference_file) + "_" + "aligned." + format)
-                align_reads(index_dir, sample_file, aligned_out_file, filt="aligned", threads=threads, edit_distance=edit_distance, min_read_len=min_read_len, binary=binary)
-            align_reads(index_dir, sample_file, sam_out_file_prev, filt="unaligned", threads=threads, edit_distance=edit_distance, min_read_len=min_read_len, binary=binary)
-        else:
-            build_reference(reference_file, index_dir, large_index=large_index, seed_size=seed_size, threads=threads, binary=binary)
-            if save_aligned:
-                aligned_out_file = os.path.join(out_dir, os.path.basename(sample_file) + "_" + os.path.basename(reference_file) + "_" + "aligned." + format)
-                align_reads(index_dir, sam_out_file_prev, aligned_out_file, filt="aligned", threads=threads, edit_distance=edit_distance, min_read_len=min_read_len, binary=binary)
-            align_reads(index_dir, sam_out_file_prev, sam_out_file, filt="unaligned", threads=threads, edit_distance=edit_distance, min_read_len=min_read_len, binary=binary)
-            shutil.move(sam_out_file, sam_out_file_prev)  # need to check if this is ok
-    shutil.move(sam_out_file_prev, sam_out_file)
-    return sam_out_file
-
-def top_down_align2(sample_file, reference_files, index_dir, out_dir, threads=multiprocessing.cpu_count(), save_aligned=True, format="bam", large_index=True, seed_size=20, edit_distance=14, min_read_len=50, xf=1.2, snap_binary="snap-aligner", samtools_binary="/local/cluster/samtools/bin/samtools"):
-    """
-    This function takes an input file and recursively aligns it to the individual reference files. Reads that are aligned are saved, and unaligned reads are passed to the next step in the alignment.
-    Currently this is quite inefficient since it performs the alignment twice. Could try to use samtools to partition the reads into aligned and unaligned.
-    :param sample_file: Input file on which to perform the alignment
-    :param reference_files: list of references files to align agains
-    :param index_dir: directory where the intermediate reference file indexes are stored
-    :param out_dir: output directory for the results
-    :param threads: number of threads to use
-    :param save_aligned: True/False to save/not save the intermediate aligned reads
-    :param format: one of 'sam' or 'bam'
-    :param large_index: makes the index about 30% bigger, but faster for quick/inaccurate alignements
-    :param seed_size: for initial match to begin alignment
-    :param edit_distance: the maximum edit distance to allow for an alignment
-    :param min_read_len: Specify the minimum read length to align, reads shorter than this (after clipping) stay unaligned.
-     This should be a good bit bigger than the seed length or you might get some questionable alignments.  Default 50
-    :param binary: location of the snap-aligner binary
-    :return:
-    """
-    FNULL = open(os.devnull, 'w')
-    out_message_file_name = os.path.join(out_dir, "top_down_align_stdout.txt")
-    out_message_file = open(out_message_file_name, 'w')
-    if format != "sam" and format != "bam":
-        raise Exception("format must be one of 'sam' or 'bam'")
-    unaligned_prev = os.path.join(out_dir, os.path.basename(sample_file) + "_unaligned_prev." + format)
-    unaligned = os.path.join(out_dir, os.path.basename(sample_file) + "_unaligned." + format)
-    for i in range(len(reference_files)):
-        reference_file = reference_files[i]
-        if i == 0:
-            build_reference(reference_file, index_dir, large_index=large_index, seed_size=seed_size, threads=threads, binary=snap_binary)
-            aligned_out_file = os.path.join(out_dir, os.path.basename(sample_file) + "_" + os.path.basename(reference_file) + "_" + "aligned." + format)
-            #cmd = "set -o pipefail; " + snap_binary + " single " + index_dir + " " + sample_file + " -o -sam - -f -xf " + str(xf) + " -t " + str(threads) + " -d " + str(edit_distance) + " -mrl " + str(min_read_len) + " | " + samtools_binary + " view -@ " + str(threads) + " -h -b -1 -f4 -o " + unaligned_prev + " -U " + aligned_out_file
-            cmd = "set -o pipefail; " + snap_binary + " single " + index_dir + " " + sample_file + " -o -sam - -xf " + str(xf) + " -t " + str(threads) + " -d " + str(edit_distance) + " -mrl " + str(min_read_len) + " | " + samtools_binary + " view -@ " + str(threads) + " -h -b -1 -f4 -o " + unaligned_prev + " -U " + aligned_out_file
-            exit_code = subprocess.check_call(cmd, shell=True,  stdout=FNULL, stderr=out_message_file)
-            # align_reads(index_dir, sample_file, aligned_out_file, filt="aligned", threads=threads, edit_distance=edit_distance, min_read_len=min_read_len, binary=binary)
-            # align_reads(index_dir, sample_file, sam_out_file_prev, filt="unaligned", threads=threads, edit_distance=edit_distance, min_read_len=min_read_len, binary=binary)
-        else:
-            build_reference(reference_file, index_dir, large_index=large_index, seed_size=seed_size, threads=threads, binary=snap_binary)
-            aligned_out_file = os.path.join(out_dir, os.path.basename(sample_file) + "_" + os.path.basename(reference_file) + "_" + "aligned." + format)
-            #cmd = "set -o pipefail; " + snap_binary + " single " + index_dir + " " + unaligned_prev + " -o -sam - -f -xf " + str(xf) + " -t " + str(threads) + " -d " + str(edit_distance) + " -mrl " + str(min_read_len) + " | " + samtools_binary + " view -@ " + str(threads) + " -h -b -1 -f4 -o " + unaligned + " -U " + aligned_out_file
-            #cmd = "set -o pipefail; " + samtools_binary + " view -h " + unaligned_prev + " | " + snap_binary + " single " + index_dir + " -sam - -o -sam - -f -xf " + str(xf) + " -t " + str(threads) + " -d " + str(edit_distance) + " -mrl " + str(min_read_len) + " | " + samtools_binary + " view -@ " + str(threads) + " -h -b -1 -f4 -o " + unaligned + " -U " + aligned_out_file
-            #cmd = "set -o pipefail; " + samtools_binary + " view -h " + unaligned_prev + " | " + snap_binary + " single " + index_dir + " -sam - -o -sam - -f -xf " + str(xf) + " -t " + str(threads) + " -d " + str(edit_distance) + " -mrl " + str(min_read_len) + " | cut -f 1-18 | " + samtools_binary + " view -@ " + str(threads) + " -h -b -1 -f4 -o " + unaligned + " -U " + aligned_out_file
-            cmd = "set -o pipefail; " + samtools_binary + " view -h " + unaligned_prev + " | " + snap_binary + " single " + index_dir + " -sam - -o -sam - -xf " + str(xf) + " -t " + str(threads) + " -d " + str(edit_distance) + " -mrl " + str(min_read_len) + " | cut -f 1-18 | " + samtools_binary + " view -@ " + str(threads) + " -h -b -1 -f4 -o " + unaligned + " -U " + aligned_out_file
-            exit_code = subprocess.check_call(cmd, shell=True,  stdout=FNULL, stderr=out_message_file)
-            # align_reads(index_dir, sample_file, aligned_out_file, filt="aligned", threads=threads, edit_distance=edit_distance, min_read_len=min_read_len, binary=binary)
-            # align_reads(index_dir, sample_file, sam_out_file_prev, filt="unaligned", threads=threads, edit_distance=edit_distance, min_read_len=min_read_len, binary=binary)            shutil.move(sam_out_file, sam_out_file_prev)  # need to check if this is ok
-            shutil.move(unaligned, unaligned_prev)
-    shutil.move(unaligned_prev, unaligned)
-
-
-def minia_assemble(out_dir, sample_file, reference_files, format='bam', top_down=False, minia_binary='/home/pi/koslickd/minia-2.0.3-Linux/bin/./minia', samtools_binary="/local/cluster/samtools/bin/samtools"):
-    """
-    For each one of the reference_files, convert bam to sam, sam to fastq, then assemble. Iterate while including contigs from previous runs
-    :param out_dir:
-    :param sample_file:
-    :param reference_files:
-    :param minia_binary:
-    :return:
-    """
-    FNULL = open(os.devnull, 'w')
-    out_message_file_name = os.path.join(out_dir, "minia_align_stdout.txt")
-    out_message_file = open(out_message_file_name, 'w')
-    unaligned = os.path.join(out_dir, os.path.basename(sample_file) + "_unaligned." + format)
-    if top_down: #assemble one at a time, merging as you go
-        for i in range(len(reference_files)):
-            reference_file = reference_files[i]
-            aligned_out_file = os.path.join(out_dir, os.path.basename(sample_file) + "_" + os.path.basename(reference_file) + "_" + "aligned." + format)
-            if format == 'bam':
-                sam_out = os.path.join(out_dir, "temp.sam")
-                cmd = samtools_binary + " view " + aligned_out_file + " -o " + sam_out
-                exit_code = subprocess.check_call(cmd, shell=True,  stdout=FNULL, stderr=out_message_file)
-                sam2fastq(sam_out, os.path.join(out_dir, "temp.fastq"))
-                files_to_assemble = [os.path.join(out_dir, "temp.fastq")]
-            else:
-                files_to_assemble = [aligned_out_file]
-            if i != 0:  # Add the contigs from the previous run
-                files_to_assemble.append(os.path.join(out_dir, "prev_contigs.fa"))
-            fid = open(os.path.join(out_dir, "to_assemble.txt"), 'w')
-            for file_name in files_to_assemble:
-                fid.write(file_name + "\n")
-            fid.close()
-            # Run minia
-            cmd = minia_binary + " -in " + os.path.join(out_dir, "to_assemble.txt") + " -kmer-size 31 -abundance-min 1 -out " + os.path.join(out_dir, "minia_out")
-            exit_code = subprocess.check_call(cmd, shell=True)
-            shutil.move(os.path.join(out_dir, "minia_out.contigs.fa"), os.path.join(out_dir, "prev_contigs.fa"))
-        #Lastly, do the unassembled reads
-        aligned_out_file = unaligned
-        if format == 'bam':
-            sam_out = os.path.join(out_dir, "temp.sam")
-            cmd = samtools_binary + " view " + aligned_out_file + " -o " + sam_out
-            exit_code = subprocess.check_call(cmd, shell=True,  stdout=FNULL, stderr=out_message_file)
-            sam2fastq(sam_out, os.path.join(out_dir, "temp.fastq"))
-            files_to_assemble = [os.path.join(out_dir, "temp.fastq")]
-        else:
-            sam2fastq(aligned_out_file, os.path.join(out_dir, "temp.fastq"))
-            files_to_assemble = [os.path.join(out_dir, "temp.fastq")]
-        files_to_assemble.append(os.path.join(out_dir, "prev_contigs.fa"))
-        fid = open(os.path.join(out_dir, "to_assemble.txt"), 'w')
-        for file_name in files_to_assemble:
-            fid.write(file_name + "\n")
-        fid.close()
-        cmd = minia_binary + " -in " + os.path.join(out_dir, "to_assemble.txt") + " -kmer-size 31 -abundance-min 1 -out " + os.path.join(out_dir, "minia_out")
-        exit_code = subprocess.check_call(cmd, shell=True)
-        shutil.move(os.path.join(out_dir, "minia_out.contigs.fa"), os.path.join(out_dir, "final_assembly.fa"))
-    else:  # else assemble everything individually, then join
-        for i in range(len(reference_files) + 1):
-            if i == 0: #Do the unaligned reads
-                reference_file = unaligned
-                aligned_out_file = unaligned
-            else:
-                reference_file = reference_files[i - 1]
-                aligned_out_file = os.path.join(out_dir, os.path.basename(sample_file) + "_" + os.path.basename(reference_file) + "_" + "aligned." + format)
-            if format == 'bam':
-                sam_out = os.path.join(out_dir, "temp.sam")
-                cmd = samtools_binary + " view " + aligned_out_file + " -o " + sam_out
-                exit_code = subprocess.check_call(cmd, shell=True,  stdout=FNULL, stderr=out_message_file)
-                sam2fastq(sam_out, os.path.join(out_dir, "temp.fastq"))
-                file_to_assemble = os.path.join(out_dir, "temp.fastq")
-            else:
-                sam2fastq(aligned_out_file, os.path.join(out_dir, "temp.fastq"))
-                file_to_assemble = os.path.join(out_dir, "temp.fastq")
-            # Run minia
-            cmd = minia_binary + " -in " + file_to_assemble + " -kmer-size 31 -abundance-min 1 -out " + os.path.join(out_dir, os.path.basename(reference_file) + "_minia_out")
-            exit_code = subprocess.check_call(cmd, shell=True)
-        # merge everything in one big assembly
-        fid = open(os.path.join(out_dir, "to_assemble.txt"), 'w')
-        for i in range(len(reference_files) + 1):
-            if i == 0:
-                reference_file = unaligned
-            else:
-                reference_file = reference_files[i - 1]
-            file_name = os.path.join(out_dir, os.path.basename(reference_file) + "_minia_out.contigs.fa")
-            if os.path.exists(file_name):
-                fid.write(file_name + "\n")
-        fid.close()
-        cmd = minia_binary + " -in " + os.path.join(out_dir, "to_assemble.txt") + " -kmer-size 31 -abundance-min 1 -out " + os.path.join(out_dir, "final_assembly")
-        exit_code = subprocess.check_call(cmd, shell=True)
-
-def bam2consensus(in_bam, out_dir, gap_allow=50, samtools_binary="/local/cluster/samtools/bin/samtools"):
-    out_file = os.path.join(out_dir, os.path.basename(in_bam) + ".contigs.fa")
-    #out_file = '/scratch/temp/SNAP/training/test.contigs.fa'
-    # run mpileup on the input bam
-    cmd = samtools_binary + " sort " + in_bam + " -o " + os.path.join(out_dir, os.path.basename(in_bam)+".sorted.bam")
-    exit_code = subprocess.check_call(cmd, shell=True)
-    cmd = samtools_binary + " index " + os.path.join(out_dir, os.path.basename(in_bam)+".sorted.bam")
-    exit_code = subprocess.check_call(cmd, shell=True)
-    cmd = samtools_binary + " mpileup " + os.path.join(out_dir, os.path.basename(in_bam)+".sorted.bam") + " -o " + os.path.join(out_dir, os.path.basename(in_bam) + ".pileup")
-    exit_code = subprocess.check_call(cmd, shell=True)
-    os.remove(os.path.join(out_dir, os.path.basename(in_bam)+".sorted.bam"))
-    os.remove(os.path.join(out_dir, os.path.basename(in_bam)+".sorted.bam.bai"))
-    in_file = os.path.join(out_dir, os.path.basename(in_bam) + ".pileup")
-    out_fid = open(out_file, 'w')
-    fid = open(in_file, 'r')
-    i = 0
-    regex = re.compile(r'[actgACTG\*]')
-    for line in fid.readlines():
-        call = ''
-        line_split = line.split()
-        # get number of reads aligning to this base
-        num_reads = float(line_split[3])
-        # genomic position of this base
-        position = int(line_split[1])
-        if i == 0:
-            prev_position = position - 1
-            out_fid.write('>seq0\n')
-            i = 1
-        # If there is a small enough gap, fill with N's
-        if position - prev_position <= gap_allow and position - prev_position != 1:
-            for dummy in range(position - prev_position - 1):
-                #out_fid.write('N')
-                out_fid.write(random.choice('ACTG'))
-        elif position - prev_position > gap_allow:
-            out_fid.write(call)
-            out_fid.write('\n')
-            out_fid.write('>seq%i\n' % i)
-            i += 1
-        if num_reads > 0:
-            chars = line_split[4]
-            # get only the ACTG's
-            chars_only_bases = "".join(regex.findall(chars)).upper()
-            # get the most frequent
-            letters_and_counts = collections.Counter(chars_only_bases).most_common()
-            to_pick = []
-            to_pick.append(letters_and_counts[0][0])
-            for j in range(1,len(letters_and_counts)):
-                if letters_and_counts[j][1] == letters_and_counts[j - 1][1]:
-                    to_pick.append(letters_and_counts[j][0])
-            if len(to_pick) > 1:  # If more than one maximum likelihood base, randomly pick one
-                choice = random.choice(to_pick)
-                if choice == '*':  # If the most common is a deletion, don't include an N
-                    #call = call + ''
-                    whatevs = 0
-                else:
-                    out_fid.write(choice)
-            elif len(to_pick) == 1:  # If there's only a single maximum likelihood base, make this it
-                if to_pick[0] == '*':
-                    whatevs = 0
-                else:
-                    #call = call + to_pick[0]
-                    out_fid.write(to_pick[0])
-            else:  # If there is no base, make it an N
-                #out_fid.write('N')
-                out_fid.write(random.choice('ACTG'))
-            if letters_and_counts[0][1] < num_reads / float(2):  # In case the majority of reads say there should be a deletion here
-                whatevs = 0
-        else:
-            #out_fid.write('N')
-            out_fid.write(random.choice('ACTG'))
-        prev_position = position
-
-    out_fid.write('\n')
-    out_fid.close()
-    fid.close()
-    os.remove(os.path.join(out_dir, os.path.basename(in_bam) + ".pileup"))
-
-
-
 ##########################################################################
 # Tests
 
@@ -1498,18 +811,6 @@ def test_yield_overlaps_3():
     x2 = [1, 2, 6]
     assert len(list(_yield_overlaps(x1, x2))) == 2
     assert len(list(_yield_overlaps(x2, x1))) == 2
-
-
-def test_CompositionSketch():
-    CS1 = CompositionSketch(n=5, max_prime=1e10, ksize=11, prefixsize=1, save_kmers='y')
-    CS2 = CompositionSketch(n=5, max_prime=1e10, ksize=11, prefixsize=1, save_kmers='y')
-    sequence1 = "CATGTGCATGTAGATCGATGCATGCATCGATGCATGATCGATCX"
-    sequence2 = "CATGTGCATGTAGATCGATGCATGCATCGATGCATGATCGATCGAAAAAAAAAAAAAAAAAAA"
-    CS1.add_sequence(sequence1)
-    CS2.add_sequence(sequence2)
-    assert CS1.similarity(CS2) == 1.0
-    assert CS1.jaccard(CS2) == 0.6
-    assert CS1.jaccard_count(CS2) == (0.5076923076923078, 0.5750000000000001)
 
 
 def test_CountEstimator():
@@ -1582,55 +883,6 @@ def form_matrices_test():
     assert (B == np.array([[1., 1., 0.4], [1., 1., 0.4], [0.4, 0.4, 1.]])).all()
 
 
-def test_lsqnonneg():
-    CE1 = CountEstimator(n=5, max_prime=1e10, ksize=3, save_kmers='y')
-    CE2 = CountEstimator(n=5, max_prime=1e10, ksize=3, save_kmers='y')
-    CE3 = CountEstimator(n=5, max_prime=1e10, ksize=3, save_kmers='y')
-    seq1 = 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'
-    seq2 = 'ccccccccccccccccccccccccccccccccccccccc'
-    seq3 = 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaccccccccccccccccccccccccccccccccccccccc'
-    CE1.add_sequence(seq1)
-    CE2.add_sequence(seq2)
-    CE3.add_sequence(seq3)
-    A = form_jaccard_count_matrix([CE1, CE2, CE3])
-    Y = CE3.count_vector([CE1, CE2, CE3])
-    x = lsqnonneg(A, Y, 0)
-    # check if the L1 norm to the truth is less than machine zero
-    assert abs(x - np.array([0, 0, 1.])).sum() < 1e-07
-    assert (x == jaccard_count_lsqnonneg([CE1, CE2, CE3], Y, 0)).all()
-    A = form_jaccard_matrix([CE1, CE2, CE3])
-    Y = CE3.jaccard_vector([CE1, CE2, CE3])
-    x = lsqnonneg(A, Y, 0)
-    # check if the L1 norm to the truth is less than machine zero
-    assert abs(x - np.array([0, 0, 1.])).sum() < 1e-07
-    assert (x == jaccard_lsqnonneg([CE1, CE2, CE3], Y, 0)).all()
-
-
-def test_snap():
-    temp_dir = tempfile.mkdtemp()
-    index_file = os.path.join(temp_dir,"in.fasta")
-    align_file = os.path.join(temp_dir, "in.fastq")
-    out_sam = os.path.join(temp_dir,"out.sam")
-    out_fastq = os.path.join(temp_dir, "out.fastq")
-    fid = open(index_file, "w")
-    fid.write(">seq1\n")
-    fid.write("GGATTGGTGTATTCACGCTAGAATTCTTGTTAATCATATTATAACACTGGTTAATAGAGGAATGCAAAAAGATGC\n")
-    fid.close()
-    fid = open(align_file, "w")
-    fid.write("@SRR172902.1213325\n")
-    fid.write("GGATTGGTGTATTCACGCTAGAATTCTTGTTAATCATATTATAACACTGGTTAATAGAGGAATGCAAAAAGATGC\n")
-    fid.write("+\n")
-    fid.write("BB@BABB<B>BBBBBBBBABB@@AAAA@A<@@@@A@A@@?@A?A@?@AB@;@@>@@A?>@>@<?@?=9==>?<<@\n")
-    fid.close()
-    res = build_reference(index_file, temp_dir, large_index=True, seed_size=20, threads=1, binary="snap-aligner")
-    assert res == 0
-    res = align_reads(temp_dir, align_file, out_sam, filt='aligned', threads=1, edit_distance=14, min_read_len=50, binary="snap-aligner")
-    assert res == 0
-    sam2fastq(out_sam, out_fastq)
-    assert filecmp.cmp(align_file, out_fastq)
-    shutil.rmtree(temp_dir)
-
-
 def test_suite():
     """
     Runs all the test functions
@@ -1642,13 +894,8 @@ def test_suite():
     test_yield_overlaps()
     test_yield_overlaps_2()
     test_yield_overlaps_3()
-    test_CompositionSketch()
     test_CountEstimator()
     test_import_export()
     test_hash_list()
     test_vector_formation()
     form_matrices_test()
-    test_lsqnonneg()
-    if _platform == "linux" or _platform == "linux2":  # I don't have snap installed on my mac, so only do the test on the server
-        test_snap()
-
