@@ -1,7 +1,9 @@
 import MinHash as MH
+import screed
+
 
 reload(MH)
-fid = open('/Users/dkoslicki/Dropbox/Repositories/MinHash/data/test_files.txt', 'r')
+fid = open('/home/dkoslicki/Dropbox/Repositories/MinHash/data/test_files.txt', 'r')
 file_names = fid.readlines()
 fid.close()
 file_names = [name.strip() for name in file_names]
@@ -32,9 +34,9 @@ CE = MH.CountEstimator(n=500, ksize=20, input_file_name=file_names[0], save_kmer
 CEs = MH.compute_multiple(n=500,ksize=11,input_files_list=file_names,save_kmers='y')
 MH.export_multiple_to_single_hdf5(CEs, 'test_big.h5')
 #Load them back in
-CEs=MH.import_multiple_from_single_hdf5('test_big.h5')
+CEs = MH.import_multiple_from_single_hdf5('test_big.h5')
 #load just a few in
-CEs=MH.import_multiple_from_single_hdf5('test_big.h5', file_names[0:2])
+CEs = MH.import_multiple_from_single_hdf5('test_big.h5', file_names[0:2])
 
 
 # Let's look at forming the Y vector
