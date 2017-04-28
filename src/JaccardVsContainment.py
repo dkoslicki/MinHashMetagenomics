@@ -17,7 +17,7 @@ h = 100  # number of hashes in sketch
 def i_size(j, k, n):
 	return int(n*j/float(1-j) + k)
 
-i_range = [i_size(val, ksize, n1) for val in np.arange(0, 1, 0.01)]
+i_range = [i_size(val, ksize, n1) for val in np.arange(0, 1, 0.005)]
 true_jaccards = np.zeros(len(i_range))
 estimate_jaccards = np.zeros(len(i_range))
 containment_jaccards = np.zeros(len(i_range))
@@ -90,7 +90,7 @@ plt.text(0, 0, 'Overestimate', rotation=90, horizontalalignment='center', vertic
 plt.axhline(0, color='black', linestyle='dashed', linewidth=2)
 plt.ylabel('Difference')
 plt.xlabel('True Jaccard index')
-plt.savefig('Differences.png')
+plt.savefig('../Paper/Differences.png')
 
 # Do a true vs sourmash estimate plot
 plt.figure()
@@ -100,16 +100,17 @@ ax.plot(sorted_true, sorted_estimates)
 plt.ylabel('Estimate Jaccard')
 plt.xlabel('True Jaccard')
 plt.title('Classic Min Hash')
-plt.savefig('TrueVsEstimate.png')
+plt.savefig('../Paper/TrueVsEstimate.png')
 
 # Do a relative error plot
 plt.figure()
 plt.plot(sorted_true, sorted_differences / sorted_true)
 axes = plt.gca()
+axes.set_ylim([-1, 1])
 plt.axhline(0, color='black', linestyle='dashed', linewidth=2)
 plt.ylabel('Relative error')
 plt.xlabel('True Jaccard index')
-plt.savefig('RelativeError.png')
+plt.savefig('../Paper/RelativeError.png')
 
 plt.figure()
 n, bins, patches = plt.hist(differences, 50, normed=1, facecolor='green', alpha=0.75)
@@ -119,7 +120,7 @@ plt.title('Histogram of (true - estimate) Jaccard index\n Mean: %f' % np.mean(di
 plt.text(0, max(plt.yticks()[0])-1, 'Underestimate', rotation=0, horizontalalignment='left', verticalalignment='top', multialignment='left', color='b', fontsize=14)
 plt.text(plt.xticks()[0][1], max(plt.yticks()[0])-1, 'Overestimate', rotation=0, horizontalalignment='left', verticalalignment='top', multialignment='left', color='r', fontsize=14)
 plt.xlabel('Difference')
-plt.savefig('Histogram.png')
+plt.savefig('../Paper/Histogram.png')
 
 # Containment guys
 plt.figure()
@@ -133,7 +134,7 @@ plt.title('Histogram of (true - corrected estimate) Jaccard index\n Mean: %f' % 
 plt.text(0, max(plt.yticks()[0])-1, 'Underestimate', rotation=0, horizontalalignment='left', verticalalignment='top', multialignment='left', color='b', fontsize=14)
 plt.text(plt.xticks()[0][1], max(plt.yticks()[0])-1, 'Overestimate', rotation=0, horizontalalignment='left', verticalalignment='top', multialignment='left', color='r', fontsize=14)
 plt.xlabel('Difference')
-plt.savefig('ContainmentHistogram.png')
+plt.savefig('../Paper/ContainmentHistogram.png')
 
 # Do a true vs containment estimate plot
 plt.figure()
@@ -143,13 +144,14 @@ ax.plot(sorted_true, sorted_containment_estimates)
 plt.ylabel('Estimate Jaccard')
 plt.xlabel('True Jaccard')
 plt.title('Min Hash Via Containment')
-plt.savefig('ContainmentTrueVsEstimate.png')
+plt.savefig('../Paper/ContainmentTrueVsEstimate.png')
 
 # Do a relative error plot
 plt.figure()
 plt.plot(sorted_true, containment_differences / sorted_true)
 axes = plt.gca()
+axes.set_ylim([-1, 1])
 plt.axhline(0, color='black', linestyle='dashed', linewidth=2)
 plt.ylabel('Relative error')
 plt.xlabel('True Jaccard index')
-plt.savefig('ContainmentRelativeError.png')
+plt.savefig('../Paper/ContainmentRelativeError.png')
