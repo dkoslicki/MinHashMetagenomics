@@ -131,7 +131,7 @@ ax.text(radius_small*np.cos(3.1415/2.+3.1415/4.)+x_small, radius_small*np.sin(3.
 ax.text(x_small+radius_small, 0, r'$A$', horizontalalignment='left', verticalalignment='bottom', fontdict=font, usetex=True)
 
 # control display
-ax.set_xlim(x_small-radius_small-0.2, x_small+radius_small+0.2)
+ax.set_xlim((x_small-radius_small-0.2)/((radius_small+0.2) - (-radius_small-0.2)), (x_small+radius_small+0.2)/((radius_small+0.2) - (-radius_small-0.2)))
 ax.set_ylim(-radius_small-0.2, radius_small+0.2)
 ax.set_aspect('equal')
 #ax.text(x_small-radius_small-0.35, radius_small+0.25, 'b)', horizontalalignment='left', verticalalignment='bottom', fontdict=font)

@@ -112,11 +112,12 @@ Min hash is great at comparing sets of similar size. When one set is much larger
 
 \begin{figure}[!h]%
 \begin{center}
-\includegraphics[width=3.25in,trim={0 0 0 0in},clip]{Figs/ClassicalConceptual.png}%
-\includegraphics[width=3.25in,trim={0 0 0 0in},clip]{Figs/ContainmentConceptual.png}
+\includegraphics[width=3.15in,trim={0 0 0 0in},clip]{Figs/ClassicalConceptual.png}%
+\hspace{1ex}
+\includegraphics[width=3.0in,trim={0 0 0 0in},clip]{Figs/ContainmentConceptual.png}
 \end{center}
 \caption{Conceptual comparison of classical min hash to the proposed containment approach when estimating the Jaccard index of very different sized sets. a) Sampling 100 points from $A\cup B$ (as is done in the classical min hash approach) leads to finding only \protect \input{ClassicalConceptual.txt}elements in $A\cap B$. b) Sampling just 50 points of $A$ and testing if a point $x\in A\cap B$, finds \protect \input{ContainmentConceptual.txt}elements in $A\cap B$. This latter approach will be seen to lead to a better estimate of the Jaccard index. }
-\label{fig:TrueVsEstimate}%
+\label{fig:Conceptual}%
 \end{figure}
 
 
@@ -146,7 +147,7 @@ Definitions, derivation of mathematical results here.
 In this section, we compare classic min hash to the proposed method.
 \subsection{Synthetic data}
 \label{section:SyntheticData}
-Here we illustrate the improved accuracy of \themethod over classical min hash in estimating the Jaccard index. To that end, we generated two random strings $w_A$ and $w_B$ on the alphabet $\{A,C,T,G\}$. We set $|w_A|= 10,000$ and $|w_B| = 15$ to simulate the situation of interest where one wishes to estimate the Jaccard index of two sets of very different size. We then appended a common string $w_C$ of increasing length to each of $w_A$ and $w_B$ so that $\Jac_k(w_Aw_C, w_Bw_C)$ ranges between 0 and 1. We picked the $k$-mer size of $11$ and utilized a signature size of 100. Figure \ref{fig:TrueVsEstimate} depicts the comparison of \themethod with the classical min hash Jaccard estimate on this data and effectively illustrates the results in section \ref{section:ChernoffBounds} which proved that the containment approach has a higher probably of being closer to the true Jaccard than the classic approach. The mean and variance of the classic min hash approach on this data was \input{SyntheticDataClassic.txt} while using the containment approach was \input{SyntheticDataContainment.txt} demonstrating a substantial decrease in variance.
+Here we illustrate the improved accuracy of \themethod over classical min hash in estimating the Jaccard index. To that end, we generated two random strings $w_A$ and $w_B$ on the alphabet $\{A,C,T,G\}$. We set $|w_A|= 10,000$ and $|w_B| = 15$ to simulate the situation of interest where one wishes to estimate the Jaccard index of two sets of very different size. We then appended a common string $w_C$ of increasing length to each of $w_A$ and $w_B$ so that $\Jac_k(w_Aw_C, w_Bw_C)$ ranges between 0 and 1. We picked the $k$-mer size of $11$ and utilized a signature size of 100. Figure \ref{fig:TrueVsEstimate} depicts the comparison of \themethod with the classical min hash Jaccard estimate on this data and effectively illustrates the results in section \ref{section:ChernoffBounds} which proved that the containment approach has a higher probably of being closer to the true Jaccard than the classic approach. The mean and variance of the classic min hash approach on this data was \input{SyntheticDataClassic.txt}while using the containment approach was \input{SyntheticDataContainment.txt}demonstrating a substantial decrease in variance.
 
 
 \begin{figure}[!h]%
