@@ -251,6 +251,7 @@ class CountEstimator(object):
         grp.attrs['filename'] = np.string_(self.input_file_name)
         grp.attrs['ksize'] = self.ksize
         grp.attrs['prime'] = self.p
+        grp.attrs['true_num_kmers'] = self._true_num_kmers
         fid.close()
 
     def count_vector(self, other_list):
@@ -293,12 +294,14 @@ def import_single_hdf5(file_name):
     file_name = grp.attrs['filename']
     ksize = grp.attrs['ksize']
     prime = grp.attrs['prime']
+    true_num_kmers = grp.attrs['true_num_kmers']
     mins = grp["mins"][...]  # For some reason, slicing is WAY slower than using ... in this case.
     counts = grp["counts"][...]
     CE = CountEstimator(n=len(mins), max_prime=3, ksize=ksize)
     CE.p = prime
     CE._mins = mins
     CE._counts = counts
+    CE._true_num_kmers = true_num_kmers
     CE.input_file_name = file_name
     if "kmers" in grp:
         CE._kmers = grp["kmers"][...]
@@ -359,6 +362,7 @@ def export_multiple_to_single_hdf5(CEs, export_file_name):
         subgrp.attrs['filename'] = np.string_(CE.input_file_name)  # But keep the full file name on hand
         subgrp.attrs['ksize'] = CE.ksize
         subgrp.attrs['prime'] = CE.p
+        subgrp.attrs['true_num_kmers'] = CE._true_num_kmers
 
     fid.close()
 
@@ -393,10 +397,12 @@ def import_multiple_from_single_hdf5(file_name, import_list=None):
         prime = subgrp.attrs['prime']
         mins = subgrp["mins"][...]
         counts = subgrp["counts"][...]
+        true_num_kmers = subgrp.attrs["true_num_kmers"]
         CE = CountEstimator(n=len(mins), max_prime=3, ksize=ksize)
         CE.p = prime
         CE._mins = mins
         CE._counts = counts
+        CE._true_num_kmers = true_num_kmers
         CE.input_file_name = file_name
         if "kmers" in subgrp:
             CE._kmers = subgrp["kmers"][...]
