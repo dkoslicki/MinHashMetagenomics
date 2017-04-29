@@ -18,7 +18,7 @@ h = 100  # number of hashes in sketch
 def i_size(j, k, n):
 	return int(n*j/float(1-j) + k)
 
-i_range = [i_size(val, ksize, n1) for val in np.arange(0, 1, 0.05)]
+i_range = [i_size(val, ksize, n1) for val in np.arange(0, 1, 0.005)]
 true_jaccards = np.zeros(len(i_range))
 estimate_jaccards = np.zeros(len(i_range))
 containment_jaccards = np.zeros(len(i_range))
@@ -97,7 +97,7 @@ plt.text(0, 0, 'Overestimate', rotation=90, horizontalalignment='center', vertic
 plt.axhline(0, color='black', linestyle='dashed', linewidth=2)
 plt.ylabel('Difference')
 plt.xlabel('True Jaccard index')
-plt.savefig('../Paper/Differences.png')
+plt.savefig('../Paper/Figs/Differences.png')
 
 # Do a true vs sourmash estimate plot
 plt.figure()
@@ -107,8 +107,9 @@ ax.plot(sorted_true, sorted_estimates)
 plt.ylabel('Estimate Jaccard')
 plt.xlabel('True Jaccard')
 plt.title('Classic Min Hash')
+axes = plt.gca()
 axes.text(-.2, 1.15, 'a)', horizontalalignment='left', verticalalignment='bottom', fontdict=font)
-plt.savefig('../Paper/TrueVsEstimate.png')
+plt.savefig('../Paper/Figs/TrueVsEstimate.png')
 
 # Do a relative error plot
 plt.figure()
@@ -118,7 +119,7 @@ axes.set_ylim([-1, 1])
 plt.axhline(0, color='black', linestyle='dashed', linewidth=2)
 plt.ylabel('Relative error')
 plt.xlabel('True Jaccard index')
-plt.savefig('../Paper/RelativeError.png')
+plt.savefig('../Paper/Figs/RelativeError.png')
 
 plt.figure()
 n, bins, patches = plt.hist(differences, 50, normed=1, facecolor='green', alpha=0.75)
@@ -128,7 +129,7 @@ plt.title('Histogram of (true - estimate) Jaccard index\n Mean: %f' % np.mean(di
 plt.text(0, max(plt.yticks()[0])-1, 'Underestimate', rotation=0, horizontalalignment='left', verticalalignment='top', multialignment='left', color='b', fontsize=14)
 plt.text(plt.xticks()[0][1], max(plt.yticks()[0])-1, 'Overestimate', rotation=0, horizontalalignment='left', verticalalignment='top', multialignment='left', color='r', fontsize=14)
 plt.xlabel('Difference')
-plt.savefig('../Paper/Histogram.png')
+plt.savefig('../Paper/Figs/Histogram.png')
 
 # Containment guys
 plt.figure()
@@ -142,7 +143,7 @@ plt.title('Histogram of (true - corrected estimate) Jaccard index\n Mean: %f' % 
 plt.text(0, max(plt.yticks()[0])-1, 'Underestimate', rotation=0, horizontalalignment='left', verticalalignment='top', multialignment='left', color='b', fontsize=14)
 plt.text(plt.xticks()[0][1], max(plt.yticks()[0])-1, 'Overestimate', rotation=0, horizontalalignment='left', verticalalignment='top', multialignment='left', color='r', fontsize=14)
 plt.xlabel('Difference')
-plt.savefig('../Paper/ContainmentHistogram.png')
+plt.savefig('../Paper/Figs/ContainmentHistogram.png')
 
 # Do a true vs containment estimate plot
 plt.figure()
@@ -152,8 +153,9 @@ ax.plot(sorted_true, sorted_containment_estimates)
 plt.ylabel('Estimate Jaccard')
 plt.xlabel('True Jaccard')
 plt.title('Min Hash Via Containment')
+axes = plt.gca()
 axes.text(-.2, 1.15, 'b)', horizontalalignment='left', verticalalignment='bottom', fontdict=font)
-plt.savefig('../Paper/ContainmentTrueVsEstimate.png')
+plt.savefig('../Paper/Figs/ContainmentTrueVsEstimate.png')
 
 # Do a relative error plot
 plt.figure()
@@ -163,14 +165,14 @@ axes.set_ylim([-1, 1])
 plt.axhline(0, color='black', linestyle='dashed', linewidth=2)
 plt.ylabel('Relative error')
 plt.xlabel('True Jaccard index')
-plt.savefig('../Paper/ContainmentRelativeError.png')
+plt.savefig('../Paper/Figs/ContainmentRelativeError.png')
 
 # Print out stats and save to file for putting in the paper.
 print("Classic Min Hash mean: %f, variance: %f" % (np.mean(differences), np.var(differences)))
 print("Containment Min Hash mean: %f, variance: %f" % (np.mean(containment_differences), np.var(containment_differences)))
 fid = open(os.path.abspath('../Paper/SyntheticDataClassic.txt'), 'w')
-fid.write("$%f\pm%f$\n" % (np.mean(differences), np.var(differences)))
+fid.write("$%f\pm%f$" % (np.mean(differences), np.var(differences)))
 fid.close()
 fid = open(os.path.abspath('../Paper/SyntheticDataContainment.txt'), 'w')
-fid.write("$%f\pm%f$\n" % (np.mean(containment_differences), np.var(containment_differences)))
+fid.write("$%f\pm%f$" % (np.mean(containment_differences), np.var(containment_differences)))
 fid.close()
