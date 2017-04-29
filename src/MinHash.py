@@ -583,36 +583,45 @@ def _yield_count_overlaps(mins1, mins2, counts1, counts2):
     """
     i = 0
     j = 0
+    processed = 0
     try:
-        while 1:
+        while processed <= min(len(mins1), len(mins2)):
             while mins1[i] < mins2[j]:
                 i += 1
+                processed += 1
             while mins1[i] > mins2[j]:
                 j += 1
+                processed += 1
             if mins1[i] == mins2[j]:
                 yield (counts1[i], counts2[j])
                 i += 1
                 j += 1
+                processed += 1
     except IndexError:
         return
 
 
 def _yield_overlaps(x1, x2):
     """yield common hash values while iterating over two sorted lists of hashes
+    To properly compute the estimate, I need this to only process min(len(x1), len(x2)) elements
     Returns an iterable object
     """
     i = 0
     j = 0
+    processed = 0
     try:
-        while 1:
+        while processed <= min(len(x1), len(x2)):
             while x1[i] < x2[j]:
                 i += 1
+                processed += 1
             while x1[i] > x2[j]:
                 j += 1
+                processed += 1
             if x1[i] == x2[j]:
                 yield x1[i]
                 i += 1
                 j += 1
+                processed += 1
     except IndexError:
         return
 
