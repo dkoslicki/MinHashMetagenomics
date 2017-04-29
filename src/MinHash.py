@@ -105,12 +105,25 @@ class CountEstimator(object):
         if self.input_file_name:
             self.parse_file(rev_comp=rev_comp)
 
+        # Optional container for the true number of k-mers in the genome used to populate the sketch
+        self._true_num_kmers = 0
+
     def parse_file(self, rev_comp=False):
         """
         opens a file and populates the CountEstimator with it
         """
         for record in screed.open(self.input_file_name):
             self.add_sequence(record.sequence, rev_comp)
+
+    def down_sample(self, h):
+        """
+        This will down-sample a sketch to have exactly h elements
+        :param h: number of elements you wish to save
+        :return: None
+        """
+        self._mins = self._mins[0:h]
+        self._counts = self._counts[0:h]
+        self._kmers = self._kmers[0:h]
 
     def add(self, kmer, rev_comp=False):
         """
