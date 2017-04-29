@@ -15,6 +15,8 @@ x_big = -.5  # x-coordinate of bigger circle
 radius_big = 1.4  # radius of bigger circle
 x_small = 0.9  # x-coordinate of smaller circle
 radius_small = .3  # radius of smaller circle
+point_size_big = 0.01
+point_size_small = 0.006
 
 # Both sets together
 plt.figure()
@@ -38,7 +40,7 @@ for i in range(num_points_both):
 		y = 2 * radius_big * np.random.rand() - radius_big
 	if (x - x_big) ** 2 + y ** 2 <= radius_big ** 2 and (x - x_small) ** 2 + y ** 2 <= radius_small ** 2:
 		num_int_both += 1
-	points.append(sg.Point(x, y).buffer(.01))
+	points.append(sg.Point(x, y).buffer(point_size_big))
 
 # compute the 3 parts
 left = a.difference(b)
@@ -103,7 +105,7 @@ for i in range(num_points_single):
 		y = 2 * radius_small * np.random.rand() - radius_small
 	if (x + .5) ** 2 + y ** 2 <= radius_big ** 2 and (x - .9) ** 2 + y ** 2 <= radius_small ** 2:
 		num_int_single += 1
-	points.append(sg.Point(x, y).buffer(.01))
+	points.append(sg.Point(x, y).buffer(point_size_small))
 
 # compute the 3 parts
 left = a.difference(b)
