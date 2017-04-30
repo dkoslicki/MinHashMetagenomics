@@ -168,7 +168,7 @@ def create_relative_errors(num_genomes, num_reads, python_loc, gen_sim_loc, prim
 	os.remove(simulation_file)
 	os.remove(abundances_file)
 	# return the relative errors
-	return MH_relative_errors, CMH_relative_errors
+	return MH_relative_errors, CMH_relative_errors, simulation_kmers_length, np.mean(genome_lengths)
 
 
 # Now let's parallelize it and do a bunch of replicates
@@ -182,9 +182,13 @@ res = pool.map(dummy_wrapper, [(num_genomes, num_reads, python_loc, gen_sim_loc,
 # Plot the results
 MH_results = np.zeros((num_replicates, len(hash_range)))
 CMH_results = np.zeros((num_replicates, len(hash_range)))
+simulation_kmers_lengths = np.zeros(num_replicates)
+mean_genome_lengths = np.zeros(num_replicates)
 for i in range(num_replicates):
 	MH_results[i, :] = res[i][0]
 	CMH_results[i, :] = res[i][1]
+	simulation_kmers_lengths[i] = res[i][2]
+	mean_genome_lengths[i] = res[i][3]
 
 np.savetxt(os.path.abspath('../data/SimulatedMetagenomes/MinHash_results.txt'), MH_results)
 np.savetxt(os.path.abspath('../data/SimulatedMetagenomes/ContainmentMinHash_results.txt'), CMH_results)
@@ -226,6 +230,10 @@ fid.close()
 fid = open(os.path.abspath('../Paper/SimulatedBiologicalDataksize.txt'), 'w')
 fid.write('%d' % ksize)
 fid.close()
+fid = open(os.path.abspath('../Paper/SimulatedBiologicalData_rel_size.txt'), 'w')
+fid.write('%3.3f\%%' % float(100*np.mean(simulation_kmers_lengths) / float(np.mean(mean_genome_lengths))))
+fid.close()
+
 
 
 

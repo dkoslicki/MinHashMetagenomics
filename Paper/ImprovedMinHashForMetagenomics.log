@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.16 (TeX Live 2015/Debian) (preloaded format=pdflatex 2017.2.17)  28 APR 2017 22:43
+This is pdfTeX, Version 3.14159265-2.6-1.40.16 (TeX Live 2015/Debian) (preloaded format=pdflatex 2017.2.17)  30 APR 2017 01:57
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -516,14 +516,14 @@ Underfull \hbox (badness 10000) in paragraph at lines 94--97
  []
 
 (./ClassicalConceptual.txt) (./ContainmentConceptual.txt)
-<Figs/ClassicalConceptual.png, id=47, 322.3242pt x 299.9205pt>
+<Figs/ClassicalConceptual.png, id=51, 322.3242pt x 299.9205pt>
 File: Figs/ClassicalConceptual.png Graphic file (type png)
 
 <use Figs/ClassicalConceptual.png>
 Package pdftex.def Info: Figs/ClassicalConceptual.png used on input line 115.
 (pdftex.def)             Requested size: 227.65005pt x 211.83296pt.
 
-<Figs/ContainmentConceptual.png, id=50, 304.9794pt x 299.9205pt>
+<Figs/ContainmentConceptual.png, id=54, 304.9794pt x 299.9205pt>
 File: Figs/ContainmentConceptual.png Graphic file (type png)
 
 <use Figs/ContainmentConceptual.png>
@@ -538,14 +538,14 @@ LaTeX Warning: `!h' float specifier changed to `!ht'.
 
 [1{/var/lib/texmf/fonts/map/pdftex/updmap/pdftex.map}]
 (./SyntheticDataClassic.txt) (./SyntheticDataContainment.txt)
-<Figs/TrueVsEstimate.png, id=80, 407.6028pt x 339.669pt>
+<Figs/TrueVsEstimate.png, id=84, 407.6028pt x 339.669pt>
 File: Figs/TrueVsEstimate.png Graphic file (type png)
 
 <use Figs/TrueVsEstimate.png>
 Package pdftex.def Info: Figs/TrueVsEstimate.png used on input line 155.
 (pdftex.def)             Requested size: 234.87749pt x 195.73315pt.
 
-<Figs/ContainmentTrueVsEstimate.png, id=82, 408.3255pt x 339.669pt>
+<Figs/ContainmentTrueVsEstimate.png, id=86, 408.3255pt x 339.669pt>
 File: Figs/ContainmentTrueVsEstimate.png Graphic file (type png)
 
 <use Figs/ContainmentTrueVsEstimate.png>
@@ -556,27 +556,83 @@ Package pdftex.def Info: Figs/ContainmentTrueVsEstimate.png used on input line
 
 LaTeX Warning: `!h' float specifier changed to `!ht'.
 
-[2 <./Figs/ClassicalConceptual.png> <./Figs/ContainmentConceptual.png>]
-[3 <./Figs/TrueVsEstimate.png> <./Figs/ContainmentTrueVsEstimate.png>]
-No file ImprovedMinHashForMetagenomics.bbl.
-Package atveryend Info: Empty hook `BeforeClearDocument' on input line 173.
-Package atveryend Info: Empty hook `AfterLastShipout' on input line 173.
+(./SimulatedBiologicalData_small_rel_size.txt) [2 <./Figs/ClassicalConceptual.p
+ng> <./Figs/ContainmentConceptual.png>] (./SimulatedBiologicalData_rel_size.txt
+)
+
+LaTeX Warning: Reference `figure:SimulatedBiologicalData' on page 3 undefined o
+n input line 164.
+
+(./SimulatedBiologicalData_small_NumReads.txt)
+(./SimulatedBiologicalData_small_NumGenomes.txt)
+(./SimulatedBiologicalData_small_ksize.txt)
+(./SimulatedBiologicalData_small_NumReplicates.txt)
+(./SimulatedBiologicalData_small_p.txt) (./SimulatedBiologicalDataNumReads.txt)
+(./SimulatedBiologicalDataNumGenomes.txt) (./SimulatedBiologicalDataksize.txt)
+(./SimulatedBiologicalDataNumReplicates.txt) (./SimulatedBiologicalDatap.txt)
+<Figs/SimulatedBiologicalData_small.png, id=104, 462.528pt x 346.896pt>
+File: Figs/SimulatedBiologicalData_small.png Graphic file (type png)
+
+<use Figs/SimulatedBiologicalData_small.png>
+Package pdftex.def Info: Figs/SimulatedBiologicalData_small.png used on input l
+ine 175.
+(pdftex.def)             Requested size: 234.87749pt x 176.15768pt.
+
+<Figs/SimulatedBiologicalData.png, id=106, 462.528pt x 346.896pt>
+File: Figs/SimulatedBiologicalData.png Graphic file (type png)
+
+<use Figs/SimulatedBiologicalData.png>
+Package pdftex.def Info: Figs/SimulatedBiologicalData.png used on input line 17
+6.
+(pdftex.def)             Requested size: 234.87749pt x 176.15768pt.
+
+(./SimulatedBiologicalData_small_NumReplicates.txt)
+(./SimulatedBiologicalData_small_NumGenomes.txt)
+(./SimulatedBiologicalData_small_NumReads.txt)
+(./SimulatedBiologicalDataNumReplicates.txt)
+(./SimulatedBiologicalDataNumGenomes.txt)
+(./SimulatedBiologicalDataNumReads.txt)
+(./SimulatedBiologicalData_small_NumReplicates.txt)
+(./SimulatedBiologicalData_small_NumGenomes.txt)
+(./SimulatedBiologicalData_small_NumReads.txt)
+(./SimulatedBiologicalDataNumReplicates.txt)
+(./SimulatedBiologicalDataNumGenomes.txt)
+(./SimulatedBiologicalDataNumReads.txt)
+
+LaTeX Warning: `!h' float specifier changed to `!ht'.
+
+[3 <./Figs/TrueVsEstimate.png> <./Figs/ContainmentTrueVsEstimate.png>] [4 <./Fi
+gs/SimulatedBiologicalData_small.png> <./Figs/SimulatedBiologicalData.png>]
+(./ImprovedMinHashForMetagenomics.bbl)
+Package atveryend Info: Empty hook `BeforeClearDocument' on input line 190.
+ [5
+
+]
+Package atveryend Info: Empty hook `AfterLastShipout' on input line 190.
+
 (./ImprovedMinHashForMetagenomics.aux)
-Package atveryend Info: Executing hook `AtVeryEndDocument' on input line 173.
-Package atveryend Info: Executing hook `AtEndAfterFileList' on input line 173.
+Package atveryend Info: Executing hook `AtVeryEndDocument' on input line 190.
+Package atveryend Info: Executing hook `AtEndAfterFileList' on input line 190.
 Package rerunfilecheck Info: File `ImprovedMinHashForMetagenomics.out' has not 
 changed.
-(rerunfilecheck)             Checksum: A6610C28574A4E26B0537C944CAD6D53;632.
-Package atveryend Info: Empty hook `AtVeryVeryEnd' on input line 173.
+(rerunfilecheck)             Checksum: EAE5C168689A6DAC5D0A9059EC0ECAB6;679.
+
+
+LaTeX Warning: There were undefined references.
+
+
+LaTeX Warning: Label(s) may have changed. Rerun to get cross-references right.
+
+Package atveryend Info: Empty hook `AtVeryVeryEnd' on input line 190.
  ) 
 Here is how much of TeX's memory you used:
- 8984 strings out of 493029
- 132884 string characters out of 6136234
- 225248 words of memory out of 5000000
- 12198 multiletter control sequences out of 15000+600000
+ 9065 strings out of 493029
+ 135835 string characters out of 6136234
+ 225286 words of memory out of 5000000
+ 12210 multiletter control sequences out of 15000+600000
  12352 words of font info for 48 fonts, out of 8000000 for 9000
  1302 hyphenation exceptions out of 8191
- 36i,6n,39p,1398b,390s stack positions out of 5000i,500n,10000p,200000b,80000s
+ 36i,7n,39p,1545b,390s stack positions out of 5000i,500n,10000p,200000b,80000s
 </usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmbx10.pfb></us
 r/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmcsc10.pfb></usr/sha
 re/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi10.pfb></usr/share/tex
@@ -589,10 +645,10 @@ msfonts/cm/cmsy6.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts
 /cm/cmsy8.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmt
 i10.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmti9.pfb
 ></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmtt9.pfb>
-Output written on ImprovedMinHashForMetagenomics.pdf (3 pages, 263603 bytes).
+Output written on ImprovedMinHashForMetagenomics.pdf (5 pages, 356901 bytes).
 PDF statistics:
- 156 PDF objects out of 1000 (max. 8388607)
- 124 compressed objects within 2 object streams
- 28 named destinations out of 1000 (max. 500000)
- 125 words of extra memory for PDF output out of 10000 (max. 10000000)
+ 181 PDF objects out of 1000 (max. 8388607)
+ 141 compressed objects within 2 object streams
+ 33 named destinations out of 1000 (max. 500000)
+ 155 words of extra memory for PDF output out of 10000 (max. 10000000)
 
