@@ -17,10 +17,10 @@ import matplotlib.pyplot as plt
 from multiprocessing.dummy import Pool
 from itertools import *
 
-num_threads = 7
-num_genomes = 25
-num_reads = 10000
-num_replicates = 7
+num_threads = 8
+num_genomes = 20
+num_reads = 100000
+num_replicates = 20
 python_loc = "python"
 gen_sim_loc = "/home/dkoslicki/Documents/GemSIM_v1.6/GemReads.py"
 prime = 9999999999971  # taking hashes mod this prime
