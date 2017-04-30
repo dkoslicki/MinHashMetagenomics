@@ -17,10 +17,10 @@ import matplotlib.pyplot as plt
 from multiprocessing.dummy import Pool
 from itertools import *
 
-num_threads = 5
+num_threads = 7
 num_genomes = 25
-num_reads = 100000
-num_replicates = 10
+num_reads = 10000
+num_replicates = 7
 python_loc = "python"
 gen_sim_loc = "/home/dkoslicki/Documents/GemSIM_v1.6/GemReads.py"
 prime = 9999999999971  # taking hashes mod this prime
@@ -188,12 +188,20 @@ for i in range(num_replicates):
 	MH_results[i, :] = res[i][0]
 	CMH_results[i, :] = res[i][1]
 
+np.savetxt(os.path.abspath('../data/SimulatedMetagenomes/MinHash_results.txt'), MH_results)
+np.savetxt(os.path.abspath('../data/SimulatedMetagenomes/ContainmentMinHash_results.txt'), CMH_results)
+
 plt.figure()
-plt.errorbar(hash_range, np.mean(MH_results, 0), yerr=np.var(MH_results, 0), fmt='--r', ecolor='k', label="Classic Min Hash")
-plt.errorbar(hash_range, np.mean(CMH_results, 0), yerr=np.var(CMH_results, 0), fmt='b', ecolor='k', label="Containment Min Hash")
+plt.errorbar(hash_range, np.mean(MH_results, 0), yerr=np.std(MH_results, 0), fmt='--r', ecolor=[1, 0, 0, .2], label="Classic Min Hash")
+plt.errorbar(hash_range, np.mean(CMH_results, 0), yerr=np.std(CMH_results, 0), fmt='b', ecolor=[0, 0, 1, .2], label="Containment Min Hash")
 axes = plt.gca()
 plt.ylabel('Relative error')
 plt.xlabel('Number of hashes')
+plt.xlim([min(hash_range), max(hash_range)])
+ticks = plt.xticks()
+ticks[0][0] = min(hash_range)
+plt.xticks(ticks[0])
 plt.legend()
 
 plt.savefig('../Paper/Figs/SimulatedBiologicalData.png')
+
