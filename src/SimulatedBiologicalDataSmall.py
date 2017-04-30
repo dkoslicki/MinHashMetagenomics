@@ -13,9 +13,7 @@ import MinHash as MH
 import bz2
 import tempfile
 import matplotlib.pyplot as plt
-#from multiprocessing import Pool
 from multiprocessing.dummy import Pool
-from itertools import *
 
 num_threads = 8
 num_genomes = 20
@@ -188,13 +186,19 @@ for i in range(num_replicates):
 	MH_results[i, :] = res[i][0]
 	CMH_results[i, :] = res[i][1]
 
-np.savetxt(os.path.abspath('../data/SimulatedMetagenomes/MinHash_results.txt'), MH_results)
-np.savetxt(os.path.abspath('../data/SimulatedMetagenomes/ContainmentMinHash_results.txt'), CMH_results)
+np.savetxt(os.path.abspath('../data/SimulatedMetagenomes/MinHash_results_small.txt'), MH_results)
+np.savetxt(os.path.abspath('../data/SimulatedMetagenomes/ContainmentMinHash_results_small.txt'), CMH_results)
 
+font = {'family': 'serif',
+		'color':  'black',
+		'weight': 'normal',
+		'size': 18,
+		}
 plt.figure()
 plt.errorbar(hash_range, np.mean(MH_results, 0), yerr=np.std(MH_results, 0), fmt='--r', ecolor=[1, 0, 0, .2], label="Classic Min Hash")
 plt.errorbar(hash_range, np.mean(CMH_results, 0), yerr=np.std(CMH_results, 0), fmt='b', ecolor=[0, 0, 1, .2], label="Containment Min Hash")
 axes = plt.gca()
+axes.text(-.1, 1, 'a)', horizontalalignment='left', verticalalignment='bottom', fontdict=font, transform=axes.transAxes)
 plt.ylabel('Relative error')
 plt.xlabel('Number of hashes')
 plt.xlim([min(hash_range), max(hash_range)])
@@ -203,5 +207,21 @@ ticks[0][0] = min(hash_range)
 plt.xticks(ticks[0])
 plt.legend()
 
-plt.savefig('../Paper/Figs/SimulatedBiologicalData.png')
+plt.savefig('../Paper/Figs/SimulatedBiologicalData_small.png')
 
+# Save parameters for input to LaTeX paper
+fid = open(os.path.abspath('../Paper/SimulatedBiologicalData_small_NumGenomes.txt'), 'w')
+fid.write('%d' % num_genomes)
+fid.close()
+fid = open(os.path.abspath('../Paper/SimulatedBiologicalData_small_NumReads.txt'), 'w')
+fid.write('%d' % num_reads)
+fid.close()
+fid = open(os.path.abspath('../Paper/SimulatedBiologicalData_small_NumReplicates.txt'), 'w')
+fid.write('%d' % num_replicates)
+fid.close()
+fid = open(os.path.abspath('../Paper/SimulatedBiologicalData_small_p.txt'), 'w')
+fid.write('%f' % p)
+fid.close()
+fid = open(os.path.abspath('../Paper/SimulatedBiologicalData_small_ksize.txt'), 'w')
+fid.write('%d' % ksize)
+fid.close()
