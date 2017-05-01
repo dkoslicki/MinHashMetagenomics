@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.16 (TeX Live 2015/Debian) (preloaded format=pdflatex 2017.2.17)  30 APR 2017 01:57
+This is pdfTeX, Version 3.14159265-2.6-1.40.16 (TeX Live 2015/Debian) (preloaded format=pdflatex 2017.2.17)  30 APR 2017 09:26
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -556,21 +556,16 @@ Package pdftex.def Info: Figs/ContainmentTrueVsEstimate.png used on input line
 
 LaTeX Warning: `!h' float specifier changed to `!ht'.
 
-(./SimulatedBiologicalData_small_rel_size.txt) [2 <./Figs/ClassicalConceptual.p
-ng> <./Figs/ContainmentConceptual.png>] (./SimulatedBiologicalData_rel_size.txt
-)
-
-LaTeX Warning: Reference `figure:SimulatedBiologicalData' on page 3 undefined o
-n input line 164.
-
-(./SimulatedBiologicalData_small_NumReads.txt)
-(./SimulatedBiologicalData_small_NumGenomes.txt)
+(./SimulatedBiologicalData_small_rel_size.txt)
+(./SimulatedBiologicalData_rel_size.txt) [2 <./Figs/ClassicalConceptual.png> <.
+/Figs/ContainmentConceptual.png>] (./SimulatedBiologicalData_small_NumReads.txt
+) (./SimulatedBiologicalData_small_NumGenomes.txt)
 (./SimulatedBiologicalData_small_ksize.txt)
 (./SimulatedBiologicalData_small_NumReplicates.txt)
 (./SimulatedBiologicalData_small_p.txt) (./SimulatedBiologicalDataNumReads.txt)
 (./SimulatedBiologicalDataNumGenomes.txt) (./SimulatedBiologicalDataksize.txt)
 (./SimulatedBiologicalDataNumReplicates.txt) (./SimulatedBiologicalDatap.txt)
-<Figs/SimulatedBiologicalData_small.png, id=104, 462.528pt x 346.896pt>
+<Figs/SimulatedBiologicalData_small.png, id=105, 462.528pt x 346.896pt>
 File: Figs/SimulatedBiologicalData_small.png Graphic file (type png)
 
 <use Figs/SimulatedBiologicalData_small.png>
@@ -578,7 +573,7 @@ Package pdftex.def Info: Figs/SimulatedBiologicalData_small.png used on input l
 ine 175.
 (pdftex.def)             Requested size: 234.87749pt x 176.15768pt.
 
-<Figs/SimulatedBiologicalData.png, id=106, 462.528pt x 346.896pt>
+<Figs/SimulatedBiologicalData.png, id=107, 462.528pt x 346.896pt>
 File: Figs/SimulatedBiologicalData.png Graphic file (type png)
 
 <use Figs/SimulatedBiologicalData.png>
@@ -616,23 +611,16 @@ Package atveryend Info: Executing hook `AtEndAfterFileList' on input line 190.
 Package rerunfilecheck Info: File `ImprovedMinHashForMetagenomics.out' has not 
 changed.
 (rerunfilecheck)             Checksum: EAE5C168689A6DAC5D0A9059EC0ECAB6;679.
-
-
-LaTeX Warning: There were undefined references.
-
-
-LaTeX Warning: Label(s) may have changed. Rerun to get cross-references right.
-
 Package atveryend Info: Empty hook `AtVeryVeryEnd' on input line 190.
  ) 
 Here is how much of TeX's memory you used:
- 9065 strings out of 493029
- 135835 string characters out of 6136234
- 225286 words of memory out of 5000000
- 12210 multiletter control sequences out of 15000+600000
+ 9064 strings out of 493029
+ 135803 string characters out of 6136234
+ 225293 words of memory out of 5000000
+ 12209 multiletter control sequences out of 15000+600000
  12352 words of font info for 48 fonts, out of 8000000 for 9000
  1302 hyphenation exceptions out of 8191
- 36i,7n,39p,1545b,390s stack positions out of 5000i,500n,10000p,200000b,80000s
+ 36i,6n,39p,1539b,390s stack positions out of 5000i,500n,10000p,200000b,80000s
 </usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmbx10.pfb></us
 r/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmcsc10.pfb></usr/sha
 re/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi10.pfb></usr/share/tex
@@ -645,10 +633,10 @@ msfonts/cm/cmsy6.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts
 /cm/cmsy8.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmt
 i10.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmti9.pfb
 ></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmtt9.pfb>
-Output written on ImprovedMinHashForMetagenomics.pdf (5 pages, 356901 bytes).
+Output written on ImprovedMinHashForMetagenomics.pdf (5 pages, 356960 bytes).
 PDF statistics:
- 181 PDF objects out of 1000 (max. 8388607)
- 141 compressed objects within 2 object streams
+ 182 PDF objects out of 1000 (max. 8388607)
+ 142 compressed objects within 2 object streams
  33 named destinations out of 1000 (max. 500000)
  155 words of extra memory for PDF output out of 10000 (max. 10000000)
 
