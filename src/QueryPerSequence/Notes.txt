@@ -1,0 +1,4 @@
+This will take a FASTA file of input k-mers and query a jellyfish bloom filter returning the total number of k-mers in the fasta file that show up in the bloom filter
+
+compile with something like:
+g++ -I /home/pi/koslickd/jellyfish-2.2.3/include -std=c++0x -Wall -O3 -L /home/pi/koslickd/jellyfish-2.2.3/.libs -Wl,--rpath=/home/pi/koslickd/jellyfish-2.2.3/.libs query_per_sequence.cc sequence_mers.hpp -l jellyfish-2.0 -l pthread -o query_per_sequence
