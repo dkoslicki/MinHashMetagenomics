@@ -1,0 +1,22 @@
+# List of requirements, put in setuptools later
+subprocess
+numpy
+os
+MinHash
+screed
+pybloom
+khmer
+bz2
+tempfile
+matplotlib
+multiprocessing
+h5py
+re
+itertools
+blist
+bisect
+ctypes
+warnings
+shapely
+descartes
+
