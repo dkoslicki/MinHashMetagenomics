@@ -1,16 +1,45 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import os
-
-# FYI, this is about 10,000X times easier to do by hand (as I did here) than to use a "pre-packaged"
-# solution like, eg. Circleator (http://jonathancrabtree.github.io/Circleator/). Just give that a go and
-# you'll be running back to a matplotlib solution faster than you can say an unsavory four-letter word ;)
+import getopt
+import sys
 
 bottom = 8
 truncate_to = 2  # this needs to be a power of two since we are plotting on a sqrt scale
 units = 'M'
 num_labels = 8
-input_coverage_file = '../data/SNAP/coverage_1000.txt'
+figure_letter = 'a'
+#input_coverage_file = '../data/SNAP/coverage_1000.txt'
+
+try:
+	opts, args = getopt.getopt(sys.argv[1:], "hi:o:btunf", ["Help=", "InputFile=", "OutputFile=", "Bottom=", "TruncateTo=", "Units=", "NumLabel=", "FigureLetter="])
+except getopt.GetoptError:
+	print 'Unknown option, call using: python CoveragePlot.py -i <InputFile> -o <OutputFile> -b <BottomOfPlotFloat> -t <TruncateCoverageToPowerOfTwoInt> -u <Units "M" or "K"> -n <NumLabelInt> -f <FigureLetter>'
+	sys.exit(2)
+for opt, arg in opts:
+	if opt == '-h':
+		print 'python CoveragePlot.py -i <InputFile> -o <OutputFile> -b <BottomOfPlotFloat> -t <TruncateCoverageToPowerOfTwoInt> -u <Units "M" or "K"> -n <NumLabelInt> -f <FigureLetter>'
+		sys.exit(2)
+	elif opt in ("-i", "--InputFile"):
+		input_coverage_file = arg
+	elif opt in ("-o", "--OutputFile"):
+		output_file = arg
+	elif opt in ("-i","--Bottom"):
+		bottom = int(arg)
+	elif opt in ("-k", "--TruncateTo"):
+		truncate_to = float(arg)
+	elif opt in ("-j", "--Units"):
+		units = str(arg)
+	elif opt in ("-q", "--NumLabel"):
+		num_labels = int(arg)
+	elif opt in ("-f", "--FigureLetter"):
+		figure_letter = str(arg)
+
+
+# FYI, this is about 10,000X times easier to do by hand (as I did here) than to use a "pre-packaged"
+# solution like, eg. Circleator (http://jonathancrabtree.github.io/Circleator/). Just give that a go and
+# you'll be running back to a matplotlib solution faster than you can say an unsavory four-letter word ;)
+
 
 
 # Helper rotate function
@@ -92,9 +121,15 @@ for angle in np.linspace(0, 360, num_labels, endpoint=False):
 plt.ylim([0, bottom + max_height])
 
 # Figure letter
-ax.text(-.1, 1, 'b)', horizontalalignment='left', verticalalignment='bottom', fontdict=font, transform=ax.transAxes)
-plt.savefig('../Paper/Figs/CoveragePlot.png')
-plt.show()
+font = {'family': 'serif',
+		'color':  'black',
+		'weight': 'normal',
+		'size': 18,
+		}
+ax.text(-.1, 1, '%s)' % figure_letter, horizontalalignment='left', verticalalignment='bottom', fontdict=font, transform=ax.transAxes)
+#plt.savefig('../Paper/Figs/CoveragePlot.png')
+plt.savefig(os.path.abspath(output_file))
+#plt.show()
 
 
 
