@@ -71,19 +71,6 @@ ax.text(x_small+radius_small, 0, r'$A$', horizontalalignment='left', verticalali
 ax.set_xlim(x_big-radius_big-0.2, radius_big+0.2)
 ax.set_ylim(-radius_big-0.3, radius_big+0.3)
 ax.set_aspect('equal')
-#plt.tick_params(
-#	axis='x',          # changes apply to the x-axis
-#	which='both',      # both major and minor ticks are affected
-#	bottom='off',      # ticks along the bottom edge are off
-#	top='off',         # ticks along the top edge are off
-#	labelbottom='off') # labels along the bottom edge are off
-#plt.tick_params(
-#	axis='y',          # changes apply to the x-axis
-#	which='both',      # both major and minor ticks are affected
-#	left='off',      # ticks along the bottom edge are off
-#	top='off',         # ticks along the top edge are off
-#	labelleft='off') # labels along the bottom edge are off
-#ax.text(x_big-radius_big-.6, radius_big+0.4, 'a)', horizontalalignment='left', verticalalignment='bottom', fontdict=font)
 ax.text(-.1, 1, 'a)', horizontalalignment='left', verticalalignment='bottom', fontdict=font, transform=ax.transAxes)
 plt.savefig('../Paper/Figs/ClassicalConceptual.png')
 
@@ -128,7 +115,6 @@ for elem in points:
 	ax.add_patch(descartes.PolygonPatch(elem, fc='k', ec='k', alpha=1))
 
 # Label the points
-#ax.text(0.618, 0.317, r'$A\cap B$', horizontalalignment='left', verticalalignment='bottom', fontdict=font, usetex=True)
 ax.text(radius_small*np.cos(3.1415/2.+3.1415/4.)+x_small, radius_small*np.sin(3.1415/2.+3.1415/4.), r'$A\cap B$', horizontalalignment='right', verticalalignment='bottom', fontdict=font, usetex=True)
 ax.text(x_small+radius_small, 0, r'$A$', horizontalalignment='left', verticalalignment='bottom', fontdict=font, usetex=True)
 
@@ -136,7 +122,6 @@ ax.text(x_small+radius_small, 0, r'$A$', horizontalalignment='left', verticalali
 ax.set_xlim((x_small-radius_small-0.2)/((radius_small+0.2) - (-radius_small-0.2)), (x_small+radius_small+0.2)/((radius_small+0.2) - (-radius_small-0.2)))
 ax.set_ylim(-radius_small-0.2, radius_small+0.2)
 ax.set_aspect('equal')
-#ax.text(x_small-radius_small-0.35, radius_small+0.25, 'b)', horizontalalignment='left', verticalalignment='bottom', fontdict=font)
 ax.text(-.1, 1, 'b)', horizontalalignment='left', verticalalignment='bottom', fontdict=font, transform=ax.transAxes)
 plt.savefig('../Paper/Figs/ContainmentConceptual.png')
 
