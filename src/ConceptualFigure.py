@@ -127,12 +127,12 @@ plt.savefig('../Paper/Figs/ContainmentConceptual.png')
 
 print('Number in intersection when using both sets: %d' % num_int_both)
 print('Number in intersection when using one set: %d' % num_int_single)
-fid = open(os.path.abspath('../Paper/ClassicalConceptual.txt'), 'w')
+fid = open(os.path.abspath('../Paper/Data/ClassicalConceptual.txt'), 'w')
 fid.write("%d" % num_int_both)
 fid.close()
-fid = open(os.path.abspath('../Paper/ContainmentConceptual.txt'), 'w')
+fid = open(os.path.abspath('../Paper/Data/ContainmentConceptual.txt'), 'w')
 fid.write("%d" % num_int_single)
 fid.close()
 
 cmd = 'ls ../Paper/Figs/*.png | xargs -I{} convert {} -trim {}'
-subprocess.check_output(cmd, shell = True)
+subprocess.check_output(cmd, shell=True)

@@ -9,7 +9,7 @@ truncateTo=2
 srcDir="/home/dkoslicki/Dropbox/Repositories/MinHash/src/"
 dataDir="/home/dkoslicki/Dropbox/Repositories/MinHash/data/SNAP/"
 plotDir="/home/dkoslicki/Dropbox/Repositories/MinHash/Paper/Figs/"
-paperDir="/home/dkoslicki/Dropbox/Repositories/MinHash/Paper/"
+paperDir="/home/dkoslicki/Dropbox/Repositories/MinHash/Paper/Data/"
 
 # Make the index, using seed size of 20
 snap-aligner index ${dataDir}PRJNA274798.fa ${dataDir} -s 20 -large
