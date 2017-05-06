@@ -20,3 +20,6 @@ warnings
 shapely
 descartes
 # The C++ program query_per_sequence which depends on jellyfish-2.2.3
+SNAP aligner
+samtools
+convert # via imagemagick

@@ -20,8 +20,8 @@ snap-aligner paired ${dataDir} ${dataDir}4539585.3.sorted.r1.fastq ${dataDir}453
 # Sort the output
 samtools sort --output-fmt sam ${dataDir}aligned.sam > ${dataDir}aligned.sorted.sam
 
-# Windowed coverage information, only use MAPQ quality >= 20
-samtools depth -q 20 -a --reference ${dataDir}PRJNA274798.fa ${dataDir}aligned.sorted.sam | python ${srcDir}GetCoverage.py $windowSize /dev/fd/0 ${dataDir}coverage_${windowSize}.txt
+# Windowed coverage information, only use MAPQ quality >= 10
+samtools depth -q 10 -a --reference ${dataDir}PRJNA274798.fa ${dataDir}aligned.sorted.sam | python ${srcDir}GetCoverage.py $windowSize /dev/fd/0 ${dataDir}coverage_${windowSize}.txt
 
 # Make the plot
 python ${srcDir}CoveragePlot.py -i ${dataDir}coverage_${windowSize}.txt -o ${plotDir}CoveragePlot.png -t ${truncateTo}
@@ -34,4 +34,4 @@ sed -n 4p ${dataDir}alignment-stats.txt | cut -d' ' -f6 > ${paperDir}NumReadsAli
 echo $windowSize > ${paperDir}WindowSize.txt
 echo truncateTo > ${paperDir}TruncateTo.txt
 # Save average coverage
-cat ${dataDir}coverage_${windowSize}.txt | cut -f 4 | awk '{sum+=$1}END{print sum / NR}' > ${paperDir}MeanCoverage.txt
+cat ${dataDir}coverage_${windowSize}.txt | cut -f 4 | awk '{sum+=$1}END{printf "%1.3f", sum / NR}' > ${paperDir}MeanCoverage.txt

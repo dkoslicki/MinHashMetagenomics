@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.16 (TeX Live 2015/Debian) (preloaded format=pdflatex 2017.2.17)  6 MAY 2017 13:32
+This is pdfTeX, Version 3.14159265-2.6-1.40.16 (TeX Live 2015/Debian) (preloaded format=pdflatex 2017.2.17)  6 MAY 2017 14:09
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -597,21 +597,16 @@ Package pdftex.def Info: Figs/SimulatedBiologicalData.png used on input line 17
 LaTeX Warning: `!h' float specifier changed to `!ht'.
 
 [3 <./Figs/TrueVsEstimate.png> <./Figs/ContainmentTrueVsEstimate.png>]
-
-LaTeX Warning: Citation `zaharia2011faster' on page 4 undefined on input line 1
-85.
-
-
-LaTeX Warning: Reference `fig:ViralCoverage.png' on page 4 undefined on input l
-ine 185.
-
-<Figs/CoveragePlot.png, id=122, 512.3943pt x 471.9231pt>
+(./NumReadsAligned.txt) (./WindowSize.txt) (./MeanCoverage.txt)
+<Figs/CoveragePlot.png, id=124, 492.1587pt x 466.1415pt>
 File: Figs/CoveragePlot.png Graphic file (type png)
 
 <use Figs/CoveragePlot.png>
 Package pdftex.def Info: Figs/CoveragePlot.png used on input line 189.
-(pdftex.def)             Requested size: 234.87749pt x 216.32394pt.
-
+(pdftex.def)             Requested size: 234.87749pt x 222.45796pt.
+ (./NumReadsAligned.txt) (./WindowSize.txt)
+(./MeanCoverage.txt) (./NumReadsAligned.txt) (./WindowSize.txt)
+(./MeanCoverage.txt)
 
 LaTeX Warning: `!h' float specifier changed to `!ht'.
 
@@ -631,15 +626,15 @@ changed.
 (rerunfilecheck)             Checksum: 6A90DDCAE0C803F32DADE5EABD2F82C0;679.
 
 
-LaTeX Warning: There were undefined references.
+LaTeX Warning: Label(s) may have changed. Rerun to get cross-references right.
 
 Package atveryend Info: Empty hook `AtVeryVeryEnd' on input line 203.
  ) 
 Here is how much of TeX's memory you used:
- 9076 strings out of 493029
- 136044 string characters out of 6136234
- 225389 words of memory out of 5000000
- 12217 multiletter control sequences out of 15000+600000
+ 9097 strings out of 493029
+ 136392 string characters out of 6136234
+ 225801 words of memory out of 5000000
+ 12216 multiletter control sequences out of 15000+600000
  12352 words of font info for 48 fonts, out of 8000000 for 9000
  1302 hyphenation exceptions out of 8191
  36i,6n,39p,1539b,390s stack positions out of 5000i,500n,10000p,200000b,80000s
@@ -655,10 +650,10 @@ msfonts/cm/cmsy6.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts
 /cm/cmsy8.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmt
 i10.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmti9.pfb
 ></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmtt9.pfb>
-Output written on ImprovedMinHashForMetagenomics.pdf (6 pages, 384716 bytes).
+Output written on ImprovedMinHashForMetagenomics.pdf (6 pages, 387407 bytes).
 PDF statistics:
- 194 PDF objects out of 1000 (max. 8388607)
- 150 compressed objects within 2 object streams
- 36 named destinations out of 1000 (max. 500000)
+ 202 PDF objects out of 1000 (max. 8388607)
+ 157 compressed objects within 2 object streams
+ 37 named destinations out of 1000 (max. 500000)
  166 words of extra memory for PDF output out of 10000 (max. 10000000)
 

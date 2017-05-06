@@ -8,7 +8,7 @@ bottom = 8
 truncate_to = 2  # this needs to be a power of two since we are plotting on a sqrt scale
 units = 'M'
 num_labels = 8
-figure_letter = 'a'
+figure_letter = ''
 #input_coverage_file = '../data/SNAP/coverage_1000.txt'
 
 try:
@@ -126,7 +126,9 @@ font = {'family': 'serif',
 		'weight': 'normal',
 		'size': 18,
 		}
-ax.text(-.1, 1, '%s)' % figure_letter, horizontalalignment='left', verticalalignment='bottom', fontdict=font, transform=ax.transAxes)
+if figure_letter != '':
+	ax.text(-.1, 1, '%s)' % figure_letter, horizontalalignment='left', verticalalignment='bottom', fontdict=font, transform=ax.transAxes)
+
 #plt.savefig('../Paper/Figs/CoveragePlot.png')
 plt.savefig(os.path.abspath(output_file))
 #plt.show()
