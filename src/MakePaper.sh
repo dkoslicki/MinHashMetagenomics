@@ -1,3 +1,4 @@
+#!/bin/bash
 # This script will run all the computations, save the output, automatically populate the LaTeX file, and render the results
 # Warning, this can take quite a while to run...
 
