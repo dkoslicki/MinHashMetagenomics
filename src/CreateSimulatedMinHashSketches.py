@@ -5,6 +5,10 @@ import screed
 import khmer
 import MinHash as MH
 import bz2
+from multiprocessing.dummy import Pool
+import multiprocessing
+from itertools import *
+num_threads = multiprocessing.cpu_count()
 
 prime = 9999999999971  # taking hashes mod this prime
 ksize = 11  # k-mer length
@@ -17,9 +21,12 @@ for line in fid.readlines():
 
 fid.close()
 
+
+#genome_sketches = list()
+#for genome in file_names:
+
 # Get genome k-mers and also make min hash sketches
-genome_sketches = list()
-for genome in file_names:
+def make_minhash(genome, max_h, prime, ksize):
 	kmers = set()
 	name = os.path.basename(genome)
 	MHS = MH.CountEstimator(n=max_h, max_prime=prime, ksize=ksize, save_kmers='y')
@@ -36,12 +43,20 @@ for genome in file_names:
 				MHS.add(kmer_rev)
 	MHS._true_num_kmers = len(kmers)
 	MHS.input_file_name = os.path.basename(genome)
-	genome_sketches.append(MHS)
+	#genome_sketches.append(MHS)
 	# export the kmers
 	fid = bz2.BZ2File(os.path.abspath(os.path.join('../data/Genomes/', name + ".kmers.bz2")), 'w')
 	for kmer in kmers:
 		fid.write("%s\n" % kmer)
 	fid.close()
+	return MHS
+
+
+def make_minhash_star(arg):
+	return make_minhash(*arg)
+
+pool = Pool(processes=num_threads)
+genome_sketches = pool.map(make_minhash_star, zip(file_names, repeat(max_h), repeat(prime), repeat(ksize)))
 
 # Export all the sketches
 base_names = [os.path.basename(item) for item in file_names]
