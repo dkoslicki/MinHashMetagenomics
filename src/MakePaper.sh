@@ -1,8 +1,19 @@
 #!/bin/bash
 # This script will run all the computations, save the output, automatically populate the LaTeX file, and render the results
 # Warning, this can take quite a while to run...
+dataDir="../data"
+mkdir -p ${dataDir}/SNAP
+mkdir -p ${dataDir}/Viruses
 
 # Need to package and automate the downloading of all the data I'm using
+wget -nd http://files.cgrb.oregonstate.edu/Koslicki_Lab/MinHashContainment/4539585.3.sorted.r1.fastq.tar.gz -P ${dataDir}/Snap/
+wget -nd http://files.cgrb.oregonstate.edu/Koslicki_Lab/MinHashContainment/4539585.3.sorted.r2.fastq.tar.gz -P ${dataDir}/Snap/
+wget -nd http://files.cgrb.oregonstate.edu/Koslicki_Lab/MinHashContainment/ViralGenomes.tar.gz -P ${dataDir}
+tar -xzf ${dataDir}/Snap/4539585.3.sorted.r1.fastq.tar.gz
+tar -xzf ${dataDir}/Snap/4539585.3.sorted.r2.fastq.tar.gz
+tar -xzf ${dataDir}/ViralGenomes.tar.gz
+mv ${dataDir}/Genomes/* ${dataDir}/Viruses
+rmdir ${dataDir}/Genomes
 
 # Make the conceptual figure
 python ConceptualFigure.py
