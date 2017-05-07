@@ -74,7 +74,6 @@ for i_size in i_range:
 		(len(kmers2) + len_kmers_1 - len(kmers2) * containment_est)
 
 	containment_jaccards[it] = containment_est_jaccard
-
 	it += 1
 
 font = {'family': 'serif',
