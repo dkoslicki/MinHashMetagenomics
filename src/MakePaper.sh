@@ -3,11 +3,13 @@
 # Warning, this can take quite a while to run...
 srcDir=`pwd`
 dataDir="../data"
+genSimLoc="/home/dkoslicki/Documents/GemSIM_v1.6/GemReads.py"
 mkdir -p ${dataDir}/SNAP
 mkdir -p ${dataDir}/Viruses
 mkdir -p "../Paper"
 mkdir -p "../Paper/Figs"
 mkdir -p "../Paper/Data"
+mkdir -p ${dataDir}/SimulatedMetagenomes
 
 # Need to package and automate the downloading of all the data I'm using
 echo "Downloading Data"
@@ -38,8 +40,8 @@ python JaccardVsContainment.py
 # Run the simulated biological data computations
 echo "Creating simulated biological data figures"
 python CreateSimulatedMinHashSketches.py
-python SimulatedBiologicalDataSmall.py
-python SimulatedBiologicalData.py
+python SimulatedBiologicalDataSmall.py ${genSimLoc}
+python SimulatedBiologicalData.py ${genSimLoc}
 
 # Run the real biological data computations
 echo "Creating real data figure(s)"

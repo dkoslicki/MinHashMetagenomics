@@ -14,13 +14,15 @@ import bz2
 import tempfile
 import matplotlib.pyplot as plt
 from multiprocessing.dummy import Pool
+import sys
 
 num_threads = 8
 num_genomes = 20
 num_reads = 10000
 num_replicates = 20
 python_loc = "python"
-gen_sim_loc = "/home/dkoslicki/Documents/GemSIM_v1.6/GemReads.py"
+#gen_sim_loc = "/home/dkoslicki/Documents/GemSIM_v1.6/GemReads.py"
+gen_sim_loc = sys.argv[1]
 prime = 9999999999971  # taking hashes mod this prime
 p = 0.001  # false positive rate for the bloom filter
 ksize = 11  # k-mer length
