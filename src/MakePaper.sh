@@ -1,6 +1,7 @@
 #!/bin/bash
 # This script will run all the computations, save the output, automatically populate the LaTeX file, and render the results
 # Warning, this can take quite a while to run...
+srcDir=`pwd`
 dataDir="../data"
 mkdir -p ${dataDir}/SNAP
 mkdir -p ${dataDir}/Viruses
@@ -21,6 +22,10 @@ tar -xzf ${dataDir}/ViralGenomes.tar.gz -C ${dataDir}
 mv ${dataDir}/Genomes/* ${dataDir}/Viruses
 rmdir ${dataDir}/Genomes
 tar -xzf ${dataDir}/Genomes.tar.gz -C ${dataDir}
+# Create the file names file
+cd ${dataDir}/Genomes
+find `pwd` -name "*.fna" > FileNames.txt
+cd ${srcDir}
 
 # Make the conceptual figure
 echo "Creating conceptual figure"
