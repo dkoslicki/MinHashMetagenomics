@@ -30,17 +30,20 @@ find `pwd` -name "*.fna" > FileNames.txt
 cd ${srcDir}
 
 # Make the conceptual figure
-echo "Creating conceptual figure"
+echo "Creating conceptual figure (ConceptualFigure.py)"
 python ConceptualFigure.py
 
 # Run the synthetic data computations
-echo "Creating synthetic data figures"
+echo "Creating synthetic data figures (JaccardVsContainment.py)"
 python JaccardVsContainment.py
 
 # Run the simulated biological data computations
 echo "Creating simulated biological data figures"
+echo "Pre-computing bacterial genome sketches (CreateSimulatedMinHashSketches.py)"
 python CreateSimulatedMinHashSketches.py
+echo "Creating small simulated metagenomes and computed jaccard indicies and estimates (SimulatedBiologicalDataSmall.py)"
 python SimulatedBiologicalDataSmall.py ${genSimLoc}
+echo "Creating large simulated metagenomes and computed jaccard indicies and estimates (SimulatedBiologicalData.py)"
 python SimulatedBiologicalData.py ${genSimLoc}
 
 # Run the real biological data computations
