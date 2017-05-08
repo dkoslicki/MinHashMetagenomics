@@ -14,9 +14,10 @@ import bz2
 import tempfile
 import matplotlib.pyplot as plt
 from multiprocessing.dummy import Pool
+import multiprocessing
 import sys
 
-num_threads = 8
+num_threads = multiprocessing.cpu_count()
 num_genomes = 20
 num_reads = 10000
 num_replicates = 20
