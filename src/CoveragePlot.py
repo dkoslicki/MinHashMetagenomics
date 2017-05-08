@@ -16,7 +16,6 @@ try:
 except getopt.GetoptError:
 	print 'Unknown option, call using: python CoveragePlot.py -i <InputFile> -o <OutputFile> -b <BottomOfPlotFloat> -t <TruncateCoverageToPowerOfTwoInt> -u <Units "M" or "K"> -n <NumLabelInt> -f <FigureLetter>'
 	sys.exit(2)
-print(opts)
 for opt, arg in opts:
 	if opt == '-h':
 		print 'python CoveragePlot.py -i <InputFile> -o <OutputFile> -b <BottomOfPlotFloat> -t <TruncateCoverageToPowerOfTwoInt> -u <Units "M" or "K"> -n <NumLabelInt> -f <FigureLetter>'

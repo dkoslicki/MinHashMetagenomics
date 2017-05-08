@@ -5,7 +5,9 @@ set -e
 # window size for coverage plot
 windowSize=10
 # truncate the coverage plot to the following coverage (must be a power of two)
-truncateTo=64
+truncateTo=8
+# bottom tells where to start the inner ring of the plot
+bottom=35
 srcDir=`pwd`
 dataDir="../data/SNAP/"
 plotDir="../Paper/Figs/"
@@ -19,16 +21,16 @@ metagenomer2=${dataDir}4539585.3.sorted.r1.fastq
 snap-aligner index ${foundGenome} ${dataDir} -s 16 -large
 
 # Align the paired reads, only output aligned, allow larger edit distance to get more candidate alignment locations
-snap-aligner paired ${dataDir} ${metagenomer1} ${metagenomer2} -F a -hp -mrl 40 -xf 1.2 -d 28 -o -sam ${dataDir}aligned.sam > ${dataDir}alignment-stats.txt
+snap-aligner paired ${dataDir} ${metagenomer1} ${metagenomer2} -F a -hp -mrl 40 -xf 1.2 -d 40 -o -sam ${dataDir}aligned.sam > ${dataDir}alignment-stats.txt
 
 # Sort the output
 samtools sort --output-fmt sam ${dataDir}aligned.sam > ${dataDir}aligned.sorted.sam
 
-# Windowed coverage information, only use MAPQ quality >= 10
-samtools depth -q 10 -a --reference ${foundGenome} ${dataDir}aligned.sorted.sam | python GetCoverage.py $windowSize /dev/fd/0 ${dataDir}coverage_${windowSize}.txt
+# Windowed coverage information, only use MAPQ quality >= 20
+samtools depth -q 20 -a --reference ${foundGenome} ${dataDir}aligned.sorted.sam | python GetCoverage.py $windowSize /dev/fd/0 ${dataDir}coverage_${windowSize}.txt
 
 # Make the plot
-python CoveragePlot.py -i ${dataDir}coverage_${windowSize}.txt -o ${plotDir}CoveragePlot.png -t ${truncateTo} -u bp
+python CoveragePlot.py -i ${dataDir}coverage_${windowSize}.txt -o ${plotDir}CoveragePlot.png -t ${truncateTo} -u bp -b ${bottom}
 
 # Trim the white space in the figure
 convert ${plotDir}CoveragePlot.png -trim ${plotDir}CoveragePlot.png
