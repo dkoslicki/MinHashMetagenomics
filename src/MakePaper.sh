@@ -28,6 +28,9 @@ tar -xzf ${dataDir}/Genomes.tar.gz -C ${dataDir}
 cd ${dataDir}/Genomes
 find `pwd` -name "*.fna" > FileNames.txt
 cd ${srcDir}
+cd ${dataDir}/Viruses
+find `pwd` -name "*.fna" > FileNames.txt
+cd ${srcDir}
 
 # Make the conceptual figure
 echo "Creating conceptual figure (ConceptualFigure.py)"
@@ -49,7 +52,7 @@ python SimulatedBiologicalData.py ${genSimLoc}
 # Run the real biological data computations
 echo "Creating real data figure(s)"
 python CreateVirusesMinHashSketches.py
-# NEED TO ADD SCRIPT TO COMPUTE THE JELLYFISH BLOOM FILTER metagenome_bloom_filter
+python MakeMetagenomeBloom.py
 python QueryVirusSketches.py  # Need to make it automatically spit out the top guy
 # Need to automate the downloading of this top guy and the poplation of the MakeCoveragePlot.sh target
 chmod +x MakeCoveragePlot.sh

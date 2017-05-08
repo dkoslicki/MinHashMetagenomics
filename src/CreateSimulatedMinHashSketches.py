@@ -8,8 +8,8 @@ import bz2
 from multiprocessing.dummy import Pool
 import multiprocessing
 from itertools import *
-num_threads = multiprocessing.cpu_count()
 
+num_threads = multiprocessing.cpu_count()
 prime = 9999999999971  # taking hashes mod this prime
 ksize = 11  # k-mer length
 max_h = 5000  # max number of hashes in sketch
