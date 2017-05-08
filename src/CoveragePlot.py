@@ -12,10 +12,11 @@ figure_letter = ''
 #input_coverage_file = '../data/SNAP/coverage_1000.txt'
 
 try:
-	opts, args = getopt.getopt(sys.argv[1:], "hi:o:btunf", ["Help=", "InputFile=", "OutputFile=", "Bottom=", "TruncateTo=", "Units=", "NumLabel=", "FigureLetter="])
+	opts, args = getopt.getopt(sys.argv[1:], "hi:o:b:t:u:n:f:", ["Help=", "InputFile=", "OutputFile=", "Bottom=", "TruncateTo=", "Units=", "NumLabel=", "FigureLetter="])
 except getopt.GetoptError:
 	print 'Unknown option, call using: python CoveragePlot.py -i <InputFile> -o <OutputFile> -b <BottomOfPlotFloat> -t <TruncateCoverageToPowerOfTwoInt> -u <Units "M" or "K"> -n <NumLabelInt> -f <FigureLetter>'
 	sys.exit(2)
+print(opts)
 for opt, arg in opts:
 	if opt == '-h':
 		print 'python CoveragePlot.py -i <InputFile> -o <OutputFile> -b <BottomOfPlotFloat> -t <TruncateCoverageToPowerOfTwoInt> -u <Units "M" or "K"> -n <NumLabelInt> -f <FigureLetter>'
@@ -24,17 +25,16 @@ for opt, arg in opts:
 		input_coverage_file = arg
 	elif opt in ("-o", "--OutputFile"):
 		output_file = arg
-	elif opt in ("-i","--Bottom"):
+	elif opt in ("-b", "--Bottom"):
 		bottom = int(arg)
-	elif opt in ("-k", "--TruncateTo"):
-		truncate_to = float(arg)
-	elif opt in ("-j", "--Units"):
+	elif opt in ("-t", "--TruncateTo"):
+		truncate_to = int(arg)
+	elif opt in ("-u", "--Units"):
 		units = str(arg)
-	elif opt in ("-q", "--NumLabel"):
+	elif opt in ("-n", "--NumLabel"):
 		num_labels = int(arg)
 	elif opt in ("-f", "--FigureLetter"):
 		figure_letter = str(arg)
-
 
 # FYI, this is about 10,000X times easier to do by hand (as I did here) than to use a "pre-packaged"
 # solution like, eg. Circleator (http://jonathancrabtree.github.io/Circleator/). Just give that a go and
@@ -79,17 +79,20 @@ genome_locations = np.floor(np.linspace(0, genome_length, num_labels))
 labels = list()
 if units == 'K':
 	for i in range(len(genome_locations)):
-		labels.append('%.1f Kb' % (genome_locations[i] / float(1000)))
+		labels.append('%.1f Kbp' % (genome_locations[i] / float(1000)))
 elif units == 'M':
 	for i in range(len(genome_locations)):
-		labels.append('%.1f Mb' % (genome_locations[i] / float(1000000)))
+		labels.append('%.1f Mbp' % (genome_locations[i] / float(1000000)))
+elif units == 'bp':
+	for i in range(len(genome_locations)):
+		labels.append('%d bp' % genome_locations[i])
 else:
-	raise Exception('Unknown unit type. Pick one of "K" or "M"')
+	raise Exception('Unknown unit type. Pick one of "bp", "K" or "M"')
 
 labels.reverse()  # make labels go clockwise
 labels = rotate(labels, int(np.floor(len(labels) / float(4))))  # rotate 90 degrees counter clockwise
 labels.insert(0, labels[-1])  # start at 0
-labels = labels[0:8]  # make correct length
+labels = labels[0:num_labels]  # make correct length
 
 
 theta = np.linspace(0.0, 2 * np.pi, N, endpoint=False)  # location of bars (evenly across 0->2*Pi)

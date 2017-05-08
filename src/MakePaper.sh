@@ -53,8 +53,7 @@ python SimulatedBiologicalData.py ${genSimLoc}
 echo "Creating real data figure(s)"
 python CreateVirusesMinHashSketches.py
 python MakeMetagenomeBloom.py
-python QueryVirusSketches.py  # Need to make it automatically spit out the top guy
-# Need to automate the downloading of this top guy and the poplation of the MakeCoveragePlot.sh target
+python QueryVirusSketches.py
 chmod +x MakeCoveragePlot.sh
 ./MakeCoveragePlot.sh
 

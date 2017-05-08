@@ -23,4 +23,7 @@ for line in open(input_file, 'r').readlines():
 		val = 0
 	it += 1
 
+if it < window_size:
+	raise Exception("Window size is too large: genome is only %d bp long" % it)
+
 out_fid.close()
