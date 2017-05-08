@@ -11,7 +11,7 @@ mkdir -p "../Paper/Figs"
 mkdir -p "../Paper/Data"
 mkdir -p ${dataDir}/SimulatedMetagenomes
 
-# Need to package and automate the downloading of all the data I'm using
+# Download all of the data I'm using
 echo "Downloading Data"
 wget -nd http://files.cgrb.oregonstate.edu/Koslicki_Lab/MinHashContainment/4539585.3.sorted.r1.fastq.tar.gz -P ${dataDir}/SNAP/
 wget -nd http://files.cgrb.oregonstate.edu/Koslicki_Lab/MinHashContainment/4539585.3.sorted.r2.fastq.tar.gz -P ${dataDir}/SNAP/
