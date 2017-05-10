@@ -158,10 +158,117 @@ Definitions, derivation of mathematical results here.
 \label{section:ChernoffBounds}
 \subsection{Time and space complexity}
 \begin{enumerate}
-\item Chernoff bound estimates
-\item comparison of number of hashes required for same accuracy
-\item time complexity
-\item space complexity (all with examples of the numbers in practice).
+\item Chernoff bound estimates:\\
+
+%%%%%%%%%%%%%%%%%%%%%%%%Chernoff Bounds%%%%%%%%%%%%%%%
+Chernoff bounds :
+ $X r.v.\quad S.t\quad E(X)=\mu,\quad 0<\delta<1$ then
+\begin{align*}
+&P(X\leq(1-\delta)\mu\leq e^{-\delta^2\mu/2},\quad P(X\geq(1+\delta)\mu)\leq e^{-\delta^2\mu/3} \\
+\Rightarrow\quad &P(\left|\frac{X-\mu}{\mu}\right|\geq\delta)\leq2e^{-\delta^2\mu/3}
+\end{align*}
+In the MinHash technique with different k hash functions, define
+$$X_i=\left\{
+\begin{array}{lll}
+1 &h^{(i)}_{min}(A)=h^{(i)}_{min}(B)\\
+0& o.w
+\end{array}
+\right.$$
+Which give 
+$E(X_i)= \dfrac{|A\cap B|}{|A\cup B|}=J(A,B)$.
+Hence for 
+$X^k=\sum\limits_{i=0}^k X_i$,
+the expectation of $X^k$ would be $kJ(A,B)$
+$[E(X^k)=k.J(A,B)]$. Therefore
+$$P\left( \left|\dfrac{\frac{X}{k}-J(A,B)}{J(A,B)}\right|\geq\delta\right)\leq 2e^{-\delta^2kJ(A,B)/3}$$
+Now let $k_J$ be the number of hash functions and $t$ be the confident of the chernoff bound( $k_J:=k,\quad t:=2e^{-\delta^2k_JJ(A,B)/3}$), therefore
+$$k_J=\dfrac{-3\ln(t/2)|A\cup B|}{\delta^2 |A\cap B|}$$
+In our new approach, for a bloom filter $(B)_b$ of a set $B$ with false positive rate of $p$, let 
+$$X_i=\left\{
+\begin{array}{ll}
+1&\text{ if } a\in(B)_b\text{ for } a=argmin\{h^{(i)}{(e)}:e\in A\}\\
+0& o.w
+\end{array}
+\right.$$
+
+i.e. $X_i$ will determine membership of the element of $A$ with the smallest image under hash function $h^{(i)}$ in $B$.(So take elem of $A$ that hashes to smallest value under $h^{(i)}$ and check for memberships in B). Therefore $E(X_i)=\dfrac{|A\cap B|}{|A|}+p$. Let 
+$X^k=\sum\limits_{i=0}^kX_i$, hence $ E(X^k)=k\dfrac{|A\cap B|}{|A|}+kp$. Define 
+$c:= \dfrac{|A\cap B|}{|A|}$,  $J:= \dfrac{|A\cap B|}{|A\cup B|} $ and
+$\mu:=k.c+k.p$ (i.c $\mu=E(X^k)$). Then
+\begin{align*}
+P\left(
+\left|\dfrac{\left(\frac{X^k}{k}-p\right)-c}{c}\right|\geq \delta\right)
+&=P\left(X^k\geq\left(1+\dfrac{kc\delta}{\mu}\right)\mu\right) +P\left(X^k\leq \left(1-\dfrac{kc\delta}{\mu}\right)\mu\right)\\
+&=P\left( X^k\geq\left( 1+\left(\dfrac{c}{c+p}\right)\delta\right)\mu\right) + P\left(X^k\leq\left(1-\left(\dfrac{c}{c+p}\right)\delta\right)\mu\right)\\
+&\leq 2e^{-\left(\frac{c}{c+p}\right)^2\delta^2k(c+p)/3}
+\end{align*}
+So for $t:=2e^{-\left(\frac{c}{c+p}\right)^2\delta^2k(c+p)/3}$, the desired Chernoff bound, let $k_c=k$ be the number of hash functions which is required to achieve this bound. Then 
+$$k_c=\dfrac{-3(c+p)\ln(t/2)}{c^2\delta^2}$$
+%%%% Fraction of sample comprised of genome A
+Define $c_{est}:=\frac{X^k}{k}-p$. Similarly 
+\begin{align*}
+ P\left(
+\left|\dfrac{\frac{|A|c_{est}}{|B|}-\frac{|A\cap B|}{|B|}}{\frac{|A\cap B|}{|B|}}\right|\geq \delta\right)
+&=P\left(
+\left|\dfrac{\frac{|A|c_{est}}{|B|}-\frac{|A|c}{|B|}}{\frac{|A|c}{|B|}}\right|\geq \delta\right)\\
+&=P\left(
+\left|\dfrac{\left(\frac{X^k}{k}-p\right)-c}{c}\right|\geq \delta\right)\\
+&\leq 2e^{-\left(\frac{c}{c+p}\right)^2\delta^2k(c+p)/3}
+\end{align*}
+%%%% Jaccard estimation
+For $c_{est}$, our estimation of containment, define $J_{est}:=\frac{|A|c_{est}}{|A|+|B|-|A|c_{est}}$. Therefore,
+\begin{align*}
+P\left(\left|\frac{J_{est}-J}{J}\right|\geq \delta\right) &= P(J_{est}\geq (1+\delta)J)+P(J_{est}\leq (1-\delta)J)\\
+&= P\left(\frac{|A|c_{est}}{|A|+|B|-|A|c_{est}}\geq (1+\delta)J\right)+P\left(\frac{|A|c_{est}}{|A|+|B|-|A|c_{est}}\leq (1-\delta)J\right)\\
+&= P\left(c_{est}\geq\frac{ (1+\delta)J(|A|+|B|)}{|A|(1+(1+\delta)J)} \right)+P\left(c_{est}\leq\frac{ (1-\delta)J(|A|+|B|)}{|A|(1+(1-\delta)J)} \right)\\
+&= P\left(c_{est}\geq\frac{ (1+\delta)(\frac{|A|c}{|A\cup B|})(|A|+|B|)}{|A|(\frac{|A\cup B|+(1+\delta)|A \cap B|}{|A\cup B|})} \right)+P\left(c_{est}\leq\frac{ (1-\delta)(\frac{|A|c}{|A\cup B|})(|A|+|B|)}{|A|(\frac{|A\cup B|+(1-\delta)|A \cap B|}{|A\cup B|})} \right)\\
+&= P\left(c_{est}\geq\frac{ (1+\delta)(|A|+|B|)}{|A\cup B|+(1+\delta)|A \cap B|} c \right)+P\left(c_{est}\leq\frac{ (1-\delta)(|A|+|B|)}{|A\cup B|+(1-\delta)|A \cap B|} c \right)\\
+&= P\left(c_{est}\geq\frac{ (1+\delta)(|A \cup B|+|A \cap B|)}{|A\cup B|+(1+\delta)|A \cap B|} c \right)+P\left(c_{est}\leq\frac{ (1-\delta)(|A \cup B|+|A \cap B|)}{|A\cup B|+(1-\delta)|A \cap B|} c \right)\\
+&= P\left(c_{est}\geq\left(1+\frac{\delta |A \cup B|}{|A\cup B|+(1+\delta)|A \cap B|}\right) c \right)\\
+&+P\left(c_{est}\leq\left(1-\frac{ \delta |A \cup B|}{|A\cup B|+(1-\delta)|A \cap B|}\right) c \right)\\
+\end{align*}
+define $\delta\rq{}= \frac{\delta |A \cup B|}{|A\cup B|+(1+\delta)|A \cap B|}$ and $\delta\rq{}\rq{}=\frac{\delta |A \cup B|}{|A\cup B|+(1-\delta)|A \cap B|}$. Therefore,
+\begin{align*}
+P\left(\left|\frac{J_{est}-J}{J}\right|\geq \delta\right) &\leq e^{-(\frac{c}{c+p})^2\delta\rq{}k(c+p)/3}+e^{-(\frac{c}{c+p})^2\delta\rq{}\rq{}k(c+p)/2}\\
+&\leq 2e^{-(\frac{c}{c+p})^2\delta\rq{}k(c+p)/3}
+\end{align*}
+Let $k_{est}:=k$ be the number of hash functions which is required to achieve a desire confident $t:=2e^{-(\frac{c}{c+p})^2\delta\rq{}k(c+p)/3}$. Therefore
+ $$k_{est} =\frac{-3(c+p)ln(t/2)\left(|A\cup B|+(1+\delta)|A\cap B|\right)^2}{c^2\delta^2|A\cup B|^2 } $$
+%%%%%%%%%%%%%%%%%% Comparison of #hashes%%%%%%%%%%%%%%%%%%
+\item comparison of number of hashes required for same accuracy:\\
+By comparing the ratio of the number of hash functions required for the Jaccard approach and the containment approach (our new approach), 
+$$\dfrac{k_J}{k_c}=\dfrac{-2\ln(t/2)}{\delta^2 J}.\dfrac{c^2\delta^2}{-2(c+p)\ln(t/2)}=\dfrac{c}{J}\left(\dfrac{c}{c+p}\right)$$
+Where $ \dfrac{c}{c+p}\geq.90$ ($p=0.01,\quad c\geq0.01$). Hence,
+$$\dfrac{k_J}{k_c}\geq .9\frac{c}{J}=.9 \dfrac{|A\cup B|}{|A|}=.9 \dfrac{(|A|+|B|-|A\cap B|)}{|A|}\geq .9 \dfrac{|B|}{|A|}$$
+Therefore to obtain a specific accuracy and particular Chernoff boundary, containment approach needs $\frac{|B|}{|A|}$ times fewer hash functions than the Jaccard approach.($k_J \approx\frac{|B|}{|A|}k_c$)\\
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{figure}[!h]%
+\begin{center}
+\includegraphics[width=3.0in,trim={0 0 0 0in},clip]{Figs/1010.png}%
+\hspace{1ex}
+\includegraphics[width=3.0in,trim={0 0 0 0in},clip]{Figs/1090.png}\\
+\includegraphics[width=3.0in,trim={0 0 0 0in},clip]{Figs/20010.png}%
+\hspace{1ex}
+\includegraphics[width=3.0in,trim={0 0 0 0in},clip]{Figs/20090.png}
+\end{center}
+\caption{Explanation+ example }
+\label{fig:DeltaK}%
+\end{figure}
+%%%%%%%%%%%%%%%%%%% Time Complexity%%%%%%%%%%%%%%%%%%%%
+\item time complexity:\\
+Time estimate: both approaches linear in the \# of hashes. (So containment approach m times faster)
+%%%%%%%%%%%%%%%%%% Space Complexity%%%%%%%%%%%%%%%%%%%%%
+\item space complexity (all with examples of the numbers in practice):\\
+Space estimate:
+\begin{align*}
+Jaccard &: \approx 48 \text{ bits/hash seen in practice}  \Rightarrow 48 k_c.m.(\#genomes)=: S_J\\
+Containment &:  48 k_c.(\#genomes)+1.44\log_2(1/p).|B| \\
+&\cong 48 k_c.(\#genomes)+9.6|B| = 48 k_c(\#genomes)+ 9.6. |A|.m=: S_c
+\end{align*}
+
+$\dfrac{S_c}{S_J}=\dfrac{1}{5}\dfrac{|A|}{(\#genomes).k_c}+\dfrac{1}{m}$.
+  Typically \#genomes $\approx 30000, \quad |A|\approx 4300000, \quad k_c=500, \quad m= 200$ 
+$\Rightarrow \dfrac{S_c}{S_J}\cong0.06$, so our approach achtually uses less space. Even through the bloom filter is large, we have m times fewer hashes per genome and $\approx 30000 $ genomes.
 \end{enumerate}
 
 
