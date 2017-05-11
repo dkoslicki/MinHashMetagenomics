@@ -179,7 +179,7 @@ $E(X_i)= \dfrac{|A\cap B|}{|A\cup B|}=J(A,B)$.
 Hence for 
 $X^k=\sum\limits_{i=0}^k X_i$,
 the expectation of $X^k$ would be $kJ(A,B)$
-$[E(X^k)=k.J(A,B)]$. Therefore
+$[E(X^k)=k J(A,B)]$. Therefore
 $$P\left( \left|\dfrac{\frac{X}{k}-J(A,B)}{J(A,B)}\right|\geq\delta\right)\leq 2e^{-\delta^2kJ(A,B)/3}$$
 Now let $k_J$ be the number of hash functions and $t$ be the confident of the chernoff bound( $k_J:=k,\quad t:=2e^{-\delta^2k_JJ(A,B)/3}$), therefore
 $$k_J=\dfrac{-3\ln(t/2)|A\cup B|}{\delta^2 |A\cap B|}$$
@@ -237,8 +237,8 @@ Let $k_{est}:=k$ be the number of hash functions which is required to achieve a 
 %%%%%%%%%%%%%%%%%% Comparison of #hashes%%%%%%%%%%%%%%%%%%
 \item comparison of number of hashes required for same accuracy:\\
 By comparing the ratio of the number of hash functions required for the Jaccard approach and the containment approach (our new approach), 
-$$\dfrac{k_J}{k_c}=\dfrac{-2\ln(t/2)}{\delta^2 J}.\dfrac{c^2\delta^2}{-2(c+p)\ln(t/2)}=\dfrac{c}{J}\left(\dfrac{c}{c+p}\right)$$
-Where $ \dfrac{c}{c+p}\geq.90$ ($p=0.01,\quad c\geq0.01$). Hence,
+$$\dfrac{k_J}{k_c}=\dfrac{-2\ln(t/2)}{\delta^2 J} \dfrac{c^2\delta^2}{-2(c+p)\ln(t/2)}=\dfrac{c}{J}\left(\dfrac{c}{c+p}\right)$$
+When $ \dfrac{c}{c+p}\geq.90$ ($p=0.01,\quad c\geq0.01$),
 $$\dfrac{k_J}{k_c}\geq .9\frac{c}{J}=.9 \dfrac{|A\cup B|}{|A|}=.9 \dfrac{(|A|+|B|-|A\cap B|)}{|A|}\geq .9 \dfrac{|B|}{|A|}$$
 Therefore to obtain a specific accuracy and particular Chernoff boundary, containment approach needs $\frac{|B|}{|A|}$ times fewer hash functions than the Jaccard approach.($k_J \approx\frac{|B|}{|A|}k_c$)\\
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -262,11 +262,11 @@ Time estimate: both approaches linear in the \# of hashes. (So containment appro
 Space estimate:
 \begin{align*}
 Jaccard &: \approx 48 \text{ bits/hash seen in practice}  \Rightarrow 48 k_c.m.(\#genomes)=: S_J\\
-Containment &:  48 k_c.(\#genomes)+1.44\log_2(1/p).|B| \\
-&\cong 48 k_c.(\#genomes)+9.6|B| = 48 k_c(\#genomes)+ 9.6. |A|.m=: S_c
+Containment &:  48 k_c (\#genomes)+1.44\log_2(1/p) |B| \\
+&\cong 48 k_c (\#genomes)+9.6|B| = 48 k_c(\#genomes)+ 9.6 |A| m=: S_c
 \end{align*}
 
-$\dfrac{S_c}{S_J}=\dfrac{1}{5}\dfrac{|A|}{(\#genomes).k_c}+\dfrac{1}{m}$.
+$\dfrac{S_c}{S_J}=\dfrac{1}{5}\dfrac{|A|}{(\#genomes) k_c}+\dfrac{1}{m}$.
   Typically \#genomes $\approx 30000, \quad |A|\approx 4300000, \quad k_c=500, \quad m= 200$ 
 $\Rightarrow \dfrac{S_c}{S_J}\cong0.06$, so our approach achtually uses less space. Even through the bloom filter is large, we have m times fewer hashes per genome and $\approx 30000 $ genomes.
 \end{enumerate}
