@@ -1,12 +1,13 @@
 import numpy as np
 import matplotlib.pyplot as plt
+import os
 
 
 def deltaHashNumPlot(cardAIntB, cardAUB, cont, conf, p, m, deltaStep, deltabeginpnt):
     delta= np.arange(deltabeginpnt, 1., deltaStep)
     kj= (-3 * np.log(conf/2) * cardAUB) / (np.sqrt(delta)*cardAIntB)
     kc = (-3 * (cont+p) * np.log(conf/2) * np.sqrt(cardAUB+(1+delta)*cardAIntB)) / (np.sqrt(cont*delta*cardAUB))
-    return delta,kj,kc
+    return delta, kj, kc
 
 
 cardB = 1000000  # Cardinal of B
@@ -33,9 +34,9 @@ for m in cardRatio:
         plt.ylabel('Number of hash functions')
         plt.xlim([deltabeginpnt, 1])
         plt.legend()
-        pltfigpath = '../Paper/Figs/%s%d.png' % (m,c*100)
+        pltfigpath = os.path.abspath('../Paper/Figs/%s%d.png' % (m, c*100))
         plt.savefig(pltfigpath)
         #plt.show()
 
-print(kj[1])
-print(kc[1])
+#print(kj[1])
+#print(kc[1])
