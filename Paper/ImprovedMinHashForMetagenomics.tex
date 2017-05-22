@@ -123,13 +123,13 @@ Abstract here.  \\\\
 \section{Introduction}
 \begin{enumerate}
 \item Min hash recently has been used to great success on biological data
-\item Mash, Titus' sourmash
+\item Mash, Sourmash, etc.
 \item originally designed for sets of relatively similar size and appreciable intersection size
 \item metagenomic taxonomic profiling the setup is different: many relatively small database entries, one very large metagenomic sample, very small intersection sizes in general
 \item we modify the min hash paradigm to this particular situation so it can handle a sample of much greater size than the reference database entries.
 \end{enumerate}
 
-Min hash is great at comparing sets of similar size. When one set is much larger than the other, the Jaccard index is going to be smaller, which by the Chernoff bounds is where it has a hard time. In metagenomics, the typical paradigm is one very large set (the metagenomic sample) call it $B$ and a bunch of small reference/database sets (call one $A$). Taking the classical min hash approach means sampling from $A\cup B$. Part a) of Figure \ref{fig:Conceptual} demonstrates such a situation while sampling 100 random points of $A\cup B$ and leads to \input{Data/ClassicalConceptual.txt}points lying in $A\cap B$. On the other hand, if we sample from just $A$ (instead of $A\cup B$) and have some way to test if a point $x$ is in $A\cap B$, we would get a much better estimate of $|A\cap B|$. Part b) of Figure \ref{fig:Conceptual} demonstrates this approach while sampling only 50 points from $A$ and finds \input{Data/ContainmentConceptual.txt}points lying in $A\cap B$. They key to our approach is that the membership test $x\in A\cap B$ can be efficiently performed with a bloom filter of $B$. We analyze the time and space complexity, as well as the accuracy of this approach and find that for parameters typically used in metagenomics, our proposed approach is faster, uses less space, and is more accurate than the classical min hash approach.
+Min hash is great at comparing sets of similar size. When one set is much larger than the other, the Jaccard index is going to be smaller, which is precisely the case when you need a lot of hashes to get a good estimate (by the Chernoff bounds). In metagenomics, the typical paradigm is one/few very large set(s) (the metagenomic sample(s)) call it $B$ and a bunch of small reference/database sets (call one $A$). Taking the classical min hash approach means sampling from $A\cup B$. Part a) of Figure \ref{fig:Conceptual} demonstrates such a situation while sampling 100 random points of $A\cup B$ and leads to \input{Data/ClassicalConceptual.txt}points lying in $A\cap B$. On the other hand, if we sample from just $A$ (instead of $A\cup B$) and have some way to test if a point $x$ is in $A\cap B$, we would get a much better estimate of $|A\cap B|$. Part b) of Figure \ref{fig:Conceptual} demonstrates this approach while sampling only 50 points from $A$ and finds \input{Data/ContainmentConceptual.txt}points lying in $A\cap B$. They key to our approach is that the membership test $x\in A\cap B$ can be efficiently performed with a bloom filter of $B$. We analyze the time and space complexity, as well as the accuracy of this approach and find that for parameters typically used in metagenomics, our proposed approach is faster, uses less space, and is more accurate than the classical min hash approach.
 
 
 \begin{figure}[!h]%
@@ -148,26 +148,17 @@ Min hash is great at comparing sets of similar size. When one set is much larger
 
 \section{Methods}
 Definitions, derivation of mathematical results here.
+\emph{Need to carefully choose notation so we don't repeat the usage of $X$}
 \subsection{Definitions}
 \begin{enumerate}
 \item Definitions of database entries, query sample, k-mer size, note size disparity
-\item define classic min hash (k-independent version and k-mins version)
-\item define the containment approach
+\item $k$-mer size, genome $=$ set of all $k$-mers from some genomes, give typical size. Sample is all $k$-mers from some large set of short reads, give typical size
 \end{enumerate}
-\subsection{Min Hash via containment}
-\label{section:ChernoffBounds}
-\subsection{Time and space complexity}
-\begin{enumerate}
-\item Chernoff bound estimates:\\
 
-%%%%%%%%%%%%%%%%%%%%%%%%Chernoff Bounds%%%%%%%%%%%%%%%
-Chernoff bounds :
- $X r.v.\quad S.t\quad E(X)=\mu,\quad 0<\delta<1$ then
-\begin{align*}
-&P(X\leq(1-\delta)\mu\leq e^{-\delta^2\mu/2},\quad P(X\geq(1+\delta)\mu)\leq e^{-\delta^2\mu/3} \\
-\Rightarrow\quad &P(\left|\frac{X-\mu}{\mu}\right|\geq\delta)\leq2e^{-\delta^2\mu/3}
-\end{align*}
-In the MinHash technique with different k hash functions, define
+\subsection{Classic min hash}
+\textit{describe classic approach.}
+Pick at random some number of hashes, compute minimum of said hash function on pair of sets, look for collision, prob. of collision is Jaccard.
+In the MinHash technique with different $k$ hash functions, define
 $$X_i=\left\{
 \begin{array}{lll}
 1 &h^{(i)}_{min}(A)=h^{(i)}_{min}(B)\\
@@ -177,11 +168,31 @@ $$X_i=\left\{
 Which give 
 $E(X_i)= \dfrac{|A\cap B|}{|A\cup B|}=J(A,B)$.
 Hence for 
-$X^k=\sum\limits_{i=0}^k X_i$,
-the expectation of $X^k$ would be $kJ(A,B)$
-$[E(X^k)=k.J(A,B)]$. Therefore
-$$P\left( \left|\dfrac{\frac{X}{k}-J(A,B)}{J(A,B)}\right|\geq\delta\right)\leq 2e^{-\delta^2kJ(A,B)/3}$$
-Now let $k_J$ be the number of hash functions and $t$ be the confident of the chernoff bound( $k_J:=k,\quad t:=2e^{-\delta^2k_JJ(A,B)/3}$), therefore
+$X^k=\sum\limits_{i=1}^k X_i$,
+the expectation is given by % $X^k$ would be $k J(A,B)$ 
+$E(X^k)=k J(A,B)$.
+
+\subsection{Min hash via containment}
+\textit{In this subsection, sketch the general idea of what we are doing.}
+Compute Bloom filter of larger set, randomly select some number of hashes, compute minimums of said hash function on the smaller set, check if minimum is in bloom filter. Prob(yes) is containment/coverage index (intersection over smaller set).
+
+
+\subsection{Analytic comparison of classical min hash to containment min hash.}
+\subsubsection{Chernoff bound estimates}
+\label{section:ChernoffBounds}
+\begin{definition}[Give reference]
+\label{def:GeneralChernoffBounds}
+Let $X$ be a random variable such that $E(X)=\mu,\quad 0<\delta<1$. Then probability of relative error/deviation $\delta$ from mean $\mu$ is given by
+\begin{align*}
+%P(X\leq(1-\delta)\mu\leq e^{-\delta^2\mu/2},\quad P(X\geq(1+\delta)\mu)\leq e^{-\delta^2\mu/3} \\
+%\Rightarrow\quad &
+P\left(\left|\frac{X-\mu}{\mu}\right|\geq\delta\right)\leq2e^{-\delta^2\mu/3}
+\end{align*}
+\end{definition}
+
+Applying this to the classic min hash approach
+$$P\left( \left|\dfrac{\frac{X^k}{k}-J(A,B)}{J(A,B)}\right|\geq\delta\right)\leq 2e^{-\delta^2kJ(A,B)/3}$$
+Now let $k_J$ be the number of hash functions and $t$ be the confident of the Chernoff bound( $k_J:=k,\quad t:=2e^{-\delta^2k_JJ(A,B)/3}$), therefore
 $$k_J=\dfrac{-3\ln(t/2)|A\cup B|}{\delta^2 |A\cap B|}$$
 In our new approach, for a bloom filter $(B)_b$ of a set $B$ with false positive rate of $p$, let 
 $$X_i=\left\{
@@ -192,9 +203,9 @@ $$X_i=\left\{
 \right.$$
 
 i.e. $X_i$ will determine membership of the element of $A$ with the smallest image under hash function $h^{(i)}$ in $B$.(So take elem of $A$ that hashes to smallest value under $h^{(i)}$ and check for memberships in B). Therefore $E(X_i)=\dfrac{|A\cap B|}{|A|}+p$. Let 
-$X^k=\sum\limits_{i=0}^kX_i$, hence $ E(X^k)=k\dfrac{|A\cap B|}{|A|}+kp$. Define 
+$X^k=\sum\limits_{i=1}^k X_i$, hence $ E(X^k)=k\dfrac{|A\cap B|}{|A|}+kp$. Define 
 $c:= \dfrac{|A\cap B|}{|A|}$,  $J:= \dfrac{|A\cap B|}{|A\cup B|} $ and
-$\mu:=k.c+k.p$ (i.c $\mu=E(X^k)$). Then
+$\mu:=k c+k p$ (i.c $\mu=E(X^k)$). Then
 \begin{align*}
 P\left(
 \left|\dfrac{\left(\frac{X^k}{k}-p\right)-c}{c}\right|\geq \delta\right)
@@ -235,10 +246,10 @@ P\left(\left|\frac{J_{est}-J}{J}\right|\geq \delta\right) &\leq e^{-(\frac{c}{c+
 Let $k_{est}:=k$ be the number of hash functions which is required to achieve a desire confident $t:=2e^{-(\frac{c}{c+p})^2\delta\rq{}k(c+p)/3}$. Therefore
  $$k_{est} =\frac{-3(c+p)ln(t/2)\left(|A\cup B|+(1+\delta)|A\cap B|\right)^2}{c^2\delta^2|A\cup B|^2 } $$
 %%%%%%%%%%%%%%%%%% Comparison of #hashes%%%%%%%%%%%%%%%%%%
-\item comparison of number of hashes required for same accuracy:\\
+\subsubsection{Number of hashes required}
 By comparing the ratio of the number of hash functions required for the Jaccard approach and the containment approach (our new approach), 
-$$\dfrac{k_J}{k_c}=\dfrac{-2\ln(t/2)}{\delta^2 J}.\dfrac{c^2\delta^2}{-2(c+p)\ln(t/2)}=\dfrac{c}{J}\left(\dfrac{c}{c+p}\right)$$
-Where $ \dfrac{c}{c+p}\geq.90$ ($p=0.01,\quad c\geq0.01$). Hence,
+$$\dfrac{k_J}{k_c}=\dfrac{-2\ln(t/2)}{\delta^2 J} \dfrac{c^2\delta^2}{-2(c+p)\ln(t/2)}=\dfrac{c}{J}\left(\dfrac{c}{c+p}\right)$$
+When $p=0.01$ and $\geq0.01$, $ \dfrac{c}{c+p}\geq.90$
 $$\dfrac{k_J}{k_c}\geq .9\frac{c}{J}=.9 \dfrac{|A\cup B|}{|A|}=.9 \dfrac{(|A|+|B|-|A\cap B|)}{|A|}\geq .9 \dfrac{|B|}{|A|}$$
 Therefore to obtain a specific accuracy and particular Chernoff boundary, containment approach needs $\frac{|B|}{|A|}$ times fewer hash functions than the Jaccard approach.($k_J \approx\frac{|B|}{|A|}k_c$)\\
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -255,21 +266,37 @@ Therefore to obtain a specific accuracy and particular Chernoff boundary, contai
 \label{fig:DeltaK}%
 \end{figure}
 %%%%%%%%%%%%%%%%%%% Time Complexity%%%%%%%%%%%%%%%%%%%%
-\item time complexity:\\
-Time estimate: both approaches linear in the \# of hashes. (So containment approach m times faster)
+\subsubsection{Time complexity}
+Both approaches linear in the number of hashes. (So containment approach is $m$ times faster for typical set sizes).
 %%%%%%%%%%%%%%%%%% Space Complexity%%%%%%%%%%%%%%%%%%%%%
-\item space complexity (all with examples of the numbers in practice):\\
-Space estimate:
+\subsubsection{Space complexity (all with examples of the numbers in practice)}
+Even though we must form a bloom filter for a metagenomic sample (which can potentially contain many billions of $k$-mers), due to the many fewer hashes we must store (orders of magnitude fewer) there actually turns out to be a cost savings due to the size of training databases.
+
+Let $G$ be the number of training genomes utilized, $M$ the maximum number of $k$-mers in any of the training genomes. Let $N$ be the number of $k$-mers in the sample. Typical values are XXXX. Recall that $k_c$ and $k_J$ are the number of hashes required in the containment approach and classic approach respectively.
+
+In practice, we see $48$ bits per hash seen in practice, so the total number of bits used by the classical approach is given by
 \begin{align*}
-Jaccard &: \approx 48 \text{ bits/hash seen in practice}  \Rightarrow 48 k_c.m.(\#genomes)=: S_J\\
-Containment &:  48 k_c.(\#genomes)+1.44\log_2(1/p).|B| \\
-&\cong 48 k_c.(\#genomes)+9.6|B| = 48 k_c(\#genomes)+ 9.6. |A|.m=: S_c
+%Jaccard &: \approx 48 \text{ bits/hash seen in practice}  \Rightarrow 48 k_c m (\#genomes)=: S_J\\
+S_J = 48k_J\cdot  G
 \end{align*}
 
-$\dfrac{S_c}{S_J}=\dfrac{1}{5}\dfrac{|A|}{(\#genomes).k_c}+\dfrac{1}{m}$.
-  Typically \#genomes $\approx 30000, \quad |A|\approx 4300000, \quad k_c=500, \quad m= 200$ 
-$\Rightarrow \dfrac{S_c}{S_J}\cong0.06$, so our approach achtually uses less space. Even through the bloom filter is large, we have m times fewer hashes per genome and $\approx 30000 $ genomes.
-\end{enumerate}
+
+Typical bloom filter implementations use approximately $1.44\log_2(1/p)$ bits per item where $p$ is the false positive rate. Hence, when $p = 0.01$, the total number of bits used by the proposed containment approach is give by
+\begin{align*}
+%Containment &:  48 k_c (\#genomes)+1.44\log_2(1/p) |B| \\
+%&\cong 48 k_c (\#genomes)+9.6|B| = 48 k_c(\#genomes)+ 9.6 |A| m=: S_c
+S_c = 48k_c \cdot G + 9.6N
+\end{align*}
+
+It is reasonable to assume that in practice, the number of $k$-mers in the sample $S$ is some (large) multiple $m$ of the largest number of $k$-mers found in any one of the training genomes $M$: $S \leq m\cdot  M$. Hence, comparing the ration of the size requirements of the approaches, we obtain:
+\begin{align*}
+\dfrac{S_c}{S_J} = \dfrac{1}{5}\dfrac{M}{G\cdot  k_c}+\dfrac{1}{m}
+\end{align*}
+
+Typically $G$ is greater than 30 thousand, $M$ is less than 4.3 million, $k_c=500$ (change this to confidence and delta), and $m\geq 200$. Hence, $\dfrac{S_c}{S_J}\leq 0.06$, so the containment approach actually uses significantly less space.
+% Even though the bloom filter is large, we have m times fewer hashes per genome and $\approx 30000 $ genomes.
+
+\textit{Include a plot of tradeoff in sizes (metagenome $k$-mers vs number of training genomes)}
 
 
 \section{Results}
