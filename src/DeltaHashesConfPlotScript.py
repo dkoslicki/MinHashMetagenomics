@@ -37,13 +37,13 @@ for m in cardRatio:
         plt.semilogy(delta, kj, 'r--', label='Classic Min Hash')
         plt.semilogy(delta, kc, 'b-', label='Containment Min Hash')
 
-        plt.xlabel('Delta',**font_prop)
-        plt.ylabel('Number of hash functions',**font_prop)
+        plt.xlabel('Relative error ($\delta$)',**font_prop)
+        plt.ylabel('Number of hashes',**font_prop)
         plt.xlim([deltabeginpnt, 1])
         plt.legend(bbox_to_anchor=(0., 1.02, 1., .102), loc=3, prop= font_prop, ncol=2, mode="expand",
                    borderaxespad=0)
         # Add the Venn Graph to delta-k plot
-        ax = plt.axes([.28, .42, .9, .65])
+        ax = plt.axes([.24, .26, .9, .9])
         ax.imshow(venn_plot)
         ax.axis('off')
         # Save the final delta-k plot
@@ -59,13 +59,14 @@ for m in cardRatio:
         plt.plot(delta, t_est, 'g--', label='Jaccard Estimation by Containment Method')
 
         plt.axis([0, 1, 0, 1])
-        plt.xlabel('Delta', **font_prop)
-        plt.ylabel('Confident', **font_prop)
+        plt.xlabel('Relative error ($\delta$)', **font_prop)
+        plt.ylabel('Confidence', **font_prop)
         plt.xlim([deltabeginpnt, 1])
         plt.legend(bbox_to_anchor=(0., 1.02, 1., .102), loc=3, prop={'family': 'serif', 'weight': 'normal', 'size': 11}, ncol=2, mode="expand",
                    borderaxespad=0)
         # Add the Venn Graph to delta-k plot
-        ax = plt.axes([.28, .42, .9, .65])
+        ax = plt.axes([.24, .26, .9, .9])
+        #ax = plt.axes([.28, .42, .9, .65])
         ax.imshow(venn_plot)
         ax.axis('off')
         # Save the final delta-k plot

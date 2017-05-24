@@ -248,19 +248,41 @@ Let $k_{est}:=k$ be the number of hash functions which is required to achieve a 
 %%%%%%%%%%%%%%%%%% Comparison of #hashes%%%%%%%%%%%%%%%%%%
 \subsubsection{Number of hashes required}
 By comparing the ratio of the number of hash functions required for the Jaccard approach and the containment approach (our new approach), 
-$$\dfrac{k_J}{k_c}=\dfrac{-2\ln(t/2)}{\delta^2 J} \dfrac{c^2\delta^2}{-2(c+p)\ln(t/2)}=\dfrac{c}{J}\left(\dfrac{c}{c+p}\right)$$
+$$\dfrac{k_J}{k_c}=\dfrac{-3\ln(t/2)}{\delta^2 J} \dfrac{c^2\delta^2}{-3(c+p)\ln(t/2)}=\dfrac{c}{J}\left(\dfrac{c}{c+p}\right)$$
 When $p=0.01$ and $\geq0.01$, $ \dfrac{c}{c+p}\geq.90$
 $$\dfrac{k_J}{k_c}\geq .9\frac{c}{J}=.9 \dfrac{|A\cup B|}{|A|}=.9 \dfrac{(|A|+|B|-|A\cap B|)}{|A|}\geq .9 \dfrac{|B|}{|A|}$$
 Therefore to obtain a specific accuracy and particular Chernoff boundary, containment approach needs $\frac{|B|}{|A|}$ times fewer hash functions than the Jaccard approach.($k_J \approx\frac{|B|}{|A|}k_c$)\\
+Also, we can get the similar result by computing the ratio of the number of hash functions required for the Jaccard approach and the Jaccard estimation using the containment approach:
+\begin{align*}
+\frac{k_{est}}{k_J} &=\frac{-3(c+p)ln(t/2)\left(|A\cup B|+(1+\delta)|A\cap B|\right)^2}{c^2\delta^2|A\cup B|^2 }
+\dfrac{\delta^2 |A\cap B|}{-3\ln(t/2)|A\cup B|}\\
+&= \frac{(c+p)\left(|A\cup B|+(1+\delta)|A\cap B|\right)^2(|A\cap B|)}{c^2|A\cup B|^3}\\
+& =\frac{(c+p)}{c^2}\frac{(|A\cup B|^2|A\cap B|+2(1+\delta)|A\cup B||A\cap B|^2+(1+\delta)^2|A\cap B|^3)}{|A\cup B|^3}\\
+&= \frac{(c+p)}{c^2}\left(\frac{|A\cap B|}{|A\cup B|}+2(1+\delta)\frac{|A\cap B|^2}{|A\cup B|^2}+(1+\delta)^2\frac{|A\cap B|^3}{|A\cup B|^3}\right)\\
+\end{align*}
+Note that $\frac{|A\cap B|}{|A\cup B|} <1$. Therefore we have
+\begin{align*}
+\frac{k_{est}}{k_J} &\leq \frac{(c+p)}{c^2}\left(\frac{|A\cap B|}{|A\cup B|}+2(1+\delta)\frac{|A\cap B|}{|A\cup B|}+(1+\delta)^2\frac{|A\cap B|}{|A\cup B|}\right)\\
+& = \frac{(c+p)}{c}\frac{|A|}{|A\cup B|}\left(1+2(1+\delta)+(1+\delta)^2\right)\\
+&\leq \frac{(c+p)}{c}\frac{|A|}{|B|}\left(1+2(1+\delta)+(1+\delta)^2\right)
+\end{align*}
+Again if we assume that $\frac{c}{c+p}\geq .9$ and recall $0<\delta<1$ we have
+\begin{align*}
+\frac{k_J}{k_{est}}\geq .9\frac{|B|}{|A|}\frac{1}{\left(1+2(1+\delta)+(1+\delta)^2\right)}\geq .9\frac{|B|}{|A|}\frac{1}{9} = .1\frac{|B|}{|A|}
+\end{align*}
+However in practice we can see that $\frac{|A\cap B|^2}{|A\cup B|^2}$ and $\frac{|A\cap B|^3}{|A\cup B|^3}$ are such small that are neglectable. Therefore in practice we will have 
+ \begin{equation*}
+\frac{k_J}{k_{est}}\geq .9\frac{|B|}{|A|}
+\end{equation*}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{figure}[!h]%
 \begin{center}
-\includegraphics[width=3.0in,trim={0 0 0 0in},clip]{Figs/deltaK-1010.png}%
-\hspace{1ex}
-\includegraphics[width=3.0in,trim={0 0 0 0in},clip]{Figs/deltaK-1090.png}\\
-\includegraphics[width=3.0in,trim={0 0 0 0in},clip]{Figs/deltaK-20010.png}%
-\hspace{1ex}
-\includegraphics[width=3.0in,trim={0 0 0 0in},clip]{Figs/deltaK-20090.png}
+\includegraphics[width=3.39in,trim={0 0 0 0in},clip]{Figs/deltaK-1010.png}%
+\hspace{-.327in}
+\includegraphics[width=3.39in,trim={0 0 0 0in},clip]{Figs/deltaK-1090.png}\\
+\includegraphics[width=3.39in,trim={0 0 0 0in},clip]{Figs/deltaK-20010.png}%
+\hspace{-.327in}
+\includegraphics[width=3.39in,trim={0 0 0 0in},clip]{Figs/deltaK-20090.png}
 \end{center}
 \caption{Explanation+ example }
 \label{fig:DeltaK}%
@@ -301,12 +323,12 @@ Typically $G$ is greater than 30 thousand, $M$ is less than 4.3 million, $k_c=50
 
 \begin{figure}[!h]%
 \begin{center}
-\includegraphics[width=3.0in,trim={0 0 0 0in},clip]{Figs/deltaConfident-1010.png}%
-\hspace{1ex}
-\includegraphics[width=3.0in,trim={0 0 0 0in},clip]{Figs/deltaConfident-1090.png}\\
-\includegraphics[width=3.0in,trim={0 0 0 0in},clip]{Figs/deltaConfident-20010.png}%
-\hspace{1ex}
-\includegraphics[width=3.0in,trim={0 0 0 0in},clip]{Figs/deltaConfident-20090.png}
+\includegraphics[width=3.39in,trim={0 0 0 0in},clip]{Figs/deltaConfident-1010.png}%
+\hspace{-.327in}
+\includegraphics[width=3.39in,trim={0 0 0 0in},clip]{Figs/deltaConfident-1090.png}\\
+\includegraphics[width=3.39in,trim={0 0 0 0in},clip]{Figs/deltaConfident-20010.png}%
+\hspace{-.327in}
+\includegraphics[width=3.39in,trim={0 0 0 0in},clip]{Figs/deltaConfident-20090.png}
 \end{center}
 \caption{Explanation+ example }
 \label{fig:DeltaK}%
