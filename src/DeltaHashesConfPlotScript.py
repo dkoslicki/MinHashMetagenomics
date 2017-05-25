@@ -32,15 +32,16 @@ for m in cardRatio:
         font_prop = {'family': 'serif', 'weight': 'normal', 'size': 14}
 
         # Relative error (delta)- Number of Hashes (k) Plot
-        delta, kj, kc = deltaHashNumPlot(cardAIntB, cardAUB, c, conf, p, m, deltaStep, deltabeginpnt)
+        delta, kj, kc, k_est = deltaHashNumPlot(cardAIntB, cardAUB, c, conf, p, m, deltaStep, deltabeginpnt)
         fig = plt.figure()
         plt.semilogy(delta, kj, 'r--', label='Classic Min Hash')
-        plt.semilogy(delta, kc, 'b-', label='Containment Min Hash')
+        plt.semilogy(delta, kc, 'b--', label='Containment Min Hash')
+        plt.semilogy(delta,k_est, 'g--', label ='Jaccard Estimation by Containment Method')
 
         plt.xlabel('Relative error ($\delta$)',**font_prop)
         plt.ylabel('Number of hashes',**font_prop)
         plt.xlim([deltabeginpnt, 1])
-        plt.legend(bbox_to_anchor=(0., 1.02, 1., .102), loc=3, prop= font_prop, ncol=2, mode="expand",
+        plt.legend(bbox_to_anchor=(0., 1.02, 1., .102), loc=3, prop= {'family': 'serif', 'weight': 'normal', 'size': 11}, ncol=2, mode="expand",
                    borderaxespad=0)
         # Add the Venn Graph to delta-k plot
         ax = plt.axes([.24, .26, .9, .9])
