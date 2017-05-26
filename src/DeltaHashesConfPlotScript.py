@@ -23,7 +23,7 @@ for m in cardRatio:
         cardAIntB = c * cardA  # computing card of intersection
         cardAUB = cardA + cardB - cardAIntB  # computing card of union
 
-        vennplot(cardAIntB, cardA, cardB / cardA, .2, alpha_value)  # make a Venn plot
+        vennplot(cardAIntB, cardA, cardB / float(cardA), .2, alpha_value)  # make a Venn plot
         venn_file = '../Paper/Figs/Venn-AintB=%s-Ratio=%s.png' % (cardAIntB, int(cardB / cardA))  # save the Venn plot
 
         venn_image_file = cbook.get_sample_data(os.path.abspath(venn_file))  # load the Venn plot file
@@ -41,10 +41,11 @@ for m in cardRatio:
         plt.xlabel('Relative error ($\delta$)',**font_prop)
         plt.ylabel('Number of hashes',**font_prop)
         plt.xlim([deltabeginpnt, 1])
-        plt.legend(bbox_to_anchor=(0., 1.02, 1., .102), loc=3, prop= {'family': 'serif', 'weight': 'normal', 'size': 11}, ncol=2, mode="expand",
+        plt.legend(bbox_to_anchor=(0., 1.02, 1., .102), loc=3, prop= {'family': 'serif', 'weight': 'normal', 'size': 9}, ncol=2, mode="expand",
                    borderaxespad=0)
         # Add the Venn Graph to delta-k plot
-        ax = plt.axes([.24, .26, .9, .9])
+        #ax = plt.axes([.24, .26, .9, .9])
+        ax = plt.axes([.24-.01, .26-.01, .9-.01, .9-.01])
         ax.imshow(venn_plot)
         ax.axis('off')
         # Save the final delta-k plot
@@ -61,12 +62,13 @@ for m in cardRatio:
 
         plt.axis([0, 1, 0, 1])
         plt.xlabel('Relative error ($\delta$)', **font_prop)
-        plt.ylabel('Confidence', **font_prop)
+        plt.ylabel('Probability of deviation', **font_prop)
         plt.xlim([deltabeginpnt, 1])
-        plt.legend(bbox_to_anchor=(0., 1.02, 1., .102), loc=3, prop={'family': 'serif', 'weight': 'normal', 'size': 11}, ncol=2, mode="expand",
+        plt.legend(bbox_to_anchor=(0., 1.02, 1., .102), loc=3, prop={'family': 'serif', 'weight': 'normal', 'size': 9}, ncol=2, mode="expand",
                    borderaxespad=0)
         # Add the Venn Graph to delta-k plot
-        ax = plt.axes([.24, .26, .9, .9])
+        #ax = plt.axes([.24, .26, .9, .9])
+        ax = plt.axes([.24-.01, .26-.01, .9-.01, .9-.01])
         #ax = plt.axes([.28, .42, .9, .65])
         ax.imshow(venn_plot)
         ax.axis('off')

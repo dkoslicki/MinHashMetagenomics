@@ -20,6 +20,7 @@ ctypes
 warnings
 shapely
 descartes
+VennPlot
 
 # Other programs
 # The C++ program query_per_sequence which depends on jellyfish-2.2.3
