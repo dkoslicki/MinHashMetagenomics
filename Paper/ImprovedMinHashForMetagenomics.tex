@@ -192,8 +192,8 @@ P\left(\left|\frac{X-\mu}{\mu}\right|\geq\delta\right)\leq2e^{-\delta^2\mu/3}
 
 Applying this to the classic min hash approach
 $$P\left( \left|\dfrac{\frac{X^k}{k}-J(A,B)}{J(A,B)}\right|\geq\delta\right)\leq 2e^{-\delta^2kJ(A,B)/3}$$
-Now let $k_J$ be the number of hash functions and $t$ be the confident of the Chernoff bound( $k_J:=k,\quad t:=2e^{-\delta^2k_JJ(A,B)/3}$), therefore
-$$k_J=\dfrac{-3\ln(t/2)|A\cup B|}{\delta^2 |A\cap B|}$$
+Now let $k_J$ be the number of hash functions used and let $t$ be the the value given by the Chernoff bound ($k_J:=k,\ t:=2e^{-\delta^2k_JJ(A,B)/3}$), therefore
+$$k_J=\dfrac{-3\ln(t/2)|A\cup B|}{\delta^2 |A\cap B|}.$$
 In our new approach, for a bloom filter $(B)_b$ of a set $B$ with false positive rate of $p$, let 
 $$X_i=\left\{
 \begin{array}{ll}
@@ -202,10 +202,9 @@ $$X_i=\left\{
 \end{array}
 \right.$$
 
-i.e. $X_i$ will determine membership of the element of $A$ with the smallest image under hash function $h^{(i)}$ in $B$.(So take elem of $A$ that hashes to smallest value under $h^{(i)}$ and check for memberships in B). Therefore $E(X_i)=\dfrac{|A\cap B|}{|A|}+p$. Let 
-$X^k=\sum\limits_{i=1}^k X_i$, hence $ E(X^k)=k\dfrac{|A\cap B|}{|A|}+kp$. Define 
-$c:= \dfrac{|A\cap B|}{|A|}$,  $J:= \dfrac{|A\cap B|}{|A\cup B|} $ and
-$\mu:=k c+k p$ (i.c $\mu=E(X^k)$). Then
+i.e. $X_i$ will determine membership of the element of $A$ with the smallest image under hash function $h^{(i)}$ in $B$. In essence, this takes a uniformly random element from $A$ and checks the bloom filter for membership in $B$. Therefore $E(X_i)=\dfrac{|A\cap B|}{|A|}+p$. Let 
+$X^k=\sum\limits_{i=1}^k X_i$, hence $ E(X^k)=k\dfrac{|A\cap B|}{|A|}+kp$. Let 
+$c= \dfrac{|A\cap B|}{|A|}$ be the true containment index and let  $J= \dfrac{|A\cap B|}{|A\cup B|} $ be the true Jaccard index. Also, let $\mu:=k c+k p$ (i.c $\mu=E(X^k)$). Then utilizing the Chernoff bounds, we obtain
 \begin{align*}
 P\left(
 \left|\dfrac{\left(\frac{X^k}{k}-p\right)-c}{c}\right|\geq \delta\right)
@@ -213,67 +212,74 @@ P\left(
 &=P\left( X^k\geq\left( 1+\left(\dfrac{c}{c+p}\right)\delta\right)\mu\right) + P\left(X^k\leq\left(1-\left(\dfrac{c}{c+p}\right)\delta\right)\mu\right)\\
 &\leq 2e^{-\left(\frac{c}{c+p}\right)^2\delta^2k(c+p)/3}
 \end{align*}
-So for $t:=2e^{-\left(\frac{c}{c+p}\right)^2\delta^2k(c+p)/3}$, the desired Chernoff bound, let $k_c=k$ be the number of hash functions which is required to achieve this bound. Then 
-$$k_c=\dfrac{-3(c+p)\ln(t/2)}{c^2\delta^2}$$
+So for $t:=2e^{-\left(\frac{c}{c+p}\right)^2\delta^2k(c+p)/3}$, the upper bound in the estimation, let $k_c=k$ be the number of hash functions which is required to achieve this bound and let $c_{est}=\frac{X^k}{k}-p$ be the estimate of the containment index. Then the number of hash functions required by the containment approach is given by
+$$k_c=\dfrac{-3(c+p)\ln(t/2)}{c^2\delta^2}.$$
 %%%% Fraction of sample comprised of genome A
-Define $c_{est}:=\frac{X^k}{k}-p$. Similarly 
-\begin{align*}
- P\left(
-\left|\dfrac{\frac{|A|c_{est}}{|B|}-\frac{|A\cap B|}{|B|}}{\frac{|A\cap B|}{|B|}}\right|\geq \delta\right)
-&=P\left(
-\left|\dfrac{\frac{|A|c_{est}}{|B|}-\frac{|A|c}{|B|}}{\frac{|A|c}{|B|}}\right|\geq \delta\right)\\
-&=P\left(
-\left|\dfrac{\left(\frac{X^k}{k}-p\right)-c}{c}\right|\geq \delta\right)\\
-&\leq 2e^{-\left(\frac{c}{c+p}\right)^2\delta^2k(c+p)/3}
-\end{align*}
+%Define $c_{est}:=\frac{X^k}{k}-p$. Similarly we obtain
+%\begin{align*}
+ %P\left(
+%\left|\dfrac{\frac{|A|c_{est}}{|B|}-\frac{|A\cap B|}{|B|}}{\frac{|A\cap B|}{|B|}}\right|\geq \delta\right)
+%&=P\left(
+%\left|\dfrac{\frac{|A|c_{est}}{|B|}-\frac{|A|c}{|B|}}{\frac{|A|c}{|B|}}\right|\geq \delta\right)\\
+%&=P\left(
+%\left|\dfrac{\left(\frac{X^k}{k}-p\right)-c}{c}\right|\geq \delta\right)\\
+%&\leq 2e^{-\left(\frac{c}{c+p}\right)^2\delta^2k(c+p)/3}
+%\end{align*}
+
 %%%% Jaccard estimation
-For $c_{est}$, our estimation of containment, define $J_{est}:=\frac{|A|c_{est}}{|A|+|B|-|A|c_{est}}$. Therefore,
+To directly compare the estimation quality, we must derive the Jaccard index from the containment estimate and calculate the probability of deviation from the true value of the Jaccard index. To that end, for $c_{est}$ the estimation of the containment, let $J_{est}:=\frac{|A|c_{est}}{|A|+|B|-|A|c_{est}}$. Therefore,
 \begin{align*}
 P\left(\left|\frac{J_{est}-J}{J}\right|\geq \delta\right) &= P(J_{est}\geq (1+\delta)J)+P(J_{est}\leq (1-\delta)J)\\
-&= P\left(\frac{|A|c_{est}}{|A|+|B|-|A|c_{est}}\geq (1+\delta)J\right)+P\left(\frac{|A|c_{est}}{|A|+|B|-|A|c_{est}}\leq (1-\delta)J\right)\\
+&= P\left(\frac{|A|\cdot c_{est}}{|A|+|B|-|A|\cdot c_{est}}\geq (1+\delta)J\right)+P\left(\frac{|A|\cdot c_{est}}{|A|+|B|-|A|\cdot c_{est}}\leq (1-\delta)J\right)\\
 &= P\left(c_{est}\geq\frac{ (1+\delta)J(|A|+|B|)}{|A|(1+(1+\delta)J)} \right)+P\left(c_{est}\leq\frac{ (1-\delta)J(|A|+|B|)}{|A|(1+(1-\delta)J)} \right)\\
 &= P\left(c_{est}\geq\frac{ (1+\delta)(\frac{|A|c}{|A\cup B|})(|A|+|B|)}{|A|(\frac{|A\cup B|+(1+\delta)|A \cap B|}{|A\cup B|})} \right)+P\left(c_{est}\leq\frac{ (1-\delta)(\frac{|A|c}{|A\cup B|})(|A|+|B|)}{|A|(\frac{|A\cup B|+(1-\delta)|A \cap B|}{|A\cup B|})} \right)\\
 &= P\left(c_{est}\geq\frac{ (1+\delta)(|A|+|B|)}{|A\cup B|+(1+\delta)|A \cap B|} c \right)+P\left(c_{est}\leq\frac{ (1-\delta)(|A|+|B|)}{|A\cup B|+(1-\delta)|A \cap B|} c \right)\\
 &= P\left(c_{est}\geq\frac{ (1+\delta)(|A \cup B|+|A \cap B|)}{|A\cup B|+(1+\delta)|A \cap B|} c \right)+P\left(c_{est}\leq\frac{ (1-\delta)(|A \cup B|+|A \cap B|)}{|A\cup B|+(1-\delta)|A \cap B|} c \right)\\
 &= P\left(c_{est}\geq\left(1+\frac{\delta |A \cup B|}{|A\cup B|+(1+\delta)|A \cap B|}\right) c \right)\\
-&+P\left(c_{est}\leq\left(1-\frac{ \delta |A \cup B|}{|A\cup B|+(1-\delta)|A \cap B|}\right) c \right)\\
+&+P\left(c_{est}\leq\left(1-\frac{ \delta |A \cup B|}{|A\cup B|+(1-\delta)|A \cap B|}\right) c \right).\\
 \end{align*}
-define $\delta\rq{}= \frac{\delta |A \cup B|}{|A\cup B|+(1+\delta)|A \cap B|}$ and $\delta\rq{}\rq{}=\frac{\delta |A \cup B|}{|A\cup B|+(1-\delta)|A \cap B|}$. Therefore,
+Let  $\delta\rq{}= \frac{\delta |A \cup B|}{|A\cup B|+(1+\delta)|A \cap B|}$ and $\delta\rq{}\rq{}=\frac{\delta |A \cup B|}{|A\cup B|+(1-\delta)|A \cap B|}$. Hence,
 \begin{align*}
 P\left(\left|\frac{J_{est}-J}{J}\right|\geq \delta\right) &\leq e^{-(\frac{c}{c+p})^2\delta\rq{}k(c+p)/3}+e^{-(\frac{c}{c+p})^2\delta\rq{}\rq{}k(c+p)/2}\\
 &\leq 2e^{-(\frac{c}{c+p})^2\delta\rq{}k(c+p)/3}
 \end{align*}
-Let $k_{est}:=k$ be the number of hash functions which is required to achieve a desire confident $t:=2e^{-(\frac{c}{c+p})^2\delta\rq{}k(c+p)/3}$. Therefore
- $$k_{est} =\frac{-3(c+p)ln(t/2)\left(|A\cup B|+(1+\delta)|A\cap B|\right)^2}{c^2\delta^2|A\cup B|^2 } $$
+Let $k_{est}$ be the number of hash functions $k$ which is required to achieve a desire upper bound of $t=2e^{-(\frac{c}{c+p})^2\delta\rq{}k(c+p)/3}$. Therefore
+ \begin{align}
+ \label{eqn:JaccardFromContainment}
+ k_{est} =\frac{-3(c+p)ln(t/2)\left(|A\cup B|+(1+\delta)|A\cap B|\right)^2}{c^2\delta^2|A\cup B|^2 }
+ \end{align}
+ 
 %%%%%%%%%%%%%%%%%% Comparison of #hashes%%%%%%%%%%%%%%%%%%
-\subsubsection{Number of hashes required}
-By comparing the ratio of the number of hash functions required for the Jaccard approach and the containment approach (our new approach), 
+\subsubsection{Comparison of the number of hash functions required}
+By comparing the ratio of the number of hash functions required for the Jaccard approach and the containment approach (our new approach), we obtain
 $$\dfrac{k_J}{k_c}=\dfrac{-3\ln(t/2)}{\delta^2 J} \dfrac{c^2\delta^2}{-3(c+p)\ln(t/2)}=\dfrac{c}{J}\left(\dfrac{c}{c+p}\right)$$
-When $p=0.01$ and $\geq0.01$, $ \dfrac{c}{c+p}\geq.90$
+As an example, for the particular values $p=0.01$ and $\geq0.01$, $ \dfrac{c}{c+p}\geq.90$
 $$\dfrac{k_J}{k_c}\geq .9\frac{c}{J}=.9 \dfrac{|A\cup B|}{|A|}=.9 \dfrac{(|A|+|B|-|A\cap B|)}{|A|}\geq .9 \dfrac{|B|}{|A|}$$
-Therefore to obtain a specific accuracy and particular Chernoff boundary, containment approach needs $\frac{|B|}{|A|}$ times fewer hash functions than the Jaccard approach.($k_J \approx\frac{|B|}{|A|}k_c$)\\
-Also, we can get the similar result by computing the ratio of the number of hash functions required for the Jaccard approach and the Jaccard estimation using the containment approach:
-\begin{align*}
+Therefore to obtain a specific accuracy and particular Chernoff bound, the containment approach needs roughly $\frac{|B|}{|A|}$ times fewer hash functions than the Jaccard approach. That is, $k_J \approx\frac{|B|}{|A|}k_c$. 
+
+This large reduction in the number of hash functions required holds for when the Jaccard index is estimated from the containment index estimate as in equation \eqref{eqn:JaccardFromContainment}:
+\begin{align}
 \frac{k_{est}}{k_J} &=\frac{-3(c+p)ln(t/2)\left(|A\cup B|+(1+\delta)|A\cap B|\right)^2}{c^2\delta^2|A\cup B|^2 }
 \dfrac{\delta^2 |A\cap B|}{-3\ln(t/2)|A\cup B|}\\
 &= \frac{(c+p)\left(|A\cup B|+(1+\delta)|A\cap B|\right)^2(|A\cap B|)}{c^2|A\cup B|^3}\\
 & =\frac{(c+p)}{c^2}\frac{(|A\cup B|^2|A\cap B|+2(1+\delta)|A\cup B||A\cap B|^2+(1+\delta)^2|A\cap B|^3)}{|A\cup B|^3}\\
-&= \frac{(c+p)}{c^2}\left(\frac{|A\cap B|}{|A\cup B|}+2(1+\delta)\frac{|A\cap B|^2}{|A\cup B|^2}+(1+\delta)^2\frac{|A\cap B|^3}{|A\cup B|^3}\right)\\
-\end{align*}
-Note that $\frac{|A\cap B|}{|A\cup B|} <1$. Therefore we have
+&= \frac{(c+p)}{c^2}\left(\frac{|A\cap B|}{|A\cup B|}+2(1+\delta)\frac{|A\cap B|^2}{|A\cup B|^2}+(1+\delta)^2\frac{|A\cap B|^3}{|A\cup B|^3}\right) \label{eqn:KestOverJest}\\
+\end{align}
+Note that $\frac{|A\cap B|}{|A\cup B|} <1$, we therefore have that
 \begin{align*}
 \frac{k_{est}}{k_J} &\leq \frac{(c+p)}{c^2}\left(\frac{|A\cap B|}{|A\cup B|}+2(1+\delta)\frac{|A\cap B|}{|A\cup B|}+(1+\delta)^2\frac{|A\cap B|}{|A\cup B|}\right)\\
 & = \frac{(c+p)}{c}\frac{|A|}{|A\cup B|}\left(1+2(1+\delta)+(1+\delta)^2\right)\\
 &\leq \frac{(c+p)}{c}\frac{|A|}{|B|}\left(1+2(1+\delta)+(1+\delta)^2\right)
 \end{align*}
-Again if we assume that $\frac{c}{c+p}\geq .9$ and recall $0<\delta<1$ we have
+Again if we assume reasonable values of $\frac{c}{c+p}\geq .9$ and recall that $0<\delta<1$ we have
 \begin{align*}
 \frac{k_J}{k_{est}}\geq .9\frac{|B|}{|A|}\frac{1}{\left(1+2(1+\delta)+(1+\delta)^2\right)}\geq .9\frac{|B|}{|A|}\frac{1}{9} = .1\frac{|B|}{|A|}
 \end{align*}
-However in practice we can see that $\frac{|A\cap B|^2}{|A\cup B|^2}$ and $\frac{|A\cap B|^3}{|A\cup B|^3}$ are such small that are neglectable. Therefore in practice we will have 
+However, we can see that in equation \eqref{eqn:KestOverJest}, $\frac{|A\cap B|^2}{|A\cup B|^2}$ and $\frac{|A\cap B|^3}{|A\cup B|^3}$ are small enough in practice to be negligible. Therefore in practice we will have 
  \begin{equation*}
-\frac{k_J}{k_{est}}\geq .9\frac{|B|}{|A|}
+\frac{k_J}{k_{est}}\geq .9\frac{|B|}{|A|}.
 \end{equation*}
+So using the containment approach to estimate either the containment index or the Jaccard index both results in roughly $\frac{|B|}{|A|}$ fewer hash functions.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{figure}[!h]%
 \begin{center}
@@ -289,7 +295,7 @@ However in practice we can see that $\frac{|A\cap B|^2}{|A\cup B|^2}$ and $\frac
 \end{figure}
 %%%%%%%%%%%%%%%%%%% Time Complexity%%%%%%%%%%%%%%%%%%%%
 \subsubsection{Time complexity}
-Both approaches linear in the number of hashes. (So containment approach is $m$ times faster for typical set sizes).
+Both approaches linear in the number of hashes. (So containment approach is roughly $\frac{|B|}{|A|}$ times faster for typical set sizes).
 %%%%%%%%%%%%%%%%%% Space Complexity%%%%%%%%%%%%%%%%%%%%%
 \subsubsection{Space complexity (all with examples of the numbers in practice)}
 Even though we must form a bloom filter for a metagenomic sample (which can potentially contain many billions of $k$-mers), due to the many fewer hashes we must store (orders of magnitude fewer) there actually turns out to be a cost savings due to the size of training databases.
@@ -310,9 +316,9 @@ Typical bloom filter implementations use approximately $1.44\log_2(1/p)$ bits pe
 S_c = 48k_c \cdot G + 9.6N
 \end{align*}
 
-It is reasonable to assume that in practice, the number of $k$-mers in the sample $S$ is some (large) multiple $m$ of the largest number of $k$-mers found in any one of the training genomes $M$: $S \leq m\cdot  M$. Hence, comparing the ration of the size requirements of the approaches, we obtain:
+It is reasonable to assume that in practice, the number of $k$-mers in the sample $B$ is some (large) multiple $m$ of the largest number of $k$-mers found in any one of the training genomes: $|B| \leq m\cdot  |A|$. Hence, comparing the ration of the size requirements of the approaches, we obtain:
 \begin{align*}
-\dfrac{S_c}{S_J} = \dfrac{1}{5}\dfrac{M}{G\cdot  k_c}+\dfrac{1}{m}
+\dfrac{S_c}{S_J} = \dfrac{1}{5}\dfrac{|A|}{G\cdot  k_c}+\dfrac{1}{m}
 \end{align*}
 
 Typically $G$ is greater than 30 thousand, $M$ is less than 4.3 million, $k_c=500$ (change this to confidence and delta), and $m\geq 200$. Hence, $\dfrac{S_c}{S_J}\leq 0.06$, so the containment approach actually uses significantly less space.
@@ -365,7 +371,7 @@ For the second set of simulated data, we used GemSIM to simulate \SimulatedBiolo
 \includegraphics[width=3.25in,trim={0 0 0 0in},clip]{Figs/SimulatedBiologicalData_small.png}%
 \includegraphics[width=3.25in,trim={0 0 0 0in},clip]{Figs/SimulatedBiologicalData.png}
 \end{center}
-\caption{Comparison of relative error of \themethod to the classical min hash estimate of the Jaccard index on simulated biological data. a) On \SimulatedBiologicalDataSmallNumReplicates replicates of samples consisting of \SimulatedBiologicalDataSmallNumGenomes genomes with only \SimulatedBiologicalDataSmallNumReads reads. b) On \SimulatedBiologicalDataNumReplicates replicates of samples consisting of \SimulatedBiologicalDataNumGenomes genomes with \SimulatedBiologicalDataNumReads reads.
+\caption{Comparison of relative error of \themethod to the classical min hash estimate of the Jaccard index on simulated biological data. a) On \SimulatedBiologicalDataSmallNumReplicates replicates of samples consisting of \SimulatedBiologicalDataSmallNumGenomes genomes with only \SimulatedBiologicalDataSmallNumReads reads showing the similarity of the methods when the sets to be compared are roughly the same size. b) On \SimulatedBiologicalDataNumReplicates replicates of samples consisting of \SimulatedBiologicalDataNumGenomes genomes with \SimulatedBiologicalDataNumReads reads demonstrating the improvement of the containment approach when the sets are of significantly different size.
 }
 \label{fig:SimulatedBiologicalData}%
 \end{figure}
