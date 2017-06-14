@@ -12,16 +12,17 @@ srcDir=`pwd`
 dataDir="../data/SNAP/"
 plotDir="../Paper/Figs/"
 paperDir="../Paper/Data/"
+snapLoc="../bin/snap-aligner"
 foundGenome=`cat ../Paper/Data/FoundOrganismFileName.txt`
 metagenomer1=${dataDir}4539585.3.sorted.r1.fastq
 metagenomer2=${dataDir}4539585.3.sorted.r1.fastq
 
 
 # Make the index
-snap-aligner index ${foundGenome} ${dataDir} -s 16 -large
+${snapLoc} index ${foundGenome} ${dataDir} -s 16 -large
 
 # Align the paired reads, only output aligned, allow larger edit distance to get more candidate alignment locations
-snap-aligner paired ${dataDir} ${metagenomer1} ${metagenomer2} -F a -hp -mrl 40 -xf 1.2 -d 40 -o -sam ${dataDir}aligned.sam > ${dataDir}alignment-stats.txt
+${snapLoc} paired ${dataDir} ${metagenomer1} ${metagenomer2} -F a -hp -mrl 40 -xf 1.2 -d 40 -o -sam ${dataDir}aligned.sam > ${dataDir}alignment-stats.txt
 
 # Sort the output
 samtools sort --output-fmt sam ${dataDir}aligned.sam > ${dataDir}aligned.sorted.sam

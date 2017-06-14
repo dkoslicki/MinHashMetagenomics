@@ -4,7 +4,8 @@ import subprocess
 import multiprocessing
 
 num_threads = multiprocessing.cpu_count()
-jellyfish_loc = "/home/dkoslicki/Documents/jellyfish-2.2.3/bin/./jellyfish"
+#jellyfish_loc = "/home/dkoslicki/Documents/jellyfish-2.2.3/bin/./jellyfish"
+jellyfish_loc = sys.argv[1]
 ksize = 21  # k-mer length
 p = 0.01
 metagenome_file_name_r1 = os.path.abspath("../data/SNAP/4539585.3.sorted.r1.fastq")
