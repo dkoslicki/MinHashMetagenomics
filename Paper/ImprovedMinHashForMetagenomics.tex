@@ -391,7 +391,7 @@ Hence, the containment approach uses a fraction (proportional to $\frac{|A|}{|B|
     \subfigimg[width=\linewidth]{C)}{Figs/deltaK-20010.png} &
     \subfigimg[width=\linewidth]{D)}{Figs/deltaK-20090.png}
   \end{tabular}
-\caption{Comparison of the number of required hashes and  relative error $\delta$ with the probability of deviation $\leq 1\%:=t$. The relative sizes and Jaccard indexes of the sets in A)-D) are overlain pictorially as colored discs. In all cases, the containment min hash estimate of the Jaccard index uses significantly fewer hash functions. For example, in part D), the classic min hash method (red line) needs $\approx 35,339$ hash functions to have less than $1\%$ chance to have greater than $0.01$ deviation, whereas with the same thresholds, the containment min hash estimate of the Jaccard index (blue line) needs only $\approx 152$ hash functions.}
+\caption{Comparison of the number of required hashes and relative error $\delta$ with the probability of deviation $\leq 1\%:=t$. The relative sizes and Jaccard indexes of the sets in A)-D) are overlain pictorially as colored discs. In all cases, the containment min hash estimate of the Jaccard index uses significantly fewer hash functions. For example, in part D), the classic min hash method (red line) needs $\approx 35,339$ hash functions to have less than $1\%$ chance to have greater than $0.01$ deviation, whereas with the same thresholds, the containment min hash estimate of the Jaccard index (blue line) needs only $\approx 152$ hash functions.}
 \label{fig:DeltaK}%
 \end{figure}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -413,9 +413,9 @@ Hence, the containment approach uses a fraction (proportional to $\frac{|A|}{|B|
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{figure}[!h]%
 \begin{center}
-\includegraphics[width=\linewidth,trim={0 0 0 0in},clip]{Figs/increasingRatioWithCont2.png}
+\includegraphics[width=0.75\linewidth,trim={0 0 0 0in},clip]{Figs/increasingRatioWithCont2.png}
 \end{center}
-\caption{Comparison of the number of hash functions required by each method as a function of the relative sizes of the sets under consideration. The relative error $\delta=0.1$ and the probability of deviation $t=0.01$ are fixed. Increasing $\frac{|B|}{|A|}$, the number of required hash functions required for the classic min hash approach is increasing (red line). However, for the containment approach, the number of hash functions is nearly constant for $1\leq\frac{|B|}{|A|}\leq 200$ (green line) which is in agreement with equation \ref{kj/kest}. The blue line shows the number of hash functions required if the containment index was being approximated (instead of the Jaccard index).}
+\caption{Comparison of the number of hash functions required by each method as a function of the relative sizes of the sets under consideration. The relative error $\delta=0.1$ and the probability of deviation $t=0.01$ are fixed. Increasing $\frac{|B|}{|A|}$, the number of required hash functions required for the classic min hash approach is increasing (red line). However, for the containment approach, the number of hash functions is nearly constant for $1\leq\frac{|B|}{|A|}\leq 200$ (blue line) which is in agreement with equation \ref{kj/kest}.}
 \label{Kratio}%
 \end{figure}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
