@@ -14,11 +14,11 @@ figure_letter = ''
 try:
 	opts, args = getopt.getopt(sys.argv[1:], "hi:o:b:t:u:n:f:", ["Help=", "InputFile=", "OutputFile=", "Bottom=", "TruncateTo=", "Units=", "NumLabel=", "FigureLetter="])
 except getopt.GetoptError:
-	print 'Unknown option, call using: python CoveragePlot.py -i <InputFile> -o <OutputFile> -b <BottomOfPlotFloat> -t <TruncateCoverageToPowerOfTwoInt> -u <Units "M" or "K"> -n <NumLabelInt> -f <FigureLetter>'
+	print('Unknown option, call using: python CoveragePlot.py -i <InputFile> -o <OutputFile> -b <BottomOfPlotFloat> -t <TruncateCoverageToPowerOfTwoInt> -u <Units "M" or "K"> -n <NumLabelInt> -f <FigureLetter>')
 	sys.exit(2)
 for opt, arg in opts:
 	if opt == '-h':
-		print 'python CoveragePlot.py -i <InputFile> -o <OutputFile> -b <BottomOfPlotFloat> -t <TruncateCoverageToPowerOfTwoInt> -u <Units "M" or "K"> -n <NumLabelInt> -f <FigureLetter>'
+		print('python CoveragePlot.py -i <InputFile> -o <OutputFile> -b <BottomOfPlotFloat> -t <TruncateCoverageToPowerOfTwoInt> -u <Units "M" or "K"> -n <NumLabelInt> -f <FigureLetter>')
 		sys.exit(2)
 	elif opt in ("-i", "--InputFile"):
 		input_coverage_file = arg

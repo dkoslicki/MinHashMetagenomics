@@ -493,8 +493,8 @@ def form_jaccard_count_matrix(all_CEs):
     A = np.zeros((len(all_CEs), len(all_CEs)), dtype=np.float64)
     # Can precompute all the indicies
     indicies = []
-    for i in xrange(len(all_CEs)):
-        for j in xrange(len(all_CEs)):
+    for i in range(len(all_CEs)):
+        for j in range(len(all_CEs)):
             indicies.append((i, j))
 
     shared_mins_base = multiprocessing.Array(ctypes.c_double, len(all_CEs)*len(all_CEs[0]._mins))
@@ -554,8 +554,8 @@ def form_jaccard_matrix(all_CEs):
     A = np.zeros((len(all_CEs), len(all_CEs)), dtype=np.float64)
     # Can precompute all the indicies
     indicies = []
-    for i in xrange(len(all_CEs)):
-        for j in xrange(len(all_CEs)):
+    for i in range(len(all_CEs)):
+        for j in range(len(all_CEs)):
             indicies.append((i, j))
 
     shared_mins_base = multiprocessing.Array(ctypes.c_double, len(all_CEs)*len(all_CEs[0]._mins))

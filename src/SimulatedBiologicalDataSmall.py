@@ -7,7 +7,8 @@ import os
 import screed
 import numpy as np
 import subprocess
-from pybloom import BloomFilter  # basic bloom filter for comparison purposes
+#from pybloom import BloomFilter  # basic bloom filter for comparison purposes (only for Python2)
+from pybloom_live import BloomFilter  # basic bloom filter for comparison purposes
 import khmer
 import MinHash as MH
 import bz2
@@ -76,7 +77,7 @@ def create_relative_errors(num_genomes, num_reads, python_loc, gen_sim_loc, prim
 	simulation_MHS = MH.CountEstimator(n=max_h, max_prime=prime, ksize=ksize, save_kmers='y')
 	for record in screed.open(simulation_file):
 		seq = record.sequence
-		for i in xrange(len(seq) - ksize + 1):
+		for i in range(len(seq) - ksize + 1):
 			kmer = seq[i:i+ksize]
 			kmer_rev = khmer.reverse_complement(kmer)
 			if kmer < kmer_rev:
@@ -206,7 +207,7 @@ plt.figure()
 plt.errorbar(hash_range, np.mean(MH_results, 0), yerr=np.std(MH_results, 0), fmt='--r', ecolor=[1, 0, 0, .2], label="Classic Min Hash")
 plt.errorbar(hash_range, np.mean(CMH_results, 0), yerr=np.std(CMH_results, 0), fmt='b', ecolor=[0, 0, 1, .2], label="Containment Min Hash")
 axes = plt.gca()
-axes.text(-.1, 1, 'a)', horizontalalignment='left', verticalalignment='bottom', fontdict=font, transform=axes.transAxes)
+#axes.text(-.1, 1, 'a)', horizontalalignment='left', verticalalignment='bottom', fontdict=font, transform=axes.transAxes)
 plt.ylabel('Relative error')
 plt.xlabel('Number of hashes')
 plt.xlim([min(hash_range), max(hash_range)])

@@ -39,6 +39,9 @@ python ConceptualFigure.py
 # Make the figures of the probability of deviation and number of hash functions
 python DeltaHashesConfPlotScript.py
 
+# Make the figure of number of hash functions as a function of |B|/|A|
+python JaccardIndexNumOfHashes.py
+
 # Run the synthetic data computations
 echo "Creating synthetic data figures (JaccardVsContainment.py)"
 python JaccardVsContainment.py
@@ -59,6 +62,9 @@ python MakeMetagenomeBloom.py
 python QueryVirusSketches.py
 chmod +x MakeCoveragePlot.sh
 ./MakeCoveragePlot.sh
+
+# Trim whitespace from all figures
+ls ../Paper/Figs/*.png | xargs -I{} convert {} -trim {}
 
 # Compile the LaTeX paper
 pdflatex ../Paper/ImprovedMinHashForMetagenomics.tex

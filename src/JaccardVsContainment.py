@@ -3,7 +3,8 @@
 import MinHash as MH  # Our implementation of Min Hash
 import numpy as np
 import matplotlib.pyplot as plt
-from pybloom import BloomFilter  # basic bloom filter for comparison purposes
+#from pybloom import BloomFilter  # basic bloom filter for comparison purposes (only for Python2)
+from pybloom_live import BloomFilter  # basic bloom filter for comparison purposes
 import os
 
 prime = 9999999999971  # taking hashes mod this prime
@@ -19,6 +20,7 @@ def i_size(j, k, n):
 	return int(n*j/float(1-j) + k)
 
 i_range = [i_size(val, ksize, n1) for val in np.arange(0, 1, 0.005)]
+#i_range = [i_size(val, ksize, n1) for val in np.arange(0, 1, 0.05)]  # For quick debugging
 true_jaccards = np.zeros(len(i_range))
 estimate_jaccards = np.zeros(len(i_range))
 containment_jaccards = np.zeros(len(i_range))
@@ -34,10 +36,10 @@ for i_size in i_range:
 	# Calculate exact Jaccard index
 	kmers1 = set()
 	kmers2 = set()
-	for i in xrange(len(seq1) - ksize + 1):
+	for i in range(len(seq1) - ksize + 1):
 		kmers1.add(seq1[i:i+ksize])
 
-	for i in xrange(len(seq2) - ksize + 1):
+	for i in range(len(seq2) - ksize + 1):
 		kmers2.add(seq2[i:i+ksize])
 
 	true_jaccard = len(kmers1.intersection(kmers2)) / float(len(kmers1.union(kmers2)))
@@ -62,8 +64,10 @@ for i_size in i_range:
 	#len_kmers_1 *= (1 - p)  # adjust for the false positive rate, shouldn't need to do this as I'm just adding elements
 	int_est = 0
 	for val in E2._kmers:
-		if val in f:
-			int_est += 1
+		#if val in f:  # in python2, no distinguishing between byte and utf-8 string
+		if val is not '':
+			if val.decode("utf-8") in f:
+				int_est += 1
 	int_est -= p*h  # adjust for the false positive rate
 	containment_est = int_est / float(h)
 
@@ -107,7 +111,7 @@ plt.ylabel('Estimate Jaccard')
 plt.xlabel('True Jaccard')
 plt.title('Classic Min Hash')
 axes = plt.gca()
-axes.text(-.2, 1.15, 'a)', horizontalalignment='left', verticalalignment='bottom', fontdict=font)
+#axes.text(-.2, 1.15, 'a)', horizontalalignment='left', verticalalignment='bottom', fontdict=font)
 plt.savefig('../Paper/Figs/TrueVsEstimate.png')
 
 # Do a relative error plot
@@ -153,7 +157,7 @@ plt.ylabel('Estimate Jaccard')
 plt.xlabel('True Jaccard')
 plt.title('Min Hash Via Containment')
 axes = plt.gca()
-axes.text(-.2, 1.15, 'b)', horizontalalignment='left', verticalalignment='bottom', fontdict=font)
+#axes.text(-.2, 1.15, 'b)', horizontalalignment='left', verticalalignment='bottom', fontdict=font)
 plt.savefig('../Paper/Figs/ContainmentTrueVsEstimate.png')
 
 # Do a relative error plot

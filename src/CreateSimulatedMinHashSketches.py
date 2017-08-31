@@ -32,7 +32,7 @@ def make_minhash(genome, max_h, prime, ksize):
 	MHS = MH.CountEstimator(n=max_h, max_prime=prime, ksize=ksize, save_kmers='y')
 	for record in screed.open(genome):
 		seq = record.sequence
-		for i in xrange(len(seq) - ksize + 1):
+		for i in range(len(seq) - ksize + 1):
 			kmer = seq[i:i+ksize]
 			kmer_rev = khmer.reverse_complement(kmer)
 			if kmer < kmer_rev:
