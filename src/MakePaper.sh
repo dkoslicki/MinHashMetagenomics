@@ -36,6 +36,9 @@ cd ${srcDir}
 echo "Creating conceptual figure (ConceptualFigure.py)"
 python ConceptualFigure.py
 
+# Make the figures of the probability of deviation and number of hash functions
+python DeltaHashesConfPlotScript.py
+
 # Run the synthetic data computations
 echo "Creating synthetic data figures (JaccardVsContainment.py)"
 python JaccardVsContainment.py

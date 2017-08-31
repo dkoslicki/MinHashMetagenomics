@@ -4,6 +4,7 @@ from VennPlot import vennplot
 from DeltaNumOfHashes import deltaHashNumPlot
 from DeltaConfident import deltaconfident
 import os
+import subprocess
 
 # initial values
 cardB = 100000  # Cardinal of B
@@ -35,8 +36,9 @@ for m in cardRatio:
         delta, kj, kc, k_est = deltaHashNumPlot(cardAIntB, cardAUB, c, conf, p, m, deltaStep, deltabeginpnt)
         fig = plt.figure()
         plt.semilogy(delta, kj, 'r--', label='Classic Min Hash')
-        plt.semilogy(delta, kc, 'b--', label='Containment Min Hash')
-        plt.semilogy(delta,k_est, 'g--', label ='Jaccard Estimation by Containment Method')
+        #plt.semilogy(delta, kc, 'b--', label='Containment Min Hash')
+        #plt.semilogy(delta,k_est, 'g--', label ='Jaccard Estimation by Containment Method')
+        plt.semilogy(delta, k_est, 'b--', label='Containment Min Hash')
 
         plt.xlabel('Relative error ($\delta$)',**font_prop)
         plt.ylabel('Number of hashes',**font_prop)
@@ -57,8 +59,9 @@ for m in cardRatio:
         delta, tj, tc, t_est = deltaconfident(cardAIntB, cardAUB, c, k, p, deltaStep, deltabeginpnt)
         fig = plt.figure()
         plt.plot(delta, tj, 'r--', label='Classic Min Hash')
-        plt.plot(delta, tc, 'b--', label='Containment Min Hash')
-        plt.plot(delta, t_est, 'g--', label='Jaccard Estimation by Containment Method')
+        #plt.plot(delta, tc, 'b--', label='Containment Min Hash')
+        #plt.plot(delta, t_est, 'g--', label='Jaccard Estimation by Containment Method')
+        plt.plot(delta, t_est, 'b--', label='Containment Min Hash')
 
         plt.axis([0, 1, 0, 1])
         plt.xlabel('Relative error ($\delta$)', **font_prop)
@@ -76,3 +79,6 @@ for m in cardRatio:
         pltfigpath = '../Paper/Figs/deltaConfident-%s%d.png' % (m, c * 100)
         plt.savefig(pltfigpath)
         plt.close()
+
+cmd = 'ls ../Paper/Figs/*.png | xargs -I{} convert {} -trim {}'
+subprocess.check_output(cmd, shell=True)

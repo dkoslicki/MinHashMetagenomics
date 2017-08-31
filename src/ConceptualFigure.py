@@ -71,7 +71,7 @@ ax.text(x_small+radius_small, 0, r'$A$', horizontalalignment='left', verticalali
 ax.set_xlim(x_big-radius_big-0.2, radius_big+0.2)
 ax.set_ylim(-radius_big-0.3, radius_big+0.3)
 ax.set_aspect('equal')
-ax.text(-.1, 1, 'a)', horizontalalignment='left', verticalalignment='bottom', fontdict=font, transform=ax.transAxes)
+#ax.text(-.1, 1, 'a)', horizontalalignment='left', verticalalignment='bottom', fontdict=font, transform=ax.transAxes)
 plt.savefig('../Paper/Figs/ClassicalConceptual.png')
 
 
@@ -122,16 +122,24 @@ ax.text(x_small+radius_small, 0, r'$A$', horizontalalignment='left', verticalali
 ax.set_xlim((x_small-radius_small-0.2)/((radius_small+0.2) - (-radius_small-0.2)), (x_small+radius_small+0.2)/((radius_small+0.2) - (-radius_small-0.2)))
 ax.set_ylim(-radius_small-0.2, radius_small+0.2)
 ax.set_aspect('equal')
-ax.text(-.1, 1, 'b)', horizontalalignment='left', verticalalignment='bottom', fontdict=font, transform=ax.transAxes)
+#ax.text(-.1, 1, 'b)', horizontalalignment='left', verticalalignment='bottom', fontdict=font, transform=ax.transAxes)
 plt.savefig('../Paper/Figs/ContainmentConceptual.png')
 
 print('Number in intersection when using both sets: %d' % num_int_both)
 print('Number in intersection when using one set: %d' % num_int_single)
+# Save number of points in intersections
 fid = open(os.path.abspath('../Paper/Data/ClassicalConceptual.txt'), 'w')
 fid.write("%d" % num_int_both)
 fid.close()
 fid = open(os.path.abspath('../Paper/Data/ContainmentConceptual.txt'), 'w')
 fid.write("%d" % num_int_single)
+fid.close()
+# Save number of points used to sample
+fid = open(os.path.abspath('../Paper/Data/ClassicalConceptualNumPoints.txt'), 'w')
+fid.write("%d" % num_points_both)
+fid.close()
+fid = open(os.path.abspath('../Paper/Data/ContainmentConceptualNumPoints.txt'), 'w')
+fid.write("%d" % num_points_single)
 fid.close()
 
 cmd = 'ls ../Paper/Figs/*.png | xargs -I{} convert {} -trim {}'
