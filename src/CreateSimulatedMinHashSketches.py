@@ -46,6 +46,7 @@ def make_minhash(genome, max_h, prime, ksize):
 	#genome_sketches.append(MHS)
 	# export the kmers
 	fid = bz2.BZ2File(os.path.abspath(os.path.join('../data/Genomes/', name + ".kmers.bz2")), 'w')
+	#fid = bz2.open(os.path.abspath(os.path.join('../data/Genomes/', name + ".kmers.bz2")), 'wt')  # python3
 	for kmer in kmers:
 		fid.write("%s\n" % kmer)
 	fid.close()
@@ -57,6 +58,9 @@ def make_minhash_star(arg):
 
 pool = Pool(processes=num_threads)
 genome_sketches = pool.map(make_minhash_star, zip(file_names, repeat(max_h), repeat(prime), repeat(ksize)))
+pool.close()
+pool.join()
+dummy = [len(item._kmers) for item in genome_sketches]  # to get it to actually do the work
 
 # Export all the sketches
 base_names = [os.path.basename(item) for item in file_names]

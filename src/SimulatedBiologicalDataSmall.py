@@ -7,8 +7,8 @@ import os
 import screed
 import numpy as np
 import subprocess
-#from pybloom import BloomFilter  # basic bloom filter for comparison purposes (only for Python2)
-from pybloom_live import BloomFilter  # basic bloom filter for comparison purposes
+from pybloom import BloomFilter  # basic bloom filter for comparison purposes (only for Python2)
+#from pybloom_live import BloomFilter  # basic bloom filter for comparison purposes
 import khmer
 import MinHash as MH
 import bz2
@@ -21,10 +21,13 @@ import sys
 num_threads = multiprocessing.cpu_count()
 num_genomes = 20
 num_reads = 10000
-num_replicates = 20
-python_loc = "python"
+num_replicates = 16
+#num_replicates = 8
+#python_loc = "python"
+#python_loc = "/usr/bin/python"
 #gen_sim_loc = "/home/dkoslicki/Documents/GemSIM_v1.6/GemReads.py"
 gen_sim_loc = sys.argv[1]
+python_loc = sys.argv[2]
 prime = 9999999999971  # taking hashes mod this prime
 p = 0.001  # false positive rate for the bloom filter
 ksize = 11  # k-mer length

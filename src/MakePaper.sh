@@ -4,6 +4,7 @@
 srcDir=`pwd`
 dataDir="../data"
 genSimLoc="/home/dkoslicki/Documents/GemSIM_v1.6/GemReads.py"
+python2Loc="/usr/bin/python"  # hash function not stable between python versions, and stupid byte encoding issues with python 3
 mkdir -p ${dataDir}/SNAP
 mkdir -p ${dataDir}/Viruses
 mkdir -p "../Paper"
@@ -49,11 +50,11 @@ python JaccardVsContainment.py
 # Run the simulated biological data computations
 echo "Creating simulated biological data figures"
 echo "Pre-computing bacterial genome sketches (CreateSimulatedMinHashSketches.py)"
-python CreateSimulatedMinHashSketches.py
+${python2Loc} CreateSimulatedMinHashSketches.py
 echo "Creating small simulated metagenomes and computed jaccard indicies and estimates (SimulatedBiologicalDataSmall.py)"
-python SimulatedBiologicalDataSmall.py ${genSimLoc}
+${python2Loc} SimulatedBiologicalDataSmall.py ${genSimLoc} ${python2Loc}
 echo "Creating large simulated metagenomes and computed jaccard indicies and estimates (SimulatedBiologicalData.py)"
-python SimulatedBiologicalData.py ${genSimLoc}
+${python2Loc} SimulatedBiologicalData.py ${genSimLoc} ${python2Loc}
 
 # Run the real biological data computations
 echo "Creating real data figure(s)"

@@ -145,9 +145,9 @@
 
 \date{\today}
 \begin{abstract}
-Min hash is a probabilistic method for estimation the similarity of two sets in terms of their Jaccard index. We demonstrate that this method performs best when the sets under consideration are of similar size and the performance degrades considerably when the sets are of very disparate size. In this manuscript, we introduce a new and efficient approach, called the containment min hash approach, that is more suitable for sets of very different size. We accomplish this by leveraging another probabilistic method (in particular, Bloom filters) for fast membership queries. We derive bounds on the probability of deviation for both the classic min hash technique and our containment approach and demonstrate the significant improvement in terms of both relative error and time/space complexity. We then use this method to analyze metagenomic data (that is, data given by the totality of DNA from a given environmental sample of microorganisms) and show how it can be used to detect the presence of very small, low abundance microorganisms.  \\\\
+Min hash is a probabilistic method for estimating the similarity of two sets in terms of their Jaccard index. We demonstrate that this method performs best when the sets under consideration are of similar size and the performance degrades considerably when the sets are of very different size. We introduce a new and efficient approach, called the \textit{containment min hash} approach, that is more suitable for estimating the Jaccard index of sets of very different size. We accomplish this by leveraging another probabilistic method (in particular, Bloom filters) for fast membership queries. We derive bounds on the probability of estimate errors for the containment min hash approach and show it significantly improves upon the classical min hash approach. We also show significant improvements in terms of time and space complexity. As an application, we use this method to detect the presence/absence of organisms in a metagenomic data set, showing that it can detect the presence of very small, low abundance microorganisms.  \\\\
 \smallskip
-\noindent \textsc{Keywords}: \emph{Min hash, k-mins sketch, metagenomics, taxonomic profiling, taxonomic classification, Jaccard index, containment}.
+\noindent \textsc{Keywords}: \emph{Min hash, Jaccard index, metagenomics, taxonomic classification, containment}.
 \end{abstract}
 \maketitle
 
@@ -161,7 +161,7 @@ Min hash is a probabilistic method for estimation the similarity of two sets in 
 %\item we modify the min hash paradigm to this particular situation so it can handle a sample of much greater size than the reference database entries.
 %\end{enumerate}
 
-Min hash\cite{broder1997resemblance} is a fast, probabilistic method of estimating the Jaccard index, allowing for quick estimation of set similarity. Since the introduction of this technique by Broder (1997), this method has been used in a broad range of applications: from clustering in search engines \cite{das2007google}, to association rule learning in data mining \cite{cohen2001finding}, to recent applications in computational biology \cite{ondov2016mash, sourmash}. As a probabilistic method, min hash uses random sampling to estimate the Jaccard index of two sets and bounds can be obtained on the probability of deviation from the true Jaccard index value in terms of the number of random samples used along with the magnitude of the true Jaccard value. Using the Chernoff bounds (Theorem \ref{chernoffbd}), this probability of deviating from the true value grows exponentially as the size of the true Jaccard value decreases to zero. Hence, min hash returns tight estimates only when the true Jaccard index is large. This requirement for a large Jaccard index limits the min hash technique to situations where the sets under consideration are of similar relative size and possess significant overlap with each other. In this manuscript, we introduce a modification of the min hash technique, which we call \textit{containment min hash}, that does not possess this limitation and hence is appropriate to use when sets under consideration have very different size.
+Min hash\cite{broder1997resemblance} is a fast, probabilistic method of estimating the Jaccard index, allowing for quick estimation of set similarity. Since the introduction of this technique by Broder (1997), this method has been used in a broad range of applications: from clustering in search engines \cite{das2007google}, to association rule learning in data mining \cite{cohen2001finding}, to recent applications in computational biology \cite{ondov2016mash, sourmash}. As a probabilistic method, min hash uses random sampling to estimate the Jaccard index of two sets. Bounds can be obtained on the probability of deviation from the true Jaccard index value in terms of the number of random samples used along with the magnitude of the true Jaccard value. Using the Chernoff bounds (Theorem \ref{chernoffbd}), this probability of deviating from the true value grows exponentially as the size of the true Jaccard value decreases to zero. Hence, min hash returns tight estimates only when the true Jaccard index is large. This requirement for a large Jaccard index limits this technique to situations where the sets under consideration are of similar relative size and possess significant overlap with each other. In this manuscript, we introduce a modification of the min hash technique, which we call \textit{containment min hash}, that does not possess this limitation and hence is appropriate for use when the sets under consideration have very different size.
 
 After introducing the containment min hash technique, we derive rigorous probabilistic error bounds and compare these to those of the traditional min hash technique. This allows us to precisely state when the containment approach is superior to the classical approach. To demonstrate the practical utility of the containment min hash technique, we consider an application in the area of metagenomics (the study of all sampled DNA from a community of microorganisms), where the goal is to detect the presence or absence of a given genome in a metagenomic sample. This is an area of study where the sets of interest differ in relative size by orders of magnitude. This application highlights the improvements of this approach: in both theory and practice, in many situations of interest, containment min hash is significantly more accurate, has smaller computational complexity, and utilizes less memory than the traditional min hash approach.
 
@@ -187,7 +187,7 @@ We begin by giving a high-level summary of the main idea behind the containment 
     \subfigimg[width=\linewidth]{A)}{Figs/ClassicalConceptual.png} &
     \subfigimg[width=\linewidth]{B)}{Figs/ContainmentConceptual.png}
   \end{tabular}
-\caption{Conceptual comparison of classical min hash to the proposed containment approach when estimating the Jaccard index of very different sized sets. a) Sampling \ClassicalConceptualNumPoints points from $A\cup B$ (as is done in the classical min hash approach) leads to finding only \ClassicalConceptual elements in $A\cap B$. b) Sampling just \ContainmentConceptualNumPoints points of $A$ and testing if a point $x\in A\cap B$, finds \ContainmentConceptual elements in $A\cap B$. This latter approach will be seen to lead to a better estimate of the Jaccard index. }
+\caption{Conceptual comparison of classical min hash to the proposed containment approach when estimating the Jaccard index of very different sized sets. A) Sampling \ClassicalConceptualNumPoints points from $A\cup B$ (as is done in the classical min hash approach) leads to finding only \ClassicalConceptual elements in $A\cap B$. B) Sampling just \ContainmentConceptualNumPoints points of $A$ and testing if a point $x\in A\cap B$, finds \ContainmentConceptual elements in $A\cap B$. This latter approach will be seen to lead to a better estimate of the Jaccard index. }
 \label{fig:Conceptual}%
 \end{figure}
 \renewcommand{\subfigimg}[3][,]{%
@@ -210,10 +210,11 @@ The Jaccard index, also known as the Jaccard similarity coefficient, measures th
 $$
 J(A,B)= \frac{|A\cap B|}{|A \cup B|}
 $$
-Hence, $0\leq J(A,B)\leq 1$ with larger values indicating more overlap. Note that a distance metric can be obtained from the Jaccard index as in  \cite{kosub2016note}:
-$$
-d_J(A,B) = 1-J(A,B)=\frac{|A\cup B|-|A\cap B|}{|A\cup B|}.
-$$
+Hence, $0\leq J(A,B)\leq 1$ with larger values indicating more overlap. 
+%Note that a distance metric can be obtained from the Jaccard index as in  \cite{kosub2016note}:
+%$$
+%d_J(A,B) = 1-J(A,B)=\frac{|A\cup B|-|A\cap B|}{|A\cup B|}.
+%$$
 
 To compare the relative size of the intersection to the size of $A$, we similarly define the containment index of $A$ in $B$ (both non-empty) as:
 $$
@@ -231,12 +232,16 @@ Suppose $X_1,X_2,\dots,X_n$ are independent, identically distributed Bernoulli r
 P(X\leq (1-\delta)\mu)&\leq e^{-\frac{\delta^2\mu}{2}}\label{chernoffbd1}\\
 P(X\geq (1+\delta)\mu)&\leq e^{-\frac{\delta^2\mu}{3}}\label{chernoffbd2}
 \end{align}
+And hence,
+\begin{align}
+P\left(\left|\frac{X-\mu}{\mu}\right|\geq \delta \right)&\leq 2e^{-\frac{\delta^2\mu}{3}} \label{twosidedchernoff}.
+\end{align}
 \end{theorem}  
-Based on this theorem, we have that
-\begin{equation}
-\label{twosidedchernoff}
-P\left(\left|\frac{X-\mu}{\mu}\right|\geq \delta \right)\leq 2e^{-\frac{\delta^2\mu}{3}}.
-\end{equation}
+%Based on this theorem, we have that
+%\begin{equation}
+%\label{twosidedchernoff}
+%P\left(\left|\frac{X-\mu}{\mu}\right|\geq \delta \right)\leq 2e^{-\frac{\delta^2\mu}{3}}.
+%\end{equation}
 
 \subsubsection{Bloom Filters}
 As mentioned in the Introduction, we will need a fast test of set membership to implement the containment min hash approach. While there exist many different such data structures (such as Bloom Filters \cite{bloom1970space}, skip lists \cite{pugh1990skip}, cuckoo filters \cite{fan2014cuckoo}, quotient filters \cite{bender2012don}, etc.), we utilize the Bloom filter due to its ubiquity \cite{melsted2011efficient,heo2014bless,chikhi2012space,stranneheim2010classification,chu2014biobloom,ondov2016mash,solomon2016fast,pell2012scaling} in the application area considered here (computational biology) and the ease of its mathematical analysis.
@@ -277,7 +282,7 @@ Applying the two-sided Chernoff bounds from equation \eqref{twosidedchernoff} to
 \label{eqn:ClassicChernoff}
 P\left( \left|\dfrac{\frac{X^k}{k}-J(A,B)}{J(A,B)}\right|\geq\delta\right)\leq 2e^{-\delta^2kJ(A,B)/3}.
 \end{align}
-Thus, two quantities control the accuracy of this method: $k$ and $J(A,B)$. Setting $t$ as the threshold of probability of deviation from the Chernoff bounds (i.e. $t=2e^{-\delta^2k J(A,B)/3}$), we calculate the number of hash functions $k=k_\classicX$ required to achieve this threshold:
+Thus, two quantities control the accuracy of this method for $\delta$ fixed: $k$ and $J(A,B)$. Setting $t$ as the threshold of probability of deviation from the Chernoff bounds (i.e. $t=2e^{-\delta^2k J(A,B)/3}$), we calculate the number of hash functions $k=k_\classicX$ required to achieve this threshold:
 \begin{equation}
 \label{eqn:Jaccardhashes}
 k_\classicX=\dfrac{-3\ln(t/2)|A\cup B|}{\delta^2 |A\cap B|}.
@@ -379,8 +384,28 @@ where the last proportionality holds when $C$ is bounded away from zero.
 % \begin{equation}\label{kj/kest}
 %\frac{ k_\classicX}{k_\containX}\geq .9\frac{|B|}{|A|}.
 %\end{equation}
-Hence, the containment approach uses a fraction (proportional to $\frac{|A|}{|B|})$ of the hashes that the classical approach uses to achieve the same bound of error. When $|B|$ is significantly larger, this reduction in the number of hash functions required can be significant. In Figure \ref{fig:DeltaK} we compare the relative error $\delta$ in estimating the Jaccard index to the number of hash functions for classical min hash and the containment min hash approach. Interestingly, the number of hashes required by the containment approach is nearly constant as a function of $\frac{|B|}{|A|}$ whereas for the classical approach, the number of hashes required is increasing. Figure \ref{fig:Kratio} depicts this observation.
+Hence, the containment approach uses a fraction (proportional to $\frac{|A|}{|B|})$ of the hashes that the classical approach uses to achieve the same bound of error. When $|B|$ is significantly larger than $|A|$, this reduction in the number of hash functions required can be significant. In Figure \ref{fig:DeltaK}, we compare the relative error $\delta$ in estimating the Jaccard index to the number of hash functions required for the classical and proposed approach to have a probability of $\leq 1\%$ of more than $\delta$ relative deviation in their estimate. Interestingly, the number of hashes required by the containment approach is nearly constant as a function of $\frac{|B|}{|A|}$ whereas for the classical approach, the number of hashes required is increasing. Figure \ref{fig:Kratio} depicts this observation.
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\renewcommand{\subfigimg}[3][,]{%
+  \setbox1=\hbox{\includegraphics[#1]{#3}}% Store image in box
+  \leavevmode\rlap{\usebox1}% Print image
+%  \rlap{\hspace*{-5pt}\raisebox{\dimexpr\ht1-2\baselineskip}{#2}}% Print label
+  \rlap{\hspace*{1pt}\raisebox{\dimexpr\ht1-0\baselineskip}{#2}}% Print label %positioning of labels
+  \phantom{\usebox1}% Insert appropriate spacing
+}
+\begin{figure}[!h]
+  \centering
+  \begin{tabular}{@{}p{0.50\linewidth}@{\hspace{1ex}}p{0.50\linewidth}@{}}
+    \subfigimg[width=\linewidth]{A)}{Figs/deltaConfident-1010.png} &
+    \subfigimg[width=\linewidth]{B)}{Figs/deltaConfident-1090.png} \\
+    \subfigimg[width=\linewidth]{C)}{Figs/deltaConfident-20010.png} &
+    \subfigimg[width=\linewidth]{D)}{Figs/deltaConfident-20090.png}
+  \end{tabular}
+\caption{Comparison of the probability of deviation (red line: equation \eqref{eqn:ClassicChernoff}, blue line: Proposition \eqref{prop:bounds}) versus the relative error $\delta$ with a fixed number of hash functions ($1,000$). Relative sizes and Jaccard indexes of the sets in A)-D) are overlain as colored discs. Throughout, the containment min hash estimate of the Jaccard index has a much lower probability of error than the classical min hash approach. Note that in part D), there is approximately an $80\%$ chance to have a deviation greater than $0.4$ in the classic approach, whereas in the containment approach, the chance of having a deviation of greater than just $0.2$ is almost zero.}
+\label{fig:DeltaConfidence}%
+\end{figure}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{figure}[!h]
@@ -391,29 +416,15 @@ Hence, the containment approach uses a fraction (proportional to $\frac{|A|}{|B|
     \subfigimg[width=\linewidth]{C)}{Figs/deltaK-20010.png} &
     \subfigimg[width=\linewidth]{D)}{Figs/deltaK-20090.png}
   \end{tabular}
-\caption{Comparison of the number of required hashes and relative error $\delta$ with the probability of deviation $\leq 1\%:=t$. The relative sizes and Jaccard indexes of the sets in A)-D) are overlain pictorially as colored discs. In all cases, the containment min hash estimate of the Jaccard index uses significantly fewer hash functions. For example, in part D), the classic min hash method (red line) needs $\approx 35,339$ hash functions to have less than $1\%$ chance to have greater than $0.01$ deviation, whereas with the same thresholds, the containment min hash estimate of the Jaccard index (blue line) needs only $\approx 152$ hash functions.}
+\caption{Comparison of the number of required hashes and relative error $\delta$ with probability of deviation $\leq 1\%:=t$. The relative sizes and Jaccard indexes of the sets in A)-D) are overlain pictorially as colored discs. In all cases, the containment min hash estimate of the Jaccard index uses significantly fewer hash functions. For example, in part D), the classic min hash method (red line) needs $\approx 35,339$ hash functions to have less than $1\%$ chance to have greater than $1\%$ relative deviation in its estimate, whereas with the same thresholds, the containment min hash estimate of the Jaccard index (blue line) needs only $\approx 152$ hash functions.}
 \label{fig:DeltaK}%
-\end{figure}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\begin{figure}[!h]
-  \centering
-  \begin{tabular}{@{}p{0.50\linewidth}@{\hspace{-2ex}}p{0.50\linewidth}@{}}
-    \subfigimg[width=\linewidth]{A)}{Figs/deltaConfident-1010.png} &
-    \subfigimg[width=\linewidth]{B)}{Figs/deltaConfident-1090.png} \\
-    \subfigimg[width=\linewidth]{C)}{Figs/deltaConfident-20010.png} &
-    \subfigimg[width=\linewidth]{D)}{Figs/deltaConfident-20090.png}
-  \end{tabular}
-\caption{Comparison of the probability of deviation from equation \eqref{eqn:ClassicChernoff} (red line) and Proposition \eqref{prop:bounds} (blue line) versus the relative error $\delta$with a fixed number of hash functions ($1,000$). The relative sizes and Jaccard indexes of the sets in A)-D) are overlain pictorially as colored discs. Parts C) and D) demonstrate that with very different sized sets, the containment min hash estimate of the Jaccard index has a much lower probability of error than the classical min hash approach. Note that in part D), with $1,000$ hash functions, there is approximately $80\%$ chance to have a deviation greater than $0.4$ in the classic min hash approach, whereas in the containment approach with the same assumptions, the chance of having a deviation of greater than just $0.2$ is almost zero.}
-\label{fig:DeltaConfidence}%
 \end{figure}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{figure}[!h]%
 \begin{center}
-\includegraphics[width=0.75\linewidth,trim={0 0 0 0in},clip]{Figs/increasingRatioWithCont2.png}
+\includegraphics[width=0.65\linewidth,trim={0 0 0 0in},clip]{Figs/increasingRatioWithCont2.png}
 \end{center}
 \caption{Comparison of the number of hash functions required by each method as a function of the relative sizes of the sets under consideration. The relative error $\delta=0.1$ and the probability of deviation $t=0.01$ are fixed. Increasing $\frac{|B|}{|A|}$, the number of required hash functions required for the classic min hash approach is increasing (red line). However, for the containment approach, the number of hash functions is nearly constant for $1\leq\frac{|B|}{|A|}\leq 200$ (blue line) which is in agreement with equation \ref{kj/kest}.}
 \label{fig:Kratio}%
@@ -423,7 +434,7 @@ Hence, the containment approach uses a fraction (proportional to $\frac{|A|}{|B|
 
 %%%%%%%%%%%%%%%%%%% Time Complexity%%%%%%%%%%%%%%%%%%%%
 \subsubsection{Time/Space Complexity}
-Given sets $A$ and $B$ of size $m$ and $n$ respectively, both the classic min hash and containment min hash require $\mathcal{O}(m+n)$ time to form their respective data structures. When calculating their estimates of the Jaccard index $J(A,B)$, both approaches use computational time linear in the number of hash functions required (in the case of the containment min hash approach, this is due to Bloom filter queries being constant time \cite{bloom1970space}). Because of equation \eqref{eqn:KestOverJest} and the discussion that followed, this implies that the ratio of time complexity of the classical min hash to the containment min hash is $\mathcal{O}(\frac{n}{m})$. When $B$ is very large in comparison to $A$, this implies that the containment min hash approach is significantly faster than the classical min hash approach.
+Given sets $A$ and $B$ of size $m$ and $n$ respectively, both the classic min hash and containment min hash require $\mathcal{O}(m+n)$ time to form their respective data structures. When calculating their estimates of the Jaccard index $J(A,B)$, both approaches use computational time linear in the number of hash functions required (in the case of the containment min hash approach, this is due to Bloom filter queries being constant time \cite{bloom1970space}). Because of equation \eqref{eqn:KestOverJest} and the discussion that followed, this implies that the ratio of time complexity of the classical min hash to the containment min hash is $\mathcal{O}\left(\frac{k_\classicX}{k_\containX}\right)$. Given equations \eqref{eqn:KestOverJest} and \eqref{kj/kest}, when $B$ is very large in comparison to $A$, this implies that the containment min hash approach is significantly faster than the classical min hash approach.
 %Both the classic and containment min hash approaches have time complexity linear in the number of hashes. Hence, for fixed (So containment approach is roughly $\frac{|B|}{|A|}$ times faster for typical set sizes).
 
 In terms of space complexity, if all one desires is an estimate of the Jaccard index from a single pair of sets, the containment approach will use more space as a bloom filter must be formed from one of the sets. However, in the application of interest, we have one large ($n\gg m$) ``reference'' set $B$ and many smaller sets $\{A_i\}_{i=1}^M$ each with $|A_i|\leq m$. Here, we wish to estimate $J(B,A_i)$ for each $i$. In this case, the additional space required to store a bloom filter is dwarfed by the space savings that come from using significantly fewer hash functions. Indeed, for $S_\classicX$ and $S_\containX$ the space required for the classic and containment min hash respectively, we have that $S_\classicX \propto k_\classicX (M+1)$ and $S_\containX \propto k_\containX + 1.44 \log_2(1/p)n$ where the proportionality is in terms of the number of bits required to store a single hash value. Holding this constant fixed (as well as $p$ and $t$), we then have:
@@ -433,7 +444,7 @@ In terms of space complexity, if all one desires is an estimate of the Jaccard i
 &\leq \frac{k_\containX}{k_\classicX} +\frac{nk_\containX}{k_\classicX (M+1)}\\
 &\propto \frac{m}{n}+\frac{m}{M+1}
 \end{align}
-demonstrating that for large enough $M$, the containment approach will use less space than the classical min hash approach. A more detailed space analysis can be obtained by combining equations \eqref{eqn:Jaccardhashes} and \eqref{eqn:JaccardFromContainment}. For example when $|B|=10^8$ and one wishes to estimate the Jaccard index of $M=30000$ smaller sets $A_i$ with containment $C(B,A_i)\geq 80\%$ that are small enough that $J(B,A_i)\leq 10^{-4}$ with $t=95\%$ confidence that the estimate is not off by more than $\delta=50\%$, using a false positive rate of $p=0.01$ for the bloom filter results in a 33X space savings when using the containment approach instead of the classical min hash approach.
+demonstrating that for large enough $M$, the containment approach will use less space than the classical min hash approach. A more detailed space analysis can be obtained by combining equations \eqref{eqn:Jaccardhashes} and \eqref{eqn:JaccardFromContainment}. For example when $|B|=10^8$ and one wishes to estimate the Jaccard index of $M=30000$ smaller sets $A_i$ with containment $C(A_i,B)\geq 80\%$ that are small enough that $J(A_i,B)\leq 10^{-4}$ and with $t=95\%$ confidence that the estimate is not off by more than $\delta=50\%$, using a false positive rate of $p=0.01$ for the bloom filter results in a 33X space savings when using the containment approach instead of the classical min hash approach.
 
 
 
@@ -450,7 +461,7 @@ Included in this repository is an automated script that can reproduce this paper
 \subsubsection{Simulated data}
 \label{section:SyntheticData}
 Here we illustrate the improved accuracy of the containment min hash approach over classical min hash in estimating the Jaccard index. To that end, we generated two random strings $w_A$ and $w_B$ on the alphabet $\{A,C,T,G\}$. We set $|w_A|= 10,000$ and $|w_B| = 15$ to simulate the situation of interest where one wishes to estimate the Jaccard index of two sets of very different size.
-We picked a $k$-mer (substring of length $k$) size of $11$ and considered the sets $A$ and $B$ to be the set of all $k$-mers in $w_A$ and $w_B$ respectively. We then generated strings $w_{C_i}$ of increasing length, formed a set ${C_i}$ of all its $k$-mers, and considered $J(A\cup {C_i}, B\cup {C_i})$. The number of hash functions for each method was fixed to be $k_\classicX = k_\containX = 100$. Figure \ref{fig:TrueVsEstimate} depicts the comparison of the containment min hash approach with the classical min hash Jaccard estimate on this data and effectively illustrates the results in section \ref{section:MethodsBounds} showing improved performance of the containment min hash approach. The mean and variance of the classic min hash approach on this data was \SyntheticDataClassic while using the containment approach was \SyntheticDataContainment demonstrating a substantial decrease in variance. This improved variance was observed over a range of $k$-mer sizes, number of hashes, and lengths of input strings.
+We picked a $k$-mer (substring of length $k$) size of $11$ and considered the sets $A$ and $B$ to be the set of all $k$-mers in $w_A$ and $w_B$ respectively. We then generated strings $w_{C_i}$ of increasing length, formed a set ${C_i}$ of all its $k$-mers, and considered $J(A\cup {C_i}, B\cup {C_i})$. The number of hash functions for each method was fixed to be $k_\classicX = k_\containX = 100$. Figure \ref{fig:TrueVsEstimate} depicts the comparison of the containment min hash approach with the classical min hash Jaccard estimate on this data and effectively illustrates the results in section \ref{section:MethodsBounds} showing improved performance of the containment min hash approach. The mean and variance of the classic min hash approach on this data was \SyntheticDataClassic while using the containment approach was \SyntheticDataContainment~, demonstrating a substantial decrease in variance. This improved variance was observed over a range of $k$-mer sizes, number of hashes, and lengths of input strings.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \renewcommand{\subfigimg}[3][,]{%
@@ -476,7 +487,7 @@ We picked a $k$-mer (substring of length $k$) size of $11$ and considered the se
 \subsubsection{Simulated biological data}
 To demonstrate the exponential improvement of the containment min hash approach over the classical min hash for increasing sample sizes, we contrast here the mean relative performance of each approach on simulated biological data. We utilized GemSIM \cite{mcelroy2012gemsim} to simulate two sets of metagenomic data from randomly selected bacterial genomes. We them aim to estimate the Jaccard index between the metagenomic data and each of the bacterial genomes (thereby simulating the case when attempting to detect if a bacterial genome appears in a given metagenomic sample).
 
-For the first set of simulated data, we used GemSIM to simulate 10K reads (of length 100) from \SimulatedBiologicalDataSmallNumGenomes randomly selected bacterial genomes $G_i$ (considered here as the set of all $k$-mers in the genome). We fixed the $k$-mer size to $k=\SimulatedBiologicalDataSmallKsize$. We then formed a set $M_1$ of all $11$-mers in all reads in the simulated metagenome. We then repeated this \SimulatedBiologicalDataSmallNumReplicates times. A false positive rate of $0.001$ was used for the false positive rate of the bloom filter used for the containment approach.
+For the first set of simulated data, we used GemSIM to simulate 10K reads (of length 100) from \SimulatedBiologicalDataSmallNumGenomes randomly selected bacterial genomes $G_i$ (considered here as the set of all $k$-mers in the genome). We fixed the $k$-mer size to $k=\SimulatedBiologicalDataSmallKsize$. We then formed a set $M_1$ of all $11$-mers in all reads in the simulated metagenome. We then repeated this \SimulatedBiologicalDataSmallNumReplicates times. A false positive rate of $0.001$ was used for the bloom filter in the containment approach.
 
 The second set of simulated data was produced similarly, except for the fact that we used 1M reads of the same length as before and formed a set $M_2$ of all $11$-mers in all reads of the metagenome. Again, we then repeated this \SimulatedBiologicalDataNumReplicates times using the same false positive rate for the bloom filter.
 
@@ -484,7 +495,7 @@ The second set of simulated data was produced similarly, except for the fact tha
  
 % As demonstrated in Section \ref{section:MethodsBounds}, we expect that once the number of $11$-mers in the sample is large in comparison to the number of $11$-mers used to simulate the data, the containment approach will give an exponentially better estimate of the Jaccard index in comparison to the classical min hash approach. 
  
-Figure \ref{fig:SimulatedBiologicalData} depicts the relative error of the classic min hash approach and the containment approach on these two sets of simulated data when estimating $J(M_1,G_i)$ (part A of Figure \ref{fig:SimulatedBiologicalData}) and $J(M_2,G_i)$ (part B of Figure \ref{fig:SimulatedBiologicalData}) as a function of the number of hashes used. Observe that the containment approach has significantly less error when, as is commonly seen in practice, the number of $11$-mers in the sample is appreciable in comparison to the number of $11$-mers in a given reference genome $G_i$. This improvement of the containment approach over the classic approach continues to grow as the metagenome size grows in relation to the reference genome sizes.
+Figure \ref{fig:SimulatedBiologicalData} depicts the relative error of the classic min hash approach and the containment approach on these two sets of simulated data when estimating $J(M_1,G_i)$ in part A), and $J(M_2,G_i)$ in part B), as a function of the number of hashes used. Observe that the containment approach has significantly less error when, as is commonly seen in practice, the number of $11$-mers in the sample is appreciable in comparison to the number of $11$-mers in a given reference genome $G_i$. This improvement of the containment approach over the classic approach continues to grow as the metagenome size grows in relation to the reference genome sizes.
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -505,7 +516,7 @@ Real metagenomes contain many magnitudes more $k$-mers than those found in any r
 
 % As demonstrated in section \ref{section:ChernoffBounds} we can be XX\% sure that the true Jaccard index between this genome and the sample is within a relative error of XX\% of the true Jaccard index value.  If we were to use the classical min hash approach, the Chernoff bounds dictate that we would min hash sketches of size XXX to achieve this same confidence bound on the relative error.
 
-To evaluate if this extremely low-abundance organism is actually present in the sample, we utilized the SNAP alignment tool \cite{zaharia2011faster} to align the sample to the \textit{\FoundOrganismName} genome. The script \textit{MakeCoveragePlot.sh} provides the exact commands and parameters used to perform the alignment. We found that \NumReadsAligned reads aligned with a MAPQ score above 20 (i.e. only use high-quality alignments). The coverage of the viral genome is depicted in Figure \ref{fig:ViralCoverage} using a square-root scale and a window size of \WindowSize\unskip. 
+To evaluate if this extremely low-abundance organism is actually present in the sample, we utilized the SNAP alignment tool \cite{zaharia2011faster} to align the sample to the \textit{\FoundOrganismName} genome. The script \textit{MakeCoveragePlot.sh} provides the exact commands and parameters used to perform the alignment. We found that \NumReadsAligned reads aligned with a MAPQ score above 20 (i.e. high-quality alignments). The coverage of the viral genome is depicted in Figure \ref{fig:ViralCoverage} using a square-root scale and a window size of \WindowSize\unskip. 
 %Even though the coverage was quite low (average per-window coverage was \input{Data/MeanCoverage.txt}\unskip X), 
 These high-quality mapped reads to such a small genome lends evidence to support the claim that this particular virus is actually present in the sample metagenome.
 
@@ -513,15 +524,15 @@ These high-quality mapped reads to such a small genome lends evidence to support
 \begin{center}
 \includegraphics[width=3.25in,trim={0 0 0 0in},clip]{Figs/CoveragePlot.png}%
 \end{center}
-\caption{Plot of the real metagenomic sample alignment coverage to the virus \textit{\FoundOrganismName} detected by the proposed containment min hash approach. A total of \NumReadsAligned reads aligned with a MAPQ score above 20 (i.e. using only high-quality alignments) using the SNAP aligner \cite{zaharia2011faster}. A square root scale and a window size of \WindowSize was used for the plot, resulting in an average per-window coverage of \MeanCoverage \unskip X.
+\caption{Plot of the real metagenomic sample alignment coverage to the virus \textit{\FoundOrganismName} detected by the proposed containment min hash approach. A total of \NumReadsAligned reads aligned with a MAPQ score above 20 (i.e. high-quality alignments) using the SNAP aligner \cite{zaharia2011faster}. A square root scale and a window size of \WindowSize was used for the plot, resulting in an average per-window coverage of \MeanCoverage \unskip X.
 }
 \label{fig:ViralCoverage}%
 \end{figure}
 
 
 \section{Conclusion}
-In this manuscript, we introduced an improvement of the min hash approach of estimating the Jaccard index that we showed is faster, more accurate and uses less space in many situations of practical interest. This improved ``containment min hash'' approach was used to analyze simulated and real metagenomic data and was found to give results superior to those of the classic min hash approach. This advancement can be useful outside of the field of metagenomics and computational biology, with possible applications in data mining, web clustering or even near duplicate image detection.
-MORE MORE MORE
+In this manuscript, we introduced ``containment min hash'': an improvement to the min hash approach of estimating the Jaccard index. We derived exact formulas for the probability of error for this method and also showed that it is faster, more accurate and uses less space in many situations of practical interest. This improved approach was used to analyze simulated and real metagenomic data and was found to give results superior to those of the classic min hash approach. As the theoretical results we obtained are agnostic to the application of interest, we believe this method will be useful in any application where estimates of similarity of very differently sized sets is desired. Hence, this advancement can be useful outside of the field of metagenomics and computational biology, with possible applications in data mining, web clustering or even near duplicate image detection.
+
 %We have also shown that the containment approach is able to determine the existence of microorganisms in a metagenomic data set in a fast and accurate way. We hope to generalize this approach to not only determine the presence/absence of an organism in a sample, but also to estimate the proportion of each microorganism in the data.
 
 
