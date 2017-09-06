@@ -29,7 +29,7 @@ p = 0.01  # false positive rate for the bloom filter
 len_small_string = 100
 len_large_string = 1000
 
-# Create data
+# Create data: small set called A, large set called B
 small_string = ''.join(np.random.choice(['A', 'C', 'T', 'G'], len_small_string))  # small string to form the small set A
 size_A = len(set([small_string[i:i+ksize] for i in range(len(small_string) - ksize + 1)]))  # size of smaller set, used to convert containment index to Jaccard index
 large_string = ''.join(np.random.choice(['A', 'C', 'T', 'G'], len_large_string)) + small_string  # large string to form the larger set B
@@ -39,19 +39,19 @@ A_MH = MH.CountEstimator(n=h, max_prime=prime, ksize=ksize, save_kmers='y')
 A_MH.add_sequence(small_string)  # create the min hash of the small string
 
 # Create the bloom filter and populate with the larger set
-filt = BloomFilter(capacity=1.15*len_large_string, error_rate=p)  # Initialize the bloom filter
+B_filt = BloomFilter(capacity=1.15*len_large_string, error_rate=p)  # Initialize the bloom filter
 size_B_est = 0  # used to count the number of k-mers in B, could do much more intelligently (like with HyperLogLog)
 for i in range(len(large_string) - ksize + 1):
 	kmer = large_string[i:i+ksize]
-	if kmer not in filt:
+	if kmer not in B_filt:
 		size_B_est += 1
-		filt.add(kmer)
+		B_filt.add(kmer)
 
 # Use the k-mers in the sketch of A and test if they are in the bloom filter of B
 int_est = 0  # intersection estimate
 for kmer in A_MH._kmers:
-	if kmer is not '':  # in case the set was so small the Min Hash was not fully populated
-		if kmer in filt:
+	if kmer is not '':  # in case the set "A" was so small the Min Hash was not fully populated
+		if kmer in B_filt:
 			int_est += 1
 
 int_est -= np.round(p*h)  # adjust for the false positive rate
@@ -69,5 +69,6 @@ print("Containment index estimate: %f" % containment_est)
 print("Jaccard index estimate (via the containment approach): %f" % jaccard_est)
 print("True Jaccard index: %f" % true_jaccard)
 print("Relative error: %f" % (np.abs(jaccard_est-true_jaccard) / true_jaccard))
+
 ```
 
