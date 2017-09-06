@@ -3,9 +3,7 @@ Containment min hash is a method that combines min hash and bloom filters that a
 
 This repository contains all the code necessary to re-construct [the associated paper](http://www.biorxiv.org/content/early/2017/09/04/184150).
 
-![alt text](https://github.com/dkoslicki/MinHashMetagenomics/blob/master/Paper/Figs/ClassicalConceptual.png "Cenceptual approach of min hash")
-
-![alt text](https://github.com/dkoslicki/MinHashMetagenomics/blob/master/Paper/Figs/ContainmentConceptual.png "Cenceptual approach of containment min hash")
+![alt text](https://github.com/dkoslicki/MinHashMetagenomics/blob/master/Paper/Figs/ClassicalConceptual.png "Cenceptual approach of min hash") ![alt text](https://github.com/dkoslicki/MinHashMetagenomics/blob/master/Paper/Figs/ContainmentConceptual.png "Cenceptual approach of containment min hash")
 
 
 ## Requirements ##
