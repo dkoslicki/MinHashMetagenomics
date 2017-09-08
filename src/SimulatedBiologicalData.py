@@ -14,7 +14,7 @@ import MinHash as MH
 import bz2
 import tempfile
 import matplotlib.pyplot as plt
-from multiprocessing.dummy import Pool
+from multiprocessing.dummy import Pool  # Uhhh, shouldn't this not be "dummy"?
 import multiprocessing
 import sys
 
