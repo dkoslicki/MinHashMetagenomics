@@ -339,13 +339,13 @@ We first derive a useful characterization of the probability under consideration
 \end{align}
 Then for $\delta\rq{}$ as defined in the statement of the proposition and for $\delta\rq{}\rq{}=\frac{\delta |A \cup B|}{|A\cup B|+(1-\delta)|A \cap B|}$, note that $0<\delta\rq{}, \delta\rq{}\rq{}<1$. Then using the two-sided Chernoff bounds from equations \eqref{chernoffbd1} and \eqref{chernoffbd2} applied to equation \eqref{eqn:thisline}, we have that
 \begin{align*}
-P\left(\left|\frac{J_\containX^{est}-J}{J}\right|\geq \delta\right) &\leq e^{-(\frac{C}{C+p})^2\delta\rq{}k(C+p)/3}+e^{-(\frac{C}{C+p})^2\delta\rq{}\rq{}k(C+p)/2}\\
-&\leq 2e^{-\left(\frac{C}{C+p}\right)^2\delta\rq{}k(C+p)/3}.
+P\left(\left|\frac{J_\containX^{est}-J}{J}\right|\geq \delta\right) &\leq e^{-(\frac{C}{C+p})^2\delta\rq{}^2k(C+p)/3}+e^{-(\frac{C}{C+p})^2\delta\rq{}\rq{}^2k(C+p)/2}\\
+&\leq 2e^{-\left(\frac{C}{C+p}\right)^2\delta\rq{}^2k(C+p)/3}.
 \end{align*}
 \end{proof}
  Figure \ref{fig:DeltaConfidence} gives a comparison of the bounds of deviation (as a function of $\delta$ for a fixed number of hash functions) for the classical min hash Jaccard estimate (equation \eqref{eqn:ClassicChernoff}) and the containment min hash estimate of the Jaccard index (Proposition \ref{prop:bounds}). This figure shows that the containment min hash approach has a significantly smaller probability of the estimate deviating from the true value. 
 
-Now, let $k=k_\containX$ be the number of hash functions which is required to achieve a desire threshold upper bound of $t=2e^{-\left(\frac{C}{C+p}\right)^2\delta\rq{}k(C+p)/3}$. We then have that
+Now, let $k=k_\containX$ be the number of hash functions which is required to achieve a desire threshold upper bound of $t=2e^{-\left(\frac{C}{C+p}\right)^2\delta\rq{}^2k(C+p)/3}$. We then have that
  \begin{align}
  \label{eqn:JaccardFromContainment}
  k_\containX =\frac{-3(C+p)\ln(t/2)\left(|A\cup B|+(1+\delta)|A\cap B|\right)^2}{C^2\delta^2|A\cup B|^2 }.
@@ -460,7 +460,7 @@ Included in this repository is an automated script that can reproduce this paper
 
 \subsubsection{Simulated data}
 \label{section:SyntheticData}
-Here we illustrate the improved accuracy of the containment min hash approach over classical min hash in estimating the Jaccard index. To that end, we generated two random strings $w_A$ and $w_B$ on the alphabet $\{A,C,T,G\}$. We set $|w_A|= 10,000$ and $|w_B| = 15$ to simulate the situation of interest where one wishes to estimate the Jaccard index of two sets of very different size.
+Here we illustrate the improved accuracy of the containment min hash approach over classical min hash in estimating the Jaccard index. To that end, we generated two random strings $w_A$ and $w_B$ on the alphabet $\{A,C,T,G\}$. We set $|w_B|= 10,000$ and $|w_A| = 15$ to simulate the situation of interest where one wishes to estimate the Jaccard index of two sets of very different size.
 We picked a $k$-mer (substring of length $k$) size of $11$ and considered the sets $A$ and $B$ to be the set of all $k$-mers in $w_A$ and $w_B$ respectively. We then generated strings $w_{C_i}$ of increasing length, formed a set ${C_i}$ of all its $k$-mers, and considered $J(A\cup {C_i}, B\cup {C_i})$. The number of hash functions for each method was fixed to be $k_\classicX = k_\containX = 100$. Figure \ref{fig:TrueVsEstimate} depicts the comparison of the containment min hash approach with the classical min hash Jaccard estimate on this data and effectively illustrates the results in section \ref{section:MethodsBounds} showing improved performance of the containment min hash approach. The mean and variance of the classic min hash approach on this data was \SyntheticDataClassic while using the containment approach was \SyntheticDataContainment~, demonstrating a substantial decrease in variance. This improved variance was observed over a range of $k$-mer sizes, number of hashes, and lengths of input strings.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
