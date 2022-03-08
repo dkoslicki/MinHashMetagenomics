@@ -1,7 +1,11 @@
 # Containment Min Hash
 Containment min hash is a method that combines min hash and bloom filters that allows the Jaccard index (similarity of two sets defined as the cardinality of their intersection over their union) for sets of very different size.
 
-This repository contains all the code necessary to re-construct [the associated paper](http://www.biorxiv.org/content/early/2017/09/04/184150).
+This repository contains all the code necessary to re-construct [the associated paper](http://www.biorxiv.org/content/early/2017/09/04/184150). With the associated citation:
+
+>Improving Min Hash via the Containment Index with applications to Metagenomic Analysis
+>David Koslicki, Hooman Zabeti
+>bioRxiv 184150; doi: https://doi.org/10.1101/184150
 
 ![alt text](https://github.com/dkoslicki/MinHashMetagenomics/blob/master/Paper/Figs/ClassicalConceptual.png "Cenceptual approach of min hash") ![alt text](https://github.com/dkoslicki/MinHashMetagenomics/blob/master/Paper/Figs/ContainmentConceptual.png "Cenceptual approach of containment min hash")
 
